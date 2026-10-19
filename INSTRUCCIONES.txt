@@ -1,28 +1,26 @@
-GEOTRACIA MAPA v0.9 — CORRECCIÓN DEL SELECTOR MOP
+GEOTRACIA v1.0 — Longitud y ficha de tramo vial MOP
 
-Contenido:
-- map-gps-v09-unificado.js: un único selector con 11 capas de servicios oficiales MOP.
-- map-gps-v09-unificado.css: estilos responsivos del selector.
-- INSTRUCCIONES.txt: pasos de integración.
+Archivos:
+- index.html: actualizado para cargar la versión 1.0.
+- map-gps-v10-longitud-vial.js: selector de capas + modo de consulta vial.
+- map-gps-v10-longitud-vial.css: estilos para el selector, botón km y ficha de camino.
 
-INTEGRACIÓN MANUAL EN GitHub (rama main):
-1. Subir map-gps-v09-unificado.js y map-gps-v09-unificado.css a la raíz del repositorio.
-2. En index.html, eliminar la referencia a map-gps-v07-mop.css.
-3. En index.html, eliminar la referencia a map-gps-v07-mop.js.
-4. Mantener map-gps-v06.css y map-gps-v06.js.
-5. Sustituir la referencia a map-gps-v08-oficial.css por map-gps-v09-unificado.css.
-6. Sustituir la referencia a map-gps-v08-oficial.js por map-gps-v09-unificado.js.
-7. El orden debe ser: Leaflet -> map-gps.js -> map-gps-v06.js -> map-gps-v09-unificado.js.
-8. Guardar/confirmar cambios y recargar GitHub Pages limpiando caché (en móvil, cerrar y volver a abrir la página).
+Integración:
+1. Subir index.html, map-gps-v10-longitud-vial.js y map-gps-v10-longitud-vial.css a la raíz de P-Renault/geo (rama main).
+2. Conservar los demás archivos existentes.
+3. El index.html ya no carga los archivos v0.9; carga v1.0.
+4. Recargar GitHub Pages con caché limpia.
 
-Comportamiento:
-- Un único control de capas MOP.
-- Por defecto solo se activan Puentes y Emergencias viales para reducir saturación.
-- Las demás capas se activan a demanda.
-- Los servicios MOP se consumen en línea; el proyecto no descarga ni replica sus datos.
-- El selector requiere conexión a internet y carga Esri Leaflet desde un CDN.
+Uso:
+1. Abrir Mapa y GPS.
+2. Pulsar el botón pequeño "km" del mapa.
+3. Tocar cerca de una carretera.
+4. Se consulta la capa de entidades Red_Vial_Chile/MapServer/2 y se abre una ficha con nombre, código, clasificación, carpeta, región, kilómetros inicial/final, longitud oficial KM_TRAMO si existe, longitud aproximada de la geometría devuelta y distancia al punto consultado.
+5. Pulsar "km" de nuevo para salir del modo de consulta y seguir usando el mapa normalmente.
 
-Limitaciones que deben mantenerse visibles:
-- La capa Red_Vial_Chile tiene metadatos oficiales que advierten que parte de su contenido histórico fue actualizado a 2015/2017 y puede estar en depuración. No presentarla como garantía de vigencia jurídica.
-- Los puntos registrados por la función GPS existente siguen siendo temporales en el navegador; esta corrección NO los sincroniza con Supabase.
-- Esta corrección no confirma que los 11 servicios sean uniformes en cobertura, actualización o rendimiento.
+Notas técnicas:
+- KM_TRAMO se muestra como longitud oficial del tramo (km), pero debe contrastarse con KM_I/KM_F en el sector real; el servicio se describe como documento de trabajo sujeto a depuración y actualización.
+- La longitud calculada de la geometría se calcula sobre las coordenadas devueltas por la consulta, por lo que puede ser la longitud completa de la entidad y no necesariamente el subtramo visible.
+- La consulta se hace por cercanía dentro de un entorno de aproximadamente 1 km y no afirma que el usuario esté situado exactamente sobre ese camino.
+- Requiere internet y que el servicio MOP permita consultas CORS desde el navegador.
+- No se guardan datos en Supabase ni se modifican los datos oficiales del MOP.
