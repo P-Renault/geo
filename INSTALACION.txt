@@ -1,0 +1,15 @@
+GEOTRACIA v0.5 — MAPA Y GPS
+Archivos nuevos: map-gps.js y map-gps.css.
+
+1) Sube ambos archivos junto a index.html.
+2) Dentro de <head> agrega:
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="map-gps.css">
+3) Antes de </body>, después de los scripts existentes, agrega:
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="map-gps.js"></script>
+4) Confirma los cambios y espera GitHub Pages.
+
+Incluye mapa de OpenStreetMap, GPS del dispositivo bajo permiso, coordenadas, vista satelital Esri, registro manual de puntos y exportación CSV.
+Centro inicial referencial: Temuco/La Araucanía, no es ubicación del usuario.
+IMPORTANTE: Los puntos se mantienen solo en memoria durante la sesión; todavía no se guardan en Supabase. Los caminos y tramos de la base de datos aún no se dibujan en el mapa. GPS requiere HTTPS, permiso del navegador e internet.
