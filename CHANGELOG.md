@@ -1,9 +1,10 @@
-# Cambios
+# GEOTRACIA v0.2.1
 
-## v0.2.0
-- Añadida pantalla de acceso profesional.
-- Integrado Supabase Auth para login, sesión persistente, logout y recuperación de contraseña.
-- Añadida configuración separada para URL y clave pública de Supabase.
-- Añadida migración SQL con estructura inicial, índices geoespaciales PostGIS y políticas RLS por organización.
-- Documentado el procedimiento de despliegue y los límites de esta versión.
-- Se preservan módulos y framework visual anteriores; los datos de módulos siguen siendo demo hasta implementar sus adaptadores de datos.
+- Añadida navegación entre «Iniciar sesión» y «Crear cuenta».
+- Alta con nombre, correo, contraseña y nombre opcional de organización.
+- Validación de confirmación de contraseña y mensajes de confirmación de correo.
+- Recuperación de contraseña disponible desde el modo de inicio de sesión.
+- Corregido `autocomplete` del correo para reducir la posibilidad de que el navegador autocompletar confunda la URL de Supabase con el correo.
+- Conservada la configuración pública de Supabase entregada para este despliegue.
+
+Nota: el alta depende de la configuración de Supabase Auth. Para crear automáticamente una organización y un perfil, debe estar instalada la función/trigger correspondiente en la base de datos. No se deben poner claves secretas en archivos del frontend.
