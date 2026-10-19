@@ -1,0 +1,55 @@
+/* GEOTRACIA v0.4.1 — navegación lateral contraíble en móvil */
+.sidebar-close {
+  display: none;
+}
+@media (max-width: 1000px) {
+  .sidebar-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    align-self: flex-end;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    min-height: 42px;
+    margin: -10px -4px 8px 0;
+    padding: 0 12px;
+    border: 1px solid rgba(145, 190, 212, .25);
+    border-radius: 10px;
+    background: #123750;
+    color: #f4fbff;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0,0,0,.12);
+    cursor: pointer;
+  }
+  .sidebar-close span:first-child {
+    font-size: 25px;
+    line-height: 1;
+  }
+  .sidebar-close-label {
+    font-size: 11px;
+  }
+  .sidebar {
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-bottom: max(18px, env(safe-area-inset-bottom));
+    overscroll-behavior: contain;
+    max-height: 100dvh;
+  }
+  .overlay.show {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 29;
+    background: rgba(3, 18, 32, .48);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+  .sidebar.open {
+    z-index: 30;
+  }
+}
+@media (min-width: 1001px) {
+  .sidebar-close { display: none !important; }
+}
