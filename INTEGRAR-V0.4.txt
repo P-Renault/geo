@@ -1,0 +1,21 @@
+GEOTRACIA v0.4 — CAMINOS Y TRAMOS
+
+Archivos incluidos:
+- roads.js (nuevo)
+- roads.css (nuevo)
+- 202610190003_geotracia_roads_segments.sql (migración)
+
+INSTALACIÓN
+1. Supabase > SQL Editor: ejecuta 202610190003_geotracia_roads_segments.sql después de las migraciones base y de proyectos.
+2. En index.html agrega dentro de <head>: <link rel="stylesheet" href="roads.css">
+3. Al final de index.html, después de app.js y antes de </body>, agrega: <script src="roads.js"></script>
+4. Sube roads.js y roads.css a la misma carpeta que index.html, app.js y supabase-config.js.
+5. No reemplaces app.js, auth.js, supabase-config.js ni los logotipos.
+6. Recarga GitHub Pages y abre el módulo “Caminos y tramos”.
+
+FUNCIONES
+- Selector de proyecto existente.
+- CRUD de caminos (código, nombre, tipo, superficie, longitud).
+- CRUD de tramos (camino, código, progresiva inicial/final y condición).
+- Datos persistidos en Supabase y acceso gobernado por RLS.
+- La geometría PostGIS, GPS, importación GIS y modo offline no están incluidos en esta fase.
