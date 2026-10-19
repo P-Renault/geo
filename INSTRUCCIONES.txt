@@ -1,0 +1,28 @@
+GEOTRACIA MAPA v0.9 — CORRECCIÓN DEL SELECTOR MOP
+
+Contenido:
+- map-gps-v09-unificado.js: un único selector con 11 capas de servicios oficiales MOP.
+- map-gps-v09-unificado.css: estilos responsivos del selector.
+- INSTRUCCIONES.txt: pasos de integración.
+
+INTEGRACIÓN MANUAL EN GitHub (rama main):
+1. Subir map-gps-v09-unificado.js y map-gps-v09-unificado.css a la raíz del repositorio.
+2. En index.html, eliminar la referencia a map-gps-v07-mop.css.
+3. En index.html, eliminar la referencia a map-gps-v07-mop.js.
+4. Mantener map-gps-v06.css y map-gps-v06.js.
+5. Sustituir la referencia a map-gps-v08-oficial.css por map-gps-v09-unificado.css.
+6. Sustituir la referencia a map-gps-v08-oficial.js por map-gps-v09-unificado.js.
+7. El orden debe ser: Leaflet -> map-gps.js -> map-gps-v06.js -> map-gps-v09-unificado.js.
+8. Guardar/confirmar cambios y recargar GitHub Pages limpiando caché (en móvil, cerrar y volver a abrir la página).
+
+Comportamiento:
+- Un único control de capas MOP.
+- Por defecto solo se activan Puentes y Emergencias viales para reducir saturación.
+- Las demás capas se activan a demanda.
+- Los servicios MOP se consumen en línea; el proyecto no descarga ni replica sus datos.
+- El selector requiere conexión a internet y carga Esri Leaflet desde un CDN.
+
+Limitaciones que deben mantenerse visibles:
+- La capa Red_Vial_Chile tiene metadatos oficiales que advierten que parte de su contenido histórico fue actualizado a 2015/2017 y puede estar en depuración. No presentarla como garantía de vigencia jurídica.
+- Los puntos registrados por la función GPS existente siguen siendo temporales en el navegador; esta corrección NO los sincroniza con Supabase.
+- Esta corrección no confirma que los 11 servicios sean uniformes en cobertura, actualización o rendimiento.
