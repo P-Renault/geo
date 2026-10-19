@@ -1,26 +1,39 @@
-GEOTRACIA v1.0 — Longitud y ficha de tramo vial MOP
+GEOTRACIA v1.1 — INTEGRACIÓN COMPLETA
+====================================
 
-Archivos:
-- index.html: actualizado para cargar la versión 1.0.
-- map-gps-v10-longitud-vial.js: selector de capas + modo de consulta vial.
-- map-gps-v10-longitud-vial.css: estilos para el selector, botón km y ficha de camino.
+Este paquete contiene:
+- index.html (completo, con las referencias v1.1 ya integradas)
+- map-gps-v11-osm-longitud.js
+- map-gps-v11-osm-longitud.css
 
-Integración:
-1. Subir index.html, map-gps-v10-longitud-vial.js y map-gps-v10-longitud-vial.css a la raíz de P-Renault/geo (rama main).
-2. Conservar los demás archivos existentes.
-3. El index.html ya no carga los archivos v0.9; carga v1.0.
-4. Recargar GitHub Pages con caché limpia.
+INTEGRACIÓN
+-----------
+Sube/reemplaza estos tres archivos en la raíz del repositorio P-Renault/geo,
+rama main. No tienes que editar index.html: ya viene preparado para cargar el
+CSS y el JavaScript nuevos.
 
-Uso:
-1. Abrir Mapa y GPS.
-2. Pulsar el botón pequeño "km" del mapa.
-3. Tocar cerca de una carretera.
-4. Se consulta la capa de entidades Red_Vial_Chile/MapServer/2 y se abre una ficha con nombre, código, clasificación, carpeta, región, kilómetros inicial/final, longitud oficial KM_TRAMO si existe, longitud aproximada de la geometría devuelta y distancia al punto consultado.
-5. Pulsar "km" de nuevo para salir del modo de consulta y seguir usando el mapa normalmente.
+El index conserva las referencias existentes de estilos y scripts de GEOTRACIA
+y agrega map-gps-v11-osm-longitud.css y map-gps-v11-osm-longitud.js.
 
-Notas técnicas:
-- KM_TRAMO se muestra como longitud oficial del tramo (km), pero debe contrastarse con KM_I/KM_F en el sector real; el servicio se describe como documento de trabajo sujeto a depuración y actualización.
-- La longitud calculada de la geometría se calcula sobre las coordenadas devueltas por la consulta, por lo que puede ser la longitud completa de la entidad y no necesariamente el subtramo visible.
-- La consulta se hace por cercanía dentro de un entorno de aproximadamente 1 km y no afirma que el usuario esté situado exactamente sobre ese camino.
-- Requiere internet y que el servicio MOP permita consultas CORS desde el navegador.
-- No se guardan datos en Supabase ni se modifican los datos oficiales del MOP.
+USO
+---
+1. Abre GEOTRACIA y entra a Mapa y GPS.
+2. Pulsa el control nuevo OSM.
+3. Toca directamente sobre un camino.
+4. La ficha muestra la longitud de la geometría OSM encontrada y sus etiquetas.
+5. Vuelve a pulsar OSM para desactivar el modo.
+
+ALCANCE
+-------
+La longitud se calcula sumando distancias geodésicas entre los puntos de la
+geometría OSM. Puede representar solo un segmento de un camino fragmentado.
+No es longitud oficial MOP ni distancia de conducción origen-destino.
+La consulta no guarda datos en Supabase ni modifica datos de OSM o MOP.
+La consulta depende de Overpass API pública y de la cobertura de OSM.
+Se incluye atribución a OpenStreetMap contributors; respeta sus términos ODbL.
+
+IMPORTANTE
+----------
+El index fue preparado a partir del index.html actual del repositorio que se
+consultó al preparar este paquete. Si se hicieron cambios en GitHub después de
+esa consulta, revisa esos cambios antes de reemplazar el index para no perderlos.

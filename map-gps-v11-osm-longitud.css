@@ -1,0 +1,15 @@
+/* GEOTRACIA v1.1 — medición cartográfica OSM */
+.geo-osm-measure-control{margin-top:8px!important;border:0!important;box-shadow:0 4px 16px rgba(7,28,50,.2)}
+.geo-osm-measure-button{width:42px;height:42px;display:flex;align-items:center;justify-content:center;border:0;border-radius:10px;background:#fff;color:#173653;font:800 12px/1 "DM Sans",sans-serif;cursor:pointer}
+.geo-osm-measure-button.is-active{background:#0d9488;color:#fff;outline:3px solid rgba(13,148,136,.22)}
+.geo-osm-measure-mode{cursor:crosshair}
+.geo-osm-popup{font:13px/1.4 "DM Sans",sans-serif;color:#173653;min-width:230px}
+.geo-osm-kicker{color:#0d9488;font-size:10px;font-weight:800;letter-spacing:.06em}
+.geo-osm-popup h3{margin:5px 0 10px;font-size:16px}
+.geo-osm-popup dl{margin:0}
+.geo-osm-popup dl>div{display:grid;grid-template-columns:1fr auto;gap:10px;padding:6px 0;border-bottom:1px solid #e6edf2}
+.geo-osm-popup dt{color:#65788a}
+.geo-osm-popup dd{margin:0;text-align:right;font-weight:700;max-width:155px;overflow-wrap:anywhere}
+.geo-osm-popup p{margin:10px 0 0;font-size:10px;color:#748394}
+.geo-osm-popup .geo-osm-attribution{font-weight:700}
+@media(max-width:600px){.geo-osm-popup{min-width:210px}.geo-osm-popup dl>div{gap:7px}.geo-osm-popup dd{max-width:125px}}
