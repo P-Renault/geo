@@ -1,0 +1,33 @@
+/* GEOTRACIA v0.7 — control de capas MOP */
+.geo-map-gps-view .geo-mop-layer-control {
+  border: 1px solid rgba(19, 48, 72, .16);
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(7, 28, 50, .16);
+  font: 11px/1.45 "DM Sans", sans-serif;
+}
+.geo-map-gps-view .geo-mop-layer-control .leaflet-control-layers-toggle {
+  width: 38px;
+  height: 38px;
+  background-size: 20px 20px;
+}
+.geo-map-gps-view .geo-mop-layer-control-expanded {
+  padding: 10px 12px;
+  color: #173653;
+  background: rgba(255,255,255,.97);
+}
+.geo-map-gps-view .geo-mop-layer-control label {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 5px 0;
+  white-space: normal;
+}
+.geo-map-gps-view .geo-mop-layer-control input {
+  margin-top: 2px;
+  accent-color: #0d968b;
+}
+@media (max-width: 640px) {
+  .geo-map-gps-view .geo-mop-layer-control-expanded {
+    max-width: min(245px, calc(100vw - 95px));
+  }
+}
