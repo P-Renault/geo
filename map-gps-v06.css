@@ -1,0 +1,5 @@
+/* GEOTRACIA mapa v0.6 */
+.geo-map-gps-view .leaflet-popup-content{font-family:"DM Sans",sans-serif;font-size:12px;line-height:1.5}
+.geo-map-gps-view .leaflet-popup-content b{color:#173653}
+.geo-map-gps-view .leaflet-popup-content small{color:#65798c}
+.geo-map-gps-view .leaflet-overlay-pane path{vector-effect:non-scaling-stroke}
