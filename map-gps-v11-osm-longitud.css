@@ -55,3 +55,6 @@
 /* v1.6: feedback visual al seleccionar la vía */
 .geo-data-loading .geo-data-card-head h2{color:#0d9488}
 .geo-data-card{pointer-events:auto}
+
+/* v1.8: desactiva cualquier interfaz de medición manual heredada; la longitud solo procede de geometría vial */
+#geo-approx-bar,#geo-approx-result,#geo-approx-offer{display:none!important}

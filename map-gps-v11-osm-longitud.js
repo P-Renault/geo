@@ -1,9 +1,9 @@
-/* GEOTRACIA v1.7 — selección directa y continuidad geométrica vial automática.
+/* GEOTRACIA v1.8 — selección vial automática sin trazado manual.
    OSM: geometría cartográfica. MOP: datos oficiales del tramo. No guarda ni modifica datos. */
 (() => {
   'use strict';
-  if (window.__geoMapV17Installed) return;
-  window.__geoMapV17Installed = true;
+  if (window.__geoMapV18Installed) return;
+  window.__geoMapV18Installed = true;
 
   const OVERPASS = [
     'https://overpass-api.de/api/interpreter',
@@ -79,12 +79,12 @@
     if(old&&Date.now()-old.time<CACHE_TTL)return old.ways;
     // Trae vías que intersectan un radio local. "out body geom" conserva los IDs de nodos
     // además de la geometría, necesarios para reconocer continuidad entre entidades OSM.
-    const q='[out:json][timeout:8];way(around:180,'+lat+','+lon+')[highway];out body geom;';
+    const q='[out:json][timeout:6];way(around:35,'+lat+','+lon+')[highway];out body geom;';
     let last;
     for(const endpoint of OVERPASS) {
       try {
         const res=await fetch(endpoint+'?data='+encodeURIComponent(q),{
-          method:'GET',headers:{'Accept':'application/json'},signal:AbortSignal.timeout(5500),cache:'no-store'
+          method:'GET',headers:{'Accept':'application/json'},signal:AbortSignal.timeout(6500),cache:'no-store'
         });
         if(!res.ok)throw new Error('HTTP '+res.status);
         const data=await res.json(); if(data.remark)throw new Error(data.remark);
@@ -165,77 +165,20 @@
     card.innerHTML='<header class="geo-data-card-head"><div><span class="geo-data-kicker">GEOTRACIA · CONSULTA CARTOGRÁFICA</span><h2>'+esc(title)+'</h2></div><button type="button" class="geo-data-close" aria-label="Cerrar ficha">×</button></header><div class="geo-data-card-body"><div class="geo-data-spinner"></div><p>'+esc(message)+'</p></div>';
     document.body.appendChild(card); card.querySelector('.geo-data-close').addEventListener('click',()=>closeCard(id));
   }
-  function routeDistance(points) {
-    let sum=0; for(let i=1;i<points.length;i++)sum+=haversine([points[i-1].lat,points[i-1].lng],[points[i].lat,points[i].lng]); return sum;
-  }
-  function clearApprox(clearResult=true) {
-    approxMode=false; approxPoints=[];
-    if(approxLine&&mapRef){mapRef.removeLayer(approxLine);approxLine=null;}
-    approxMarkers.forEach(m=>{if(mapRef)mapRef.removeLayer(m);});approxMarkers=[];
-    if(approxBar){approxBar.remove();approxBar=null;}
-    const result=document.getElementById('geo-approx-result');if(clearResult&&result)result.remove();
-    if(mapRef)mapRef.getContainer().classList.remove('geo-approx-mode');
-  }
-  function redrawApprox() {
-    if(approxLine&&mapRef){mapRef.removeLayer(approxLine);approxLine=null;}
-    approxMarkers.forEach(m=>{if(mapRef)mapRef.removeLayer(m);});approxMarkers=[];
-    if(approxPoints.length>1)approxLine=L.polyline(approxPoints,{color:'#0d9488',weight:6,opacity:.96,lineCap:'round',lineJoin:'round',dashArray:'10 7',className:'geo-approx-line'}).addTo(mapRef);
-    approxPoints.forEach((p,i)=>{
-      const marker=L.circleMarker(p,{radius:6,weight:2,color:'#fff',fillColor:'#0d9488',fillOpacity:1}).addTo(mapRef);
-      marker.bindTooltip(i===0?'Inicio':i===approxPoints.length-1?'Último punto':'Punto '+(i+1),{direction:'top'});
-      approxMarkers.push(marker);
-    });
-    updateApproxBar();
-  }
-  function updateApproxBar() {
-    if(!approxBar)return;
-    const dist=routeDistance(approxPoints);
-    const message=approxPoints.length===0?'Toca el mapa para marcar el inicio del camino.':
-      approxPoints.length===1?'Inicio marcado. Toca cada curva del camino para seguir su trazado.':
-      approxPoints.length+' puntos · longitud aproximada '+fmtM(dist)+'. Añade puntos siguiendo las curvas reales.';
-    approxBar.querySelector('.geo-approx-message').innerHTML='<strong>Medición aproximada</strong>'+esc(message);
-    const undo=approxBar.querySelector('[data-approx-undo]');undo.disabled=!approxPoints.length;undo.style.opacity=approxPoints.length?'1':'.45';
-    const finish=approxBar.querySelector('[data-approx-finish]');finish.disabled=approxPoints.length<2;finish.style.opacity=approxPoints.length>=2?'1':'.45';
-  }
-  function startApprox(reason) {
-    closeCard('geo-osm-card');closeCard('geo-mop-card');
-    clearApprox(true);approxMode=true;
-    const bar=document.createElement('div');bar.id='geo-approx-bar';bar.className='geo-approx-bar';
-    bar.innerHTML='<div class="geo-approx-message"><strong>Medición aproximada</strong>'+esc(reason||'Toca el mapa para comenzar.')+'</div><button type="button" data-approx-undo>Deshacer</button><button type="button" data-approx-finish class="primary">Calcular</button><button type="button" data-approx-cancel>✕</button>';
-    document.body.appendChild(bar);approxBar=bar;
-    bar.querySelector('[data-approx-undo]').addEventListener('click',()=>{if(approxPoints.length){approxPoints.pop();redrawApprox();}});
-    bar.querySelector('[data-approx-finish]').addEventListener('click',finishApprox);
-    bar.querySelector('[data-approx-cancel]').addEventListener('click',()=>{clearApprox();status('Medición aproximada cancelada.');});
-    mapRef.getContainer().classList.add('geo-approx-mode');updateApproxBar();
-    status('Medición aproximada activada. Marca puntos siguiendo el camino.');
-  }
-  function finishApprox() {
-    if(approxPoints.length<2)return;
-    const distance=routeDistance(approxPoints);
-    if(approxLine)approxLine.setStyle({dashArray:null,color:'#0d9488',weight:7});
-    if(approxBar){approxBar.remove();approxBar=null;}
-    approxMode=false;mapRef.getContainer().classList.remove('geo-approx-mode');
-    const old=document.getElementById('geo-approx-result');if(old)old.remove();
-    const result=document.createElement('section');result.id='geo-approx-result';result.className='geo-approx-result';result.setAttribute('role','dialog');
-    result.innerHTML='<h3>Medición aproximada del camino</h3><div class="geo-approx-distance">'+esc(fmtM(distance))+'</div><p>Longitud calculada sumando los segmentos que marcaste sobre el mapa. No es una medición oficial MOP ni una ruta de conducción.</p><p>'+approxPoints.length+' puntos de trazado · puedes volver a medir para ajustar las curvas.</p><button type="button" data-approx-close>Cerrar</button><button type="button" data-approx-retry style="margin-left:6px;background:#0d9488">Ajustar trazado</button>';
-    document.body.appendChild(result);
-    result.querySelector('[data-approx-close]').addEventListener('click',()=>{result.remove();});
-    result.querySelector('[data-approx-retry]').addEventListener('click',()=>{result.remove();startApprox('Ajusta los puntos siguiendo el camino.');});
-    status('Longitud aproximada calculada: '+fmtM(distance)+'.');
-  }
-  function offerApprox(message) {
-    const old=document.getElementById('geo-approx-offer');if(old)old.remove();
-    const card=document.createElement('section');card.id='geo-approx-offer';card.className='geo-data-card';
-    card.innerHTML='<header class="geo-data-card-head"><div><span class="geo-data-kicker">GEOTRACIA · MEDICIÓN ALTERNATIVA</span><h2>Medición aproximada</h2></div><button type="button" class="geo-data-close" aria-label="Cerrar">×</button></header><div class="geo-data-card-body"><p>'+esc(message||'No se obtuvieron datos suficientes. Puedes medir el camino trazando su geometría sobre el mapa.')+'</p><p>Marca puntos siguiendo las curvas del camino. GEOTRACIA sumará las distancias entre esos puntos y mostrará una longitud aproximada.</p><button type="button" class="geo-approx-launch">Trazar camino y medir</button></div>';
+  function showRetryCard(message,latlng,source='osm') {
+    const old=document.getElementById('geo-retry-card');if(old)old.remove();
+    const card=document.createElement('section');card.id='geo-retry-card';card.className='geo-data-card';
+    card.setAttribute('role','dialog');card.setAttribute('aria-label','Reintentar consulta cartográfica');
+    card.innerHTML='<header class="geo-data-card-head"><div><span class="geo-data-kicker">GEOTRACIA · CONSULTA AUTOMÁTICA</span><h2>No se pudo medir el camino</h2></div><button type="button" class="geo-data-close" aria-label="Cerrar ficha">×</button></header><div class="geo-data-card-body"><p>'+esc(message)+'</p><p>GEOTRACIA solo mostrará una longitud cuando reciba la geometría vial. No se utilizará una línea recta ni se te pedirá dibujar el camino.</p><button type="button" class="geo-approx-launch">Reintentar selección</button></div>';
     document.body.appendChild(card);
     card.querySelector('.geo-data-close').addEventListener('click',()=>card.remove());
-    card.querySelector('.geo-approx-launch').addEventListener('click',()=>{card.remove();startApprox(message);});
+    card.querySelector('.geo-approx-launch').addEventListener('click',()=>{card.remove();if(source==='mop')selectMop(latlng);else selectOsm(latlng);});
   }
   async function selectOsm(latlng) {
     if(osmBusy){status('La consulta anterior sigue en curso. Espera un momento.');return;} osmBusy=true; loadingCard('geo-osm-card','Buscando camino…','Identificando la vía más cercana y calculando automáticamente la longitud de su geometría.');
     try {
       const ways=await fetchWays(latlng.lat,latlng.lng);
-      if(!ways.length){closeCard('geo-osm-card');status('OSM no devolvió geometrías. Acerca el mapa y vuelve a tocar la vía; si el servicio sigue sin responder, la medición automática no está disponible temporalmente.',true);offerApprox('No se obtuvieron datos suficientes de OSM. La medición manual es solo una alternativa temporal y no sustituye la selección automática de la geometría vial.');return;}
+      if(!ways.length){closeCard('geo-osm-card');status('OSM no devolvió geometrías en el entorno inmediato. Acerca el mapa o vuelve a seleccionar la línea; no se calculará una distancia en línea recta.',true);showRetryCard('No se encontraron geometrías viales en el entorno inmediato. Acerca el mapa y vuelve a intentarlo.',latlng);return;}
       const p=[latlng.lat,latlng.lng];
       // La distancia visual en pantalla decide primero: es más intuitiva en móvil que un radio fijo en metros.
       const candidates=ways.map(way=>({way,pixels:pixelDistance(mapRef,latlng,way.geometry),meters:nearestMeters(p,way.geometry)}));
@@ -267,9 +210,9 @@
         '© OpenStreetMap contributors · Datos sujetos a ODbL.');
       status('Camino seleccionado y medido automáticamente: '+fmtM(length)+' ('+connected.length+' entidad(es) OSM conectada(s)).');
     } catch(e) {
-      console.error('[GEOTRACIA v1.7 OSM]',e); closeCard('geo-osm-card');
-      status('El servicio cartográfico está demorando. Puedes reintentar la selección; no se calculó una longitud automática.',true);
-      offerApprox('El servicio cartográfico no respondió a tiempo. La medición manual es una alternativa temporal, no el método automático solicitado.');
+      console.error('[GEOTRACIA v1.8 OSM]',e); closeCard('geo-osm-card');
+      status('El servicio cartográfico no respondió a tiempo. No se calculó ninguna longitud; puedes reintentar la consulta.',true);
+      showRetryCard('El servicio cartográfico no respondió a tiempo. Reintenta para buscar la geometría vial; no se ha medido una línea recta.',latlng);
     } finally {osmBusy=false;}
   }
   const mopTranslations = {
@@ -321,7 +264,7 @@
     if(mopBusy)return;mopBusy=true;loadingCard('geo-mop-card','Consultando red vial MOP…','Buscando el tramo oficial más cercano.');
     try {
       const found=await queryMop(latlng);
-      if(!found||found.distance>350){closeCard('geo-mop-card');status('No se encontró un tramo MOP cercano. Puedes utilizar la medición aproximada.',true);offerApprox('No se obtuvieron datos suficientes de la red MOP. Puedes trazar el camino manualmente.');return;}
+      if(!found||found.distance>350){closeCard('geo-mop-card');status('No se encontró un tramo MOP cercano. Puedes utilizar la medición aproximada.',true);showRetryCard('No se encontró un tramo MOP cercano. Puedes acercar el mapa o consultar la geometría OSM.',latlng);return;}
       const a=found.f.attributes||{},official=Number(a.KM_TRAMO),hasOfficial=Number.isFinite(official)&&official>0;
       const geometryLength=mopGeometryLength(found.f.geometry);
       const name=a.NOMBRE_CAMINO||a.ROL_LABEL||a.ROL||'Camino sin nombre informado';
@@ -340,9 +283,9 @@
         'Fuente: Dirección de Vialidad, Ministerio de Obras Públicas de Chile. Cobertura y atributos sujetos al servicio oficial.');
       status('Ficha MOP consultada. Revisa por separado la longitud oficial y la longitud geométrica.');
     } catch(e) {
-      console.error('[GEOTRACIA v1.7 MOP]',e);closeCard('geo-mop-card');
+      console.error('[GEOTRACIA v1.8 MOP]',e);closeCard('geo-mop-card');
       status('La consulta MOP no respondió. Puedes utilizar la medición aproximada.',true);
-      offerApprox('La consulta oficial MOP no respondió. Puedes trazar el camino manualmente.');
+      showRetryCard('La consulta oficial MOP no respondió a tiempo. Puedes volver a intentarlo.',latlng,'mop');
     } finally {mopBusy=false;}
   }
   function addControl(map,kind,label,title,callback) {
@@ -362,16 +305,16 @@
     addControl(map,'osm','OSM','Seleccionar y medir geometría cartográfica OSM',btn=>{
       osmActive=!osmActive;btn.classList.toggle('is-active',osmActive);btn.setAttribute('aria-pressed',String(osmActive));
       map.getContainer().classList.toggle('geo-osm-select-mode',osmActive);
-      if(osmActive){if(approxMode)clearApprox();mopActive=false;if(mopButton){mopButton.classList.remove('is-active');mopButton.setAttribute('aria-pressed','false');}map.getContainer().classList.remove('geo-mop-select-mode');closeCard('geo-mop-card');status('OSM activo: toca una vía; el sistema seleccionará la geometría más cercana en pantalla.');}
+      if(osmActive){mopActive=false;if(mopButton){mopButton.classList.remove('is-active');mopButton.setAttribute('aria-pressed','false');}map.getContainer().classList.remove('geo-mop-select-mode');closeCard('geo-mop-card');status('OSM activo: toca una vía; el sistema seleccionará la geometría más cercana en pantalla.');}
       else status('Selección OSM desactivada.');
     });
     addControl(map,'mop','km','Consultar tramo y longitud oficial MOP',btn=>{
       mopActive=!mopActive;btn.classList.toggle('is-active',mopActive);btn.setAttribute('aria-pressed',String(mopActive));
       map.getContainer().classList.toggle('geo-mop-select-mode',mopActive);
-      if(mopActive){if(approxMode)clearApprox();osmActive=false;if(osmButton){osmButton.classList.remove('is-active');osmButton.setAttribute('aria-pressed','false');}map.getContainer().classList.remove('geo-osm-select-mode');closeCard('geo-osm-card');status('MOP activo: toca cerca de una vía para consultar el tramo oficial más cercano.');}
+      if(mopActive){osmActive=false;if(osmButton){osmButton.classList.remove('is-active');osmButton.setAttribute('aria-pressed','false');}map.getContainer().classList.remove('geo-osm-select-mode');closeCard('geo-osm-card');status('MOP activo: toca cerca de una vía para consultar el tramo oficial más cercano.');}
       else status('Consulta MOP desactivada.');
     });
-    map.on('click',e=>{if(approxMode){approxPoints.push(e.latlng);redrawApprox();return;}if(osmActive)selectOsm(e.latlng);else if(mopActive)selectMop(e.latlng);});
+    map.on('click',e=>{if(osmActive)selectOsm(e.latlng);else if(mopActive)selectMop(e.latlng);});
   }
   function hook() {
     if(!window.L?.map){setTimeout(hook,150);return;}
