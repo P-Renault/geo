@@ -34,3 +34,24 @@
 /* v1.4: evita duplicar el botón km del módulo anterior; se conserva el selector de capas MOP. */
 .geo-road-query-control{display:none!important}
 .geo-data-card{z-index:2147483000!important}
+
+/* v1.5: medición aproximada mediante trazado manual sobre el mapa */
+.geo-approx-launch{display:block;width:100%;margin:12px 0 0;padding:12px 14px;border:0;border-radius:11px;background:#0d9488;color:#fff;font:800 13px "DM Sans",sans-serif;text-align:center;cursor:pointer}
+.geo-approx-launch:active{transform:scale(.99)}
+.geo-approx-bar{position:fixed;z-index:2147483001;left:50%;top:calc(10px + env(safe-area-inset-top));transform:translateX(-50%);width:min(620px,calc(100vw - 20px));display:flex;align-items:center;gap:8px;padding:10px;background:#fff;border:1px solid #dbe4eb;border-radius:14px;box-shadow:0 8px 28px rgba(4,19,35,.25);font:12px/1.35 "DM Sans",sans-serif;color:#173653}
+.geo-approx-bar .geo-approx-message{flex:1;min-width:0}
+.geo-approx-bar strong{display:block;font-size:13px}
+.geo-approx-bar button{flex:0 0 auto;min-height:36px;padding:7px 10px;border:1px solid #dbe4eb;border-radius:9px;background:#f5f8fa;color:#173653;font-weight:700}
+.geo-approx-bar button.primary{background:#0d9488;color:white;border-color:#0d9488}
+.geo-approx-result{position:fixed;z-index:2147483002;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(430px,calc(100vw - 20px));padding:16px;background:#fff;border-radius:15px;box-shadow:0 14px 50px rgba(4,19,35,.3);font:13px/1.45 "DM Sans",sans-serif;color:#173653}
+.geo-approx-result h3{margin:0 0 6px;font-size:17px}
+.geo-approx-result .geo-approx-distance{font-size:27px;font-weight:800;color:#0d9488;margin:8px 0}
+.geo-approx-result p{margin:6px 0;color:#637789}
+.geo-approx-result button{margin-top:8px;padding:10px 12px;border:0;border-radius:9px;background:#173653;color:white;font-weight:700}
+.geo-approx-point{width:12px!important;height:12px!important;border:3px solid #fff!important;border-radius:50%!important;background:#0d9488!important;box-shadow:0 1px 6px #173653!important}
+.geo-approx-line{filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
+@media(max-width:600px){.geo-approx-bar{gap:5px;padding:8px}.geo-approx-bar button{padding:7px 8px;font-size:11px}.geo-approx-result{bottom:calc(10px + env(safe-area-inset-bottom))}}
+
+/* v1.6: feedback visual al seleccionar la vía */
+.geo-data-loading .geo-data-card-head h2{color:#0d9488}
+.geo-data-card{pointer-events:auto}
