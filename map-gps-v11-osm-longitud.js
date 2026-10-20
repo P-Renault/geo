@@ -1,9 +1,9 @@
-/* GEOTRACIA v1.6 — selección directa de geometría vial y medición automática.
+/* GEOTRACIA v1.7 — selección directa y continuidad geométrica vial automática.
    OSM: geometría cartográfica. MOP: datos oficiales del tramo. No guarda ni modifica datos. */
 (() => {
   'use strict';
-  if (window.__geoMapV16Installed) return;
-  window.__geoMapV16Installed = true;
+  if (window.__geoMapV17Installed) return;
+  window.__geoMapV17Installed = true;
 
   const OVERPASS = [
     'https://overpass-api.de/api/interpreter',
@@ -77,13 +77,15 @@
   async function fetchWays(lat,lon) {
     const key=cacheKey(lat,lon), old=cache.get(key);
     if(old&&Date.now()-old.time<CACHE_TTL)return old.ways;
-    // Menos carga que una consulta de 180 m: limita el área inicial, pero admite caminos rurales.
-    const q='[out:json][timeout:18];way(around:65,'+lat+','+lon+')[highway];out tags geom;';
+    // Trae vías que intersectan un radio local. "out body geom" conserva los IDs de nodos
+    // además de la geometría, necesarios para reconocer continuidad entre entidades OSM.
+    const q='[out:json][timeout:8];way(around:180,'+lat+','+lon+')[highway];out body geom;';
     let last;
     for(const endpoint of OVERPASS) {
       try {
-        const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
-          body:'data='+encodeURIComponent(q),signal:AbortSignal.timeout(8500)});
+        const res=await fetch(endpoint+'?data='+encodeURIComponent(q),{
+          method:'GET',headers:{'Accept':'application/json'},signal:AbortSignal.timeout(5500),cache:'no-store'
+        });
         if(!res.ok)throw new Error('HTTP '+res.status);
         const data=await res.json(); if(data.remark)throw new Error(data.remark);
         const ways=(data.elements||[]).filter(w=>w.type==='way'&&w.geometry?.length>1);
@@ -91,6 +93,58 @@
       } catch(e){last=e;}
     }
     throw last||new Error('Overpass no disponible');
+  }
+  function endpointNodeIds(way) {
+    const ids=Array.isArray(way.nodes)?way.nodes:[];
+    return ids.length>=2?[ids[0],ids[ids.length-1]]:[];
+  }
+  function roadIdentity(way) {
+    const t=way.tags||{};
+    // Si existe nombre o referencia, son la mejor señal de continuidad.
+    if(t.name)return 'name:'+t.name.toLocaleLowerCase('es');
+    if(t.ref)return 'ref:'+t.ref.toLocaleLowerCase('es');
+    // Para vías sin nombre, solo se permite unir segmentos de la misma clase,
+    // nunca a través de un nodo con muchas ramificaciones.
+    return 'unnamed:'+String(t.highway||'')+'|'+String(t.surface||'');
+  }
+  function joinConnectedRoadWays(seed,ways) {
+    const seedIds=endpointNodeIds(seed);
+    if(seedIds.length!==2||!seed.nodes?.length)return [seed];
+    const identity=roadIdentity(seed);
+    const pool=ways.filter(w=>w.id!==seed.id&&w.nodes?.length>=2&&roadIdentity(w)===identity);
+    const chosen=[seed], used=new Set([seed.id]);
+    let frontier=new Set(seedIds);
+    // Expandir hasta 12 segmentos conectados. Para caminos nombrados, permite cruces
+    // solo si coinciden nombre/referencia; para vías sin nombre limita ramificaciones.
+    for(let depth=0;depth<12;depth++) {
+      const next=new Set(); let added=false;
+      for(const id of frontier) {
+        const touching=pool.filter(w=>!used.has(w.id)&&endpointNodeIds(w).includes(id));
+        // Evitar sumar ramales sin nombre en cruces ambiguos.
+        const safe=identity.startsWith('unnamed:')&&touching.length>1?[]:touching;
+        for(const w of safe) {
+          used.add(w.id);chosen.push(w);added=true;
+          endpointNodeIds(w).forEach(n=>next.add(n));
+        }
+      }
+      if(!added)break;
+      frontier=next;
+    }
+    return chosen;
+  }
+  function mergedRoadGeometry(ways) {
+    // La ficha puede mostrar la geometría de la entidad seleccionada y la suma
+    // de segmentos conectados. No se dibuja una línea recta entre extremos.
+    const coords=[],seen=new Set();
+    for(const way of ways) {
+      for(let i=0;i<(way.geometry||[]).length;i++) {
+        const p=way.geometry[i],id=way.nodes?.[i];
+        const key=id!=null?'n:'+id:'c:'+p.lat.toFixed(7)+','+p.lon.toFixed(7);
+        if(seen.has(key))continue;
+        seen.add(key);coords.push({lat:p.lat,lon:p.lon,nodeId:id});
+      }
+    }
+    return coords;
   }
   function closeCard(id) {
     const card=document.getElementById(id); if(card)card.remove();
@@ -181,15 +235,19 @@
     if(osmBusy){status('La consulta anterior sigue en curso. Espera un momento.');return;} osmBusy=true; loadingCard('geo-osm-card','Buscando camino…','Identificando la vía más cercana y calculando automáticamente la longitud de su geometría.');
     try {
       const ways=await fetchWays(latlng.lat,latlng.lng);
-      if(!ways.length){closeCard('geo-osm-card');status('No se obtuvieron datos suficientes de OSM. Como alternativa secundaria, puedes medir manualmente.',true);offerApprox('No se obtuvieron datos suficientes de OSM. Puedes trazar el camino manualmente y obtener una longitud aproximada.');return;}
+      if(!ways.length){closeCard('geo-osm-card');status('OSM no devolvió geometrías. Acerca el mapa y vuelve a tocar la vía; si el servicio sigue sin responder, la medición automática no está disponible temporalmente.',true);offerApprox('No se obtuvieron datos suficientes de OSM. La medición manual es solo una alternativa temporal y no sustituye la selección automática de la geometría vial.');return;}
       const p=[latlng.lat,latlng.lng];
       // La distancia visual en pantalla decide primero: es más intuitiva en móvil que un radio fijo en metros.
       const candidates=ways.map(way=>({way,pixels:pixelDistance(mapRef,latlng,way.geometry),meters:nearestMeters(p,way.geometry)}));
       candidates.sort((a,b)=>a.pixels-b.pixels||a.meters-b.meters);
       const best=candidates[0];
       if(best.meters>65){closeCard('geo-osm-card');status('No se encontró una geometría próxima en 65 m. Acerca el mapa y toca directamente sobre la vía.',true);return;}
-      const way=best.way,t=way.tags||{},length=lengthMeters(way.geometry);
-      osmHighlight=L.polyline(way.geometry.map(n=>[n.lat,n.lon]),{color:'#0d9488',weight:7,opacity:.96,lineCap:'round'}).addTo(mapRef);
+      const way=best.way,t=way.tags||{};
+      const connected=joinConnectedRoadWays(way,ways);
+      const geometry=mergedRoadGeometry(connected);
+      const length=lengthMeters(geometry.map(p=>({lat:p.lat,lon:p.lon})));
+      const drawGeometry=geometry.length>1?geometry:way.geometry;
+      osmHighlight=L.polyline(drawGeometry.map(n=>[n.lat,n.lon]),{color:'#0d9488',weight:7,opacity:.96,lineCap:'round',lineJoin:'round'}).addTo(mapRef);
       const rows=[
         ['Nombre del camino',t.name||t.ref||'Sin nombre en OpenStreetMap'],
         ['Clasificación vial',highwayNames[t.highway]||('Otro tipo vial de OSM: '+(t.highway||'No informado'))],
@@ -197,18 +255,21 @@
         ['Superficie',t.surface?(surfaces[t.surface]||('Otra superficie: '+t.surface)):'No informada en OSM'],
         ['Acceso',t.access?(accesses[t.access]||t.access):'No informado en OSM'],
         ['Referencia',t.ref||'No informada'],
-        ['Longitud de esta geometría',fmtM(length)],
+        ['Longitud geométrica calculada',fmtM(length)],
+        ['Entidades OSM conectadas incluidas',String(connected.length)],
         ['Distancia desde el punto consultado',fmtM(best.meters)],
-        ['Identificador OSM','way/'+way.id]
+        ['Identificador OSM seleccionado','way/'+way.id]
       ];
       makeCard('geo-osm-card','REFERENCIA CARTOGRÁFICA · OPENSTREETMAP',t.name||t.ref||'Camino sin nombre',rows,
-        'La longitud se calcula automáticamente sumando los segmentos de la geometría OSM seleccionada. Si el camino está dividido en varias entidades, esta cifra corresponde a la entidad seleccionada y puede no representar el camino completo. No es distancia de conducción ni longitud oficial MOP.',
+        connected.length>1
+          ? 'La longitud suma la geometría de la entidad seleccionada y segmentos conectados que comparten nombre/referencia o clasificación compatible dentro del área consultada. Puede no cubrir el camino completo si hay más segmentos fuera del área o si OSM no los identifica de forma consistente. No es distancia de conducción ni longitud oficial MOP.'
+          : 'La longitud se calcula sumando los segmentos de la geometría de la entidad seleccionada. No se encontraron segmentos vecinos que pudieran unirse con suficiente confianza dentro del área consultada; la cifra puede no representar el camino completo. No es distancia de conducción ni longitud oficial MOP.',
         '© OpenStreetMap contributors · Datos sujetos a ODbL.');
-      status('Camino seleccionado automáticamente. Longitud de la geometría disponible: '+fmtM(length)+'.');
+      status('Camino seleccionado y medido automáticamente: '+fmtM(length)+' ('+connected.length+' entidad(es) OSM conectada(s)).');
     } catch(e) {
-      console.error('[GEOTRACIA v1.6 OSM]',e); closeCard('geo-osm-card');
-      status('La consulta OSM no respondió a tiempo. Puedes usar la medición manual como alternativa.',true);
-      offerApprox('La consulta cartográfica está demorada. Puedes trazar el camino manualmente.');
+      console.error('[GEOTRACIA v1.7 OSM]',e); closeCard('geo-osm-card');
+      status('El servicio cartográfico está demorando. Puedes reintentar la selección; no se calculó una longitud automática.',true);
+      offerApprox('El servicio cartográfico no respondió a tiempo. La medición manual es una alternativa temporal, no el método automático solicitado.');
     } finally {osmBusy=false;}
   }
   const mopTranslations = {
@@ -279,7 +340,7 @@
         'Fuente: Dirección de Vialidad, Ministerio de Obras Públicas de Chile. Cobertura y atributos sujetos al servicio oficial.');
       status('Ficha MOP consultada. Revisa por separado la longitud oficial y la longitud geométrica.');
     } catch(e) {
-      console.error('[GEOTRACIA v1.6 MOP]',e);closeCard('geo-mop-card');
+      console.error('[GEOTRACIA v1.7 MOP]',e);closeCard('geo-mop-card');
       status('La consulta MOP no respondió. Puedes utilizar la medición aproximada.',true);
       offerApprox('La consulta oficial MOP no respondió. Puedes trazar el camino manualmente.');
     } finally {mopBusy=false;}
