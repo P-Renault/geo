@@ -30,3 +30,7 @@
  .geo-data-card dl>div{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:8px;padding:9px 0;font-size:13px}
  .geo-data-note{font-size:11px}
 }
+
+/* v1.4: evita duplicar el botón km del módulo anterior; se conserva el selector de capas MOP. */
+.geo-road-query-control{display:none!important}
+.geo-data-card{z-index:2147483000!important}

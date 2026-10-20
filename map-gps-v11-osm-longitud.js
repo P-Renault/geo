@@ -10,7 +10,7 @@
     'https://overpass.kumi.systems/api/interpreter'
   ];
   const MOP_ROOT = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer/2/query';
-  const CACHE_TTL = 5 * 60 * 1000;
+  const CACHE_TTL = 10 * 60 * 1000;
   const cache = new Map();
   let mapRef = null, osmActive = false, mopActive = false, osmHighlight = null;
   let osmBusy = false, mopBusy = false, activeController = null;
@@ -71,17 +71,17 @@
       min=Math.min(min,Math.hypot(p.x-(a.x+t*vx),p.y-(a.y+t*vy)));
     } return min;
   }
-  function cacheKey(lat,lon) { return (Math.round(lat*1000)/1000).toFixed(3)+','+(Math.round(lon*1000)/1000).toFixed(3); }
+  function cacheKey(lat,lon) { return (Math.round(lat*700)/700).toFixed(3)+','+(Math.round(lon*700)/700).toFixed(3); }
   async function fetchWays(lat,lon) {
     const key=cacheKey(lat,lon), old=cache.get(key);
     if(old&&Date.now()-old.time<CACHE_TTL)return old.ways;
     // Menos carga que una consulta de 180 m: limita el área inicial, pero admite caminos rurales.
-    const q='[out:json][timeout:18];way(around:95,'+lat+','+lon+')[highway];out tags geom;';
+    const q='[out:json][timeout:18];way(around:65,'+lat+','+lon+')[highway];out tags geom;';
     let last;
     for(const endpoint of OVERPASS) {
       try {
         const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
-          body:'data='+encodeURIComponent(q),signal:AbortSignal.timeout(20000)});
+          body:'data='+encodeURIComponent(q),signal:AbortSignal.timeout(8500)});
         if(!res.ok)throw new Error('HTTP '+res.status);
         const data=await res.json(); if(data.remark)throw new Error(data.remark);
         const ways=(data.elements||[]).filter(w=>w.type==='way'&&w.geometry?.length>1);
@@ -110,7 +110,7 @@
     document.body.appendChild(card); card.querySelector('.geo-data-close').addEventListener('click',()=>closeCard(id));
   }
   async function selectOsm(latlng) {
-    if(osmBusy)return; osmBusy=true; loadingCard('geo-osm-card','Buscando camino…','Consultando geometrías cercanas. La primera consulta puede tardar unos segundos; las zonas consultadas se guardan temporalmente en caché.');
+    if(osmBusy)return; osmBusy=true; loadingCard('geo-osm-card','Buscando camino…','Consultando geometrías cercanas. Consulta rápida de un radio de 65 m; las zonas consultadas se guardan temporalmente en caché.');
     try {
       const ways=await fetchWays(latlng.lat,latlng.lng);
       if(!ways.length){closeCard('geo-osm-card');status('OSM no devolvió geometrías viales cercanas. Esto no demuestra que el camino no exista ni que esté inventariado por el MOP.',true);return;}
@@ -119,7 +119,7 @@
       const candidates=ways.map(way=>({way,pixels:pixelDistance(mapRef,latlng,way.geometry),meters:nearestMeters(p,way.geometry)}));
       candidates.sort((a,b)=>a.pixels-b.pixels||a.meters-b.meters);
       const best=candidates[0];
-      if(best.meters>95){closeCard('geo-osm-card');status('No se encontró una geometría próxima. Acerca el mapa y toca directamente sobre la vía.',true);return;}
+      if(best.meters>65){closeCard('geo-osm-card');status('No se encontró una geometría próxima en 65 m. Acerca el mapa y toca directamente sobre la vía.',true);return;}
       const way=best.way,t=way.tags||{},length=lengthMeters(way.geometry);
       osmHighlight=L.polyline(way.geometry.map(n=>[n.lat,n.lon]),{color:'#0d9488',weight:7,opacity:.96,lineCap:'round'}).addTo(mapRef);
       const rows=[
