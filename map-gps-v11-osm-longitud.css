@@ -1,41 +1,32 @@
-/* GEOTRACIA v1.2 — ficha cartográfica flotante y controles accesibles */
-.geo-osm-measure-control{margin-top:8px!important;border:0!important;box-shadow:0 4px 16px rgba(7,28,50,.2)!important}
-.geo-osm-measure-button{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:0;border-radius:10px;background:#fff;color:#173653;font:800 12px/1 "DM Sans",sans-serif;cursor:pointer}
-.geo-osm-measure-button.is-active{background:#0d9488;color:#fff;outline:3px solid rgba(13,148,136,.22)}
-.geo-osm-measure-mode{cursor:crosshair}
-.geo-osm-card{position:fixed;z-index:20000;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100vw - 28px));max-height:min(76dvh,720px);display:flex;flex-direction:column;overflow:hidden;background:#fff;color:#173653;border:1px solid rgba(23,54,83,.12);border-radius:18px;box-shadow:0 24px 80px rgba(4,19,35,.38);font:14px/1.45 "DM Sans",sans-serif}
-.geo-osm-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px 18px 14px;border-bottom:1px solid #e7edf2;background:#fff}
-.geo-osm-card-head h2{margin:5px 0 0;font:800 20px/1.2 "Manrope","DM Sans",sans-serif;overflow-wrap:anywhere}
-.geo-osm-kicker{display:block;color:#0d9488;font-size:10px;font-weight:800;letter-spacing:.065em}
-.geo-osm-close{flex:0 0 38px;width:38px;height:38px;border:1px solid #dbe4eb;border-radius:11px;background:#f7fafc;color:#173653;font:400 27px/1 sans-serif;cursor:pointer}
-.geo-osm-close:hover{background:#e8f4f3;color:#087f75}
-.geo-osm-card-body{overflow:auto;overscroll-behavior:contain;padding:6px 18px 18px}
-.geo-osm-card dl{margin:0}
-.geo-osm-card dl>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:12px;padding:10px 0;border-bottom:1px solid #e7edf2}
-.geo-osm-card dt{color:#64788a;overflow-wrap:anywhere}
-.geo-osm-card dd{margin:0;text-align:right;font-weight:700;overflow-wrap:anywhere}
-.geo-osm-note{margin:14px 0 10px;color:#6d7d8c;font-size:12px;line-height:1.5}
-.geo-osm-attribution{margin:0;color:#667788;font-size:11px;font-weight:700}
-.geo-road-query-control,.geo-official-layer-control,.leaflet-top,.leaflet-bottom{z-index:900!important}
-.leaflet-popup-pane{z-index:1500!important}
-.leaflet-popup{z-index:1501!important}
-.leaflet-popup-content-wrapper{border-radius:14px!important;box-shadow:0 16px 50px rgba(4,19,35,.28)!important}
-.geo-road-popup{font:13px/1.45 "DM Sans",sans-serif;color:#173653;min-width:230px}
-.geo-road-popup-kicker{color:#0d9488;font-size:10px;font-weight:800;letter-spacing:.06em}
-.geo-road-popup h3{margin:5px 0 10px;font-size:16px}
-.geo-road-popup dl{margin:0}
-.geo-road-popup dl>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:7px 0;border-bottom:1px solid #e6edf2}
-.geo-road-popup dt{color:#65788a}
-.geo-road-popup dd{margin:0;text-align:right;font-weight:700;overflow-wrap:anywhere}
-.geo-road-popup p{margin:10px 0 0;font-size:11px;color:#748394}
-.geo-road-popup .geo-road-source{font-size:10px}
+/* GEOTRACIA v1.3 — fichas flotantes, selección y controles */
+.geo-v13-control{margin-top:8px!important;border:0!important;box-shadow:0 4px 16px rgba(7,28,50,.2)!important}
+.geo-v13-button{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:0;border-radius:10px;background:#fff;color:#173653;font:800 12px/1 "DM Sans",sans-serif;cursor:pointer}
+.geo-v13-button.is-active{background:#0d9488;color:#fff;outline:3px solid rgba(13,148,136,.22)}
+.geo-osm-select-mode,.geo-mop-select-mode{cursor:crosshair!important}
+.geo-data-card{position:fixed!important;z-index:2147483000!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;width:min(560px,calc(100vw - 28px))!important;max-height:min(78dvh,740px)!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;background:#fff!important;color:#173653!important;border:1px solid rgba(23,54,83,.14)!important;border-radius:18px!important;box-shadow:0 24px 80px rgba(4,19,35,.42)!important;font:14px/1.45 "DM Sans",sans-serif!important}
+.geo-data-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:17px 18px 14px;border-bottom:1px solid #e7edf2;background:#fff;flex:0 0 auto}
+.geo-data-card-head h2{margin:5px 0 0;font:800 20px/1.2 "Manrope","DM Sans",sans-serif;overflow-wrap:anywhere}
+.geo-data-kicker{display:block;color:#0d9488;font-size:10px;font-weight:800;letter-spacing:.06em}
+.geo-data-close{flex:0 0 40px;width:40px;height:40px;border:1px solid #dbe4eb;border-radius:11px;background:#f7fafc;color:#173653;font:400 27px/1 sans-serif;cursor:pointer}
+.geo-data-close:active{background:#dff4f1}
+.geo-data-card-body{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:5px 18px 18px;min-height:0}
+.geo-data-card dl{margin:0}
+.geo-data-card dl>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:12px;padding:9px 0;border-bottom:1px solid #e7edf2}
+.geo-data-card dt{color:#64788a;overflow-wrap:anywhere}
+.geo-data-card dd{margin:0;text-align:right;font-weight:700;overflow-wrap:anywhere;word-break:break-word}
+.geo-data-note{margin:14px 0 10px;color:#687b8c;font-size:12px;line-height:1.5}
+.geo-data-source{margin:0;color:#667788;font-size:11px;font-weight:700;line-height:1.45}
+.geo-data-loading .geo-data-card-body{min-height:100px;display:flex;align-items:center;gap:14px}
+.geo-data-spinner{width:25px;height:25px;flex:0 0 25px;border:3px solid #d9e9e8;border-top-color:#0d9488;border-radius:50%;animation:geoSpin .8s linear infinite}
+@keyframes geoSpin{to{transform:rotate(360deg)}}
+.geo-osm-select-mode .leaflet-container,.geo-mop-select-mode .leaflet-container{cursor:crosshair}
+.geo-v13-control,.leaflet-top,.leaflet-bottom{z-index:900!important}
 @media(max-width:600px){
-  .geo-osm-card{top:auto;bottom:calc(12px + env(safe-area-inset-bottom));transform:translateX(-50%);max-height:min(68dvh,620px);width:calc(100vw - 20px);border-radius:16px}
-  .geo-osm-card-head{padding:14px 14px 12px}
-  .geo-osm-card-head h2{font-size:18px}
-  .geo-osm-card-body{padding:4px 14px 14px}
-  .geo-osm-card dl>div{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:8px;padding:9px 0}
-  .geo-osm-card dd{text-align:right}
-  .geo-road-popup{min-width:205px}
-  .geo-road-popup dl>div{gap:6px}
+ .geo-data-card{top:auto!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;transform:translateX(-50%)!important;width:calc(100vw - 18px)!important;max-height:min(66dvh,620px)!important;border-radius:16px!important}
+ .geo-data-card-head{padding:13px 13px 11px;gap:9px}
+ .geo-data-card-head h2{font-size:18px}
+ .geo-data-close{width:38px;height:38px;flex-basis:38px}
+ .geo-data-card-body{padding:4px 13px 14px}
+ .geo-data-card dl>div{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:8px;padding:9px 0;font-size:13px}
+ .geo-data-note{font-size:11px}
 }

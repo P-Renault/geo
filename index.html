@@ -14,8 +14,8 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="map-gps.css">
 <link rel="stylesheet" href="map-gps-v06.css">
-<link rel="stylesheet" href="map-gps-v10-longitud-vial.css">
-<link rel="stylesheet" href="map-gps-v11-osm-longitud.css?v=1.2">
+<link rel="stylesheet" href="map-gps-v10-longitud-vial.css?v=1.3">
+<link rel="stylesheet" href="map-gps-v11-osm-longitud.css?v=1.3">
 </head>
 <body>
 <section id="authGate" class="auth-gate" aria-live="polite">
@@ -26,11 +26,7 @@
         <span class="auth-story-kicker">INTELIGENCIA TERRITORIAL EN ACCIÓN</span>
         <h2>El territorio,<br><span>mejor conectado.</span></h2>
         <p>Centraliza caminos, inspecciones, activos e incidencias en un solo espacio de trabajo.</p>
-        <div class="auth-feature-grid">
-          <div><span>⌖</span><b>Información geográfica</b></div>
-          <div><span>◈</span><b>Control operacional</b></div>
-          <div><span>✓</span><b>Trazabilidad de gestión</b></div>
-        </div>
+        <div class="auth-feature-grid"><div><span>⌖</span><b>Información geográfica</b></div><div><span>◈</span><b>Control operacional</b></div><div><span>✓</span><b>Trazabilidad de gestión</b></div></div>
       </div>
       <div class="auth-story-footer"><span class="auth-status-dot"></span> Plataforma de gestión territorial <span>·</span> GEOTRACIA</div>
     </aside>
@@ -48,8 +44,7 @@
           <div id="confirmField" hidden><label for="authConfirm">Confirmar contraseña</label><input id="authConfirm" type="password" autocomplete="new-password" minlength="8" placeholder="Repite la contraseña"></div>
           <div class="auth-utility-row"><span class="auth-secure-note"><span>◆</span> Conexión segura</span><button class="auth-link" id="forgotPassword" type="button">¿Olvidaste tu contraseña?</button></div>
           <button class="auth-submit" type="submit"><span id="submitLabel">Iniciar sesión</span><span class="submit-arrow" aria-hidden="true">→</span></button>
-          <div id="authError" class="auth-error" role="alert" aria-live="polite"></div>
-          <p class="auth-terms">Al continuar, accedes a tu espacio de trabajo de GEOTRACIA.</p>
+          <div id="authError" class="auth-error" role="alert" aria-live="polite"></div><p class="auth-terms">Al continuar, accedes a tu espacio de trabajo de GEOTRACIA.</p>
         </form>
         <div class="auth-foot"><span class="auth-foot-shield">✓</span> Acceso protegido <span>·</span> GEOTRACIA</div>
       </div>
@@ -60,15 +55,10 @@
 <aside class="sidebar" id="sidebar"><a class="brand" data-go="dashboard"><span class="logo">G</span><span><b>GEOTRACIA</b><small>INTELIGENCIA TERRITORIAL</small></span></a><div class="workspace"><span class="workspace-icon">R7</span><span><small>PROYECTO ACTIVO</small><b>Ruta R-720 · Conservación</b></span></div><small class="nav-label">ESPACIO DE TRABAJO</small><nav id="nav"></nav><div class="sidebar-bottom"><span class="online"></span><span><b>Sistema operativo</b><small>Entorno de demostración</small></span><div class="user"><span class="avatar">JP</span><span><b>Juan Pérez</b><small>Administrador</small></span></div></div></aside>
 <div class="main"><header class="topbar"><button class="icon mobile-menu" id="menu">☰</button><div class="mobile-brand">◈ GEOTRACIA</div><label class="search">⌕ <input id="globalSearch" placeholder="Buscar módulos, registros, caminos o usuarios…"><kbd>Ctrl K</kbd></label><div class="top-actions"><button class="project" id="project">PROYECTO <b>Ruta R-720 - Conservación 2024⌄</b></button><button class="icon" id="notifications" title="Notificaciones">♧</button><button class="icon" id="help" title="Ayuda">?</button><span class="avatar" id="userAvatar">GT</span><button class="btn" id="logoutBtn" type="button">Salir</button></div></header><main id="content"></main><footer>GEOTRACIA · Plataforma de inteligencia territorial <span>Framework visual v0.1 · Datos demostrativos</span></footer></div><div id="overlay" class="overlay"></div><div id="toast" class="toast"></div><dialog id="dialog"><div class="dialog-head"><div><small id="dialogEyebrow">GEOTRACIA</small><h2 id="dialogTitle">Acción</h2></div><button class="icon" data-close>×</button></div><div id="dialogBody" class="dialog-body"></div><div id="dialogFoot" class="dialog-foot"></div></dialog>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js"></script>
-<script src="auth.js"></script>
-<script src="app.js"></script>
-<script src="roads.js"></script>
-<script src="sidebar-toggle.js"></script>
+<script src="supabase-config.js"></script><script src="auth.js"></script><script src="app.js"></script><script src="roads.js"></script><script src="sidebar-toggle.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="map-gps.js"></script>
-<script src="map-gps-v06.js"></script>
-<script src="map-gps-v10-longitud-vial.js"></script>
-<script src="map-gps-v11-osm-longitud.js?v=1.2"></script>
+<script src="map-gps.js"></script><script src="map-gps-v06.js"></script>
+<script src="map-gps-v10-longitud-vial.js?v=1.3"></script>
+<script src="map-gps-v11-osm-longitud.js?v=1.3"></script>
 </body>
 </html>
