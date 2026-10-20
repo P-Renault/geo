@@ -65,3 +65,7 @@
 /* GEOTRACIA v2.0: una sola herramienta de consulta km; se conserva el selector de capas MOP. */
 .geo-road-query-control{display:none!important}
 .geo-data-card{z-index:2147483000!important}
+
+/* GEOTRACIA v2.1: tarjetas móviles con desplazamiento interno */
+.geo-data-card{max-height:min(82dvh,760px);overflow:hidden;display:flex;flex-direction:column}
+.geo-data-card .geo-data-card-body{overflow-y:auto;overscroll-behavior:contain}

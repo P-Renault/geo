@@ -1,9 +1,9 @@
-/* GEOTRACIA v2.0 — selección automática, consultas paralelas y respaldo MOP.
+/* GEOTRACIA v2.1 — reconstrucción topológica de caminos y respaldo MOP.
    OSM: geometría cartográfica. MOP: datos oficiales del tramo. No guarda ni modifica datos. */
 (() => {
   'use strict';
-  if (window.__geoMapV20Installed) return;
-  window.__geoMapV20Installed = true;
+  if (window.__geoMapV21Installed) return;
+  window.__geoMapV21Installed = true;
 
   const OVERPASS = [
     'https://overpass-api.de/api/interpreter',
@@ -115,30 +115,82 @@
     // nunca a través de un nodo con muchas ramificaciones.
     return 'unnamed:'+String(t.highway||'')+'|'+String(t.surface||'');
   }
-  function joinConnectedRoadWays(seed,ways) {
-    const seedIds=endpointNodeIds(seed);
-    if(seedIds.length!==2||!seed.nodes?.length)return [seed];
-    const identity=roadIdentity(seed);
-    const pool=ways.filter(w=>w.id!==seed.id&&w.nodes?.length>=2&&roadIdentity(w)===identity);
-    const chosen=[seed], used=new Set([seed.id]);
-    let frontier=new Set(seedIds);
-    // Expandir hasta 12 segmentos conectados. Para caminos nombrados, permite cruces
-    // solo si coinciden nombre/referencia; para vías sin nombre limita ramificaciones.
-    for(let depth=0;depth<12;depth++) {
-      const next=new Set(); let added=false;
-      for(const id of frontier) {
-        const touching=pool.filter(w=>!used.has(w.id)&&endpointNodeIds(w).includes(id));
-        // Evitar sumar ramales sin nombre en cruces ambiguos.
-        const safe=identity.startsWith('unnamed:')&&touching.length>1?[]:touching;
-        for(const w of safe) {
-          used.add(w.id);chosen.push(w);added=true;
-          endpointNodeIds(w).forEach(n=>next.add(n));
+  function wayEndpoints(way) {
+    const ids=endpointNodeIds(way),g=way.geometry||[];
+    if(ids.length!==2||g.length<2)return null;
+    return [{id:ids[0],point:g[0]},{id:ids[1],point:g[g.length-1]}];
+  }
+  function bearing(a,b) {
+    const p1=a.lat*Math.PI/180,p2=b.lat*Math.PI/180,dl=(b.lon-a.lon)*Math.PI/180;
+    return (Math.atan2(Math.sin(dl)*Math.cos(p2),Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl))*180/Math.PI+360)%360;
+  }
+  function turnPenalty(prev,junction,next) {
+    const incoming=bearing(prev,junction),outgoing=bearing(junction,next);
+    let delta=Math.abs(outgoing-incoming);if(delta>180)delta=360-delta;
+    // Menor cambio de rumbo = continuación más probable. No sumar todos los ramales.
+    return delta;
+  }
+  async function fetchWaysByNodes(nodeIds) {
+    const ids=[...new Set(nodeIds)].filter(id=>Number.isFinite(Number(id))).slice(0,12);
+    if(!ids.length)return [];
+    const key='nodes:'+ids.slice().sort((a,b)=>Number(a)-Number(b)).join(',');
+    const cached=cache.get(key);if(cached&&Date.now()-cached.time<CACHE_TTL)return cached.ways;
+    const union=ids.map(id=>'way(bn:'+id+')[highway];').join('');
+    const q='[out:json][timeout:3];('+union+');out body geom;';
+    const requests=OVERPASS.map(async endpoint=>{
+      const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','Accept':'application/json'},body:'data='+encodeURIComponent(q),signal:AbortSignal.timeout(3200),cache:'no-store'});
+      if(!res.ok)throw new Error('Overpass HTTP '+res.status);
+      const data=await res.json();if(data.remark)throw new Error(data.remark);
+      return (data.elements||[]).filter(w=>w.type==='way'&&w.geometry?.length>1&&w.nodes?.length>1);
+    });
+    try {const ways=await Promise.any(requests);cache.set(key,{time:Date.now(),ways});return ways;}
+    catch(e){return [];}
+  }
+  async function joinConnectedRoadWays(seed,initialWays) {
+    const seedEnds=wayEndpoints(seed);
+    if(!seedEnds||!seed.nodes?.length)return {ways:[seed],complete:false};
+    const identity=roadIdentity(seed), highway=String(seed.tags?.highway||'');
+    const all=new Map(initialWays.map(w=>[w.id,w]));all.set(seed.id,seed);
+    const chosen=new Map([[seed.id,seed]]);
+    let truncated=false,ambiguous=false;
+    // Extender ambos extremos de forma independiente; la consulta por nodo permite
+    // continuar más allá del radio inicial sin descargar una zona enorme.
+    for(const seedEnd of seedEnds) {
+      let currentNode=seedEnd.id;
+      let previousPoint=seedEnds.find(e=>String(e.id)!==String(seedEnd.id)).point;
+      const visited=new Set();
+      for(let hop=0;hop<12;hop++) {
+        const nodeKey=String(currentNode);if(visited.has(nodeKey))break;visited.add(nodeKey);
+        const touching=()=>[...all.values()].filter(w=>!chosen.has(w.id)&&roadIdentity(w)===identity&&endpointNodeIds(w).some(id=>String(id)===nodeKey));
+        let candidates=touching();
+        if(identity.startsWith('unnamed:')) {
+          candidates=candidates.filter(w=>String(w.tags?.highway||'')===highway);
+          const degree=[...all.values()].filter(w=>endpointNodeIds(w).some(id=>String(id)===nodeKey)&&String(w.tags?.highway||'')===highway).length;
+          if(degree>2){ambiguous=true;break;}
         }
+        if(!candidates.length) {
+          const connected=await fetchWaysByNodes([currentNode]);
+          for(const w of connected)if(!all.has(w.id))all.set(w.id,w);
+          candidates=touching();
+          if(identity.startsWith('unnamed:')) {
+            candidates=candidates.filter(w=>String(w.tags?.highway||'')===highway);
+            const degree=[...all.values()].filter(w=>endpointNodeIds(w).some(id=>String(id)===nodeKey)&&String(w.tags?.highway||'')===highway).length;
+            if(degree>2){ambiguous=true;break;}
+          }
+        }
+        if(!candidates.length)break;
+        const ranked=candidates.map(w=>{
+          const ends=wayEndpoints(w),atNode=ends?.find(e=>String(e.id)===nodeKey),far=ends?.find(e=>String(e.id)!==nodeKey);
+          return {way:w,atNode,far,penalty:atNode&&far?turnPenalty(previousPoint,atNode.point,far.point):Infinity};
+        }).filter(x=>x.atNode&&x.far).sort((a,b)=>a.penalty-b.penalty);
+        if(!ranked.length)break;
+        if(ranked.length>1&&Math.abs(ranked[1].penalty-ranked[0].penalty)<12){ambiguous=true;break;}
+        const next=ranked[0];chosen.set(next.way.id,next.way);
+        currentNode=next.far.id;previousPoint=next.atNode.point;
+        if(hop===11)truncated=true;
       }
-      if(!added)break;
-      frontier=next;
     }
-    return chosen;
+    return {ways:[...chosen.values()],complete:!truncated&&!ambiguous,ambiguous,truncated};
   }
   function mergedRoadGeometry(ways) {
     // La ficha puede mostrar la geometría de la entidad seleccionada y la suma
@@ -194,6 +246,7 @@
     const geomLength=mopGeometryLength(geom);
     const name=a.NOMBRE_CAMINO||a.ROL_LABEL||a.ROL||'Camino sin nombre informado';
     const official=Number(a.KM_TRAMO);
+    const relativeDiff=Number.isFinite(official)&&official>0?Math.abs(geomLength-official*1000)/(official*1000):null;
     const rows=[
       ['Nombre del camino',name],
       ['Código de camino',a.CODIGO_CAMINO||a.ROL||'No informado'],
@@ -201,6 +254,7 @@
       ['Tipo de carpeta',translateMop('Carpeta',a.CARPETA)],
       ['Longitud de la geometría MOP',fmtM(geomLength)],
       ['Longitud oficial MOP del tramo',Number.isFinite(official)&&official>0?fmtKm(official):'No informada'],
+      ['Diferencia entre ambas longitudes',relativeDiff==null?'No calculable':fmtM(Math.abs(geomLength-official*1000))+(relativeDiff>0.05?' · Diferencia superior al 5 %; revisar delimitación':' · Diferencia inferior o igual al 5 %')],
       ['Distancia desde el punto consultado',fmtM(found.distance)],
       ['Fuente de la geometría','Red vial oficial MOP']
     ];
@@ -222,7 +276,7 @@
       const best=candidates[0];
       if(best.meters>80){closeCard('geo-osm-card');status('No se encontró una geometría próxima en 80 m. Acerca el mapa y toca directamente sobre la vía.',true);return;}
       const way=best.way,t=way.tags||{};
-      const connected=joinConnectedRoadWays(way,ways);
+      const reconstruction=await joinConnectedRoadWays(way,ways); const connected=reconstruction.ways;
       // Sumar cada entidad por separado evita inventar líneas rectas entre vías
       // que no comparten geometría o que aparecen en un orden arbitrario.
       const length=connected.reduce((sum,w)=>sum+lengthMeters((w.geometry||[]).map(p=>({lat:p.lat,lon:p.lon}))),0);
@@ -240,17 +294,22 @@
         ['Referencia',t.ref||'No informada'],
         ['Longitud geométrica calculada',fmtM(length)],
         ['Entidades OSM conectadas incluidas',String(connected.length)],
+        ['Estado de continuidad',reconstruction.ambiguous?'Intersección ambigua: longitud posiblemente parcial':reconstruction.truncated?'Límite de segmentos alcanzado: longitud posiblemente parcial': 'Continuidad reconstruida'],
         ['Distancia desde el punto consultado',fmtM(best.meters)],
         ['Identificador OSM seleccionado','way/'+way.id]
       ];
       makeCard('geo-osm-card','REFERENCIA CARTOGRÁFICA · OPENSTREETMAP',t.name||t.ref||'Camino sin nombre',rows,
-        connected.length>1
-          ? 'La longitud suma la geometría de la entidad seleccionada y segmentos conectados que comparten nombre/referencia o clasificación compatible dentro del área consultada. Puede no cubrir el camino completo si hay más segmentos fuera del área o si OSM no los identifica de forma consistente. No es distancia de conducción ni longitud oficial MOP.'
-          : 'La longitud se calcula sumando los segmentos de la geometría de la entidad seleccionada. No se encontraron segmentos vecinos que pudieran unirse con suficiente confianza dentro del área consultada; la cifra puede no representar el camino completo. No es distancia de conducción ni longitud oficial MOP.',
+        reconstruction.ambiguous
+          ? 'Se detectó una intersección con más de una continuación plausible. Para evitar sumar ramales incorrectos, la expansión se detuvo; la longitud mostrada puede ser parcial. No equivale a longitud oficial MOP ni a distancia de conducción.'
+          : reconstruction.truncated
+            ? 'La reconstrucción alcanzó el límite de segmentos por consulta. La longitud puede ser parcial; no equivale a longitud oficial MOP ni a distancia de conducción.'
+            : connected.length>1
+              ? 'La longitud suma la geometría seleccionada y segmentos conectados siguiendo sus nodos y la continuidad direccional. La cobertura depende de la información de OSM y puede no representar todo el camino. No equivale a longitud oficial MOP ni a distancia de conducción.'
+              : 'La longitud corresponde a la geometría de la entidad seleccionada. No se encontró una continuación conectada con suficiente confianza; puede representar solo un segmento. No equivale a longitud oficial MOP ni a distancia de conducción.',
         '© OpenStreetMap contributors · Datos sujetos a ODbL.');
       status('Camino seleccionado y medido automáticamente: '+fmtM(length)+' ('+connected.length+' entidad(es) OSM conectada(s)).');
     } catch(e) {
-      console.warn('[GEOTRACIA v2.0 OSM; respaldo MOP]',e); closeCard('geo-osm-card');
+      console.warn('[GEOTRACIA v2.1 OSM; respaldo MOP]',e); closeCard('geo-osm-card');
       status('OSM no respondió dentro del tiempo límite. Consultando respaldo MOP…');
       const recovered=await tryMopFallback(latlng);
       if(!recovered) {
@@ -327,7 +386,7 @@
         'Fuente: Dirección de Vialidad, Ministerio de Obras Públicas de Chile. Cobertura y atributos sujetos al servicio oficial.');
       status('Ficha MOP consultada. Revisa por separado la longitud oficial y la longitud geométrica.');
     } catch(e) {
-      console.error('[GEOTRACIA v2.0 MOP]',e);closeCard('geo-mop-card');
+      console.error('[GEOTRACIA v2.1 MOP]',e);closeCard('geo-mop-card');
       status('La consulta MOP no respondió. No se calculó una longitud.',true);
       showRetryCard('La consulta oficial MOP no respondió a tiempo. Puedes volver a intentarlo.',latlng,'mop');
     } finally {mopBusy=false;}
