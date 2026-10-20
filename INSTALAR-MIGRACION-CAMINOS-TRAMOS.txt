@@ -1,0 +1,22 @@
+GEOTRACIA — Migración completa de caminos y tramos (202610190003)
+
+ARCHIVOS MODIFICADOS
+- 202610190003_geotracia_roads_segments.sql: crea/actualiza tablas de caminos y tramos, geometría PostGIS EPSG:4326, índices espaciales, metadatos de fuente, longitudes diferenciadas, restricciones y políticas RLS.
+- roads.js: muestra longitud declarada, oficial y geométrica por separado; solicita los campos añadidos y guarda created_by al crear tramos.
+- roads.css: estilo para mostrar las longitudes adicionales.
+
+ANTES DE EJECUTAR
+La migración presupone que el esquema base YA existe y contiene public.organizations, public.projects, public.members, public.member_role, public.is_org_member(uuid) y public.has_org_role(uuid, public.member_role[]). Si alguna falta, el SQL aborta antes de aplicar los cambios. No incluye la migración inicial ni la de proyectos, a petición del usuario.
+
+APLICACIÓN
+1. Abre Supabase Dashboard → SQL Editor.
+2. Crea una consulta nueva y pega el contenido completo de 202610190003_geotracia_roads_segments.sql.
+3. Ejecuta una vez y revisa que termine en COMMIT sin errores.
+4. Publica los archivos roads.js y roads.css en la misma raíz que usa index.html.
+5. Inicia sesión y valida creación/edición de camino y tramo con una cuenta de inspector y otra de administrador.
+
+NOTAS IMPORTANTES
+- La migración no descarga ni carga automáticamente toda la red vial de Chile. Prepara el modelo para almacenar geometría y metadatos de caminos/tramos.
+- geom admite MultiLineString en SRID 4326. geometry_length_m se calcula en metros desde la geometría PostGIS; length_m y official_length_m siguen siendo campos separados.
+- La carga nacional de datos requiere un archivo de origen/importación validado y un proceso de carga. No se debe afirmar que el inventario nacional está precargado solo por ejecutar este SQL.
+- Las políticas RLS dependen de las funciones de membresía del esquema base. No ejecutar contra producción hasta confirmar la existencia de las funciones y probar permisos.
