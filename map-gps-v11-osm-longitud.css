@@ -58,3 +58,10 @@
 
 /* v1.8: desactiva cualquier interfaz de medición manual heredada; la longitud solo procede de geometría vial */
 #geo-approx-bar,#geo-approx-result,#geo-approx-offer{display:none!important}
+
+/* v1.9: distinguir visualmente geometría de respaldo MOP */
+.geo-data-card .geo-data-kicker{letter-spacing:.045em}
+
+/* GEOTRACIA v2.0: una sola herramienta de consulta km; se conserva el selector de capas MOP. */
+.geo-road-query-control{display:none!important}
+.geo-data-card{z-index:2147483000!important}
