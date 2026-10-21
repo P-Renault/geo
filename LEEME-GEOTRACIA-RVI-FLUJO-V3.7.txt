@@ -1,0 +1,23 @@
+GEOTRACIA RVI V3.7 — CORRECCIÓN DEL DOBLE CLIC MÓVIL
+
+Qué cambia:
+- El doble clic sobre una geometría RVI abre el menú intermedio con dos opciones: Registrar punto y Agregar camino al proyecto.
+- Añade una detección de respaldo por distancia en pantalla para móviles, porque a veces Leaflet entrega el doble clic al mapa y no a la línea vial delgada.
+- El formulario genérico de Registrar punto se difiere hasta que la capa RVI pueda interceptar el doble clic; cuando RVI está activada, evita abrir directamente ese formulario desde un doble clic no capturado.
+- Conserva los cambios del formulario de caminos: etiqueta “Agregar camino”, estado de guardado y mensaje de error más descriptivo.
+- Actualiza las referencias de caché a v3.7.
+
+Archivos incluidos:
+- index.html
+- map-gps.js
+- map-gps-v11-osm-longitud.js
+- map-gps-v11-osm-longitud.css
+- roads.js
+
+Instalación:
+1. Haz copia de seguridad de los archivos actuales.
+2. Reemplaza estos archivos en la raíz del proyecto.
+3. Publica en GitHub Pages y recarga el sitio limpiando la caché del navegador.
+4. Activa RVI y haz doble clic/doble toque directamente sobre una línea turquesa. Debe aparecer primero la tarjeta con las dos opciones.
+
+Validación realizada aquí: comprobación sintáctica de JavaScript con node --check. No se afirma que la interacción móvil ni la escritura en Supabase estén probadas en producción; hay que verificarlo en el sitio desplegado.

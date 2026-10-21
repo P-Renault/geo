@@ -367,7 +367,7 @@
       L.DomEvent.disableClickPropagation(wrap);L.DomEvent.disableScrollPropagation(wrap);
       const input=wrap.querySelector('input');
       L.DomEvent.on(input,'change',()=>{
-        nationalLayerEnabled=input.checked;
+        nationalLayerEnabled=input.checked;window.__geoRviEnabled=nationalLayerEnabled;
         if(nationalLayerEnabled){if(!map.hasLayer(nationalLayer))nationalLayer.addTo(map);refreshNationalLayer();}
         else {if(map.hasLayer(nationalLayer))map.removeLayer(nationalLayer);status('Capa de red vial importada desactivada. La capa oficial MOP se controla por separado.');}
       });
@@ -375,6 +375,27 @@
     }});
     nationalLayerControl=new Control();nationalLayerControl.addTo(map);
     map.on('moveend',()=>{if(!nationalLayerEnabled)return;clearTimeout(nationalMoveTimer);nationalMoveTimer=setTimeout(()=>refreshNationalLayer(),450);});
+    // Fallback for mobile double-taps: Leaflet may dispatch dblclick on the map
+    // rather than the thin road polyline. Resolve the closest visible RVI feature.
+    map.on('dblclick',event=>{
+      if(!nationalLayerEnabled||!nationalLayer)return;
+      if(Date.now()-(Number(window.__geoRviHandledDoubleClickAt)||0)<100)return;
+      const target=map.latLngToContainerPoint(event.latlng);let best=null,bestDistance=Infinity;
+      const distanceToSegment=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y;const den=dx*dx+dy*dy;const t=den?Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/den)):0;return Math.hypot(p.x-(a.x+t*dx),p.y-(a.y+t*dy));};
+      const walk=(points,featureLayer)=>{
+        if(!Array.isArray(points))return;
+        if(points.length&&points[0]&&typeof points[0].lat==='number'){
+          for(let i=1;i<points.length;i++){const a=map.latLngToContainerPoint(points[i-1]),b=map.latLngToContainerPoint(points[i]);const d=distanceToSegment(target,a,b);if(d<bestDistance){bestDistance=d;best=featureLayer;}}
+        }else points.forEach(part=>walk(part,featureLayer));
+      };
+      nationalLayer.eachLayer(layer=>{if(layer.getLatLngs)walk(layer.getLatLngs(),layer);});
+      if(best&&bestDistance<=28){
+        window.__geoRviHandledDoubleClickAt=Date.now();
+        const feature=best.feature||{},p=feature.properties||{};
+        const road={id:p.id,source_id:String(p.id??''),road_name:p.name||'',road_ref:p.ref||'',road_type:p.type||'',surface:p.surface||'',length_m:p.length_m,geometry:feature.geometry,source:'osm',attributes:{source:'OSM / Geofabrik Chile',source_record_id:p.id,source_name:p.name||null,source_ref:p.ref||null,source_type:p.type||null,source_surface:p.surface||null}};
+        clearTimeout(nationalClickTimer);if(event.originalEvent){L.DomEvent.stopPropagation(event.originalEvent);L.DomEvent.preventDefault(event.originalEvent);}openRviActionMenu(road,event.latlng);
+      }
+    });
   }
   function roadGeoPaths(geometry) {
     if(!geometry)return [];
