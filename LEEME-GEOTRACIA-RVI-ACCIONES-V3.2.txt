@@ -1,0 +1,12 @@
+GEOTRACIA RVI V3.2 — MENÚ DE ACCIONES Y FORMULARIOS
+
+Qué cambia:
+- Doble clic sobre una línea RVI abre una tarjeta modal fija, no un popup pequeño de Leaflet.
+- Muestra dos botones verticales: Registrar punto y Agregar camino al proyecto.
+- Registrar punto abre el formulario con coordenadas y atributos viales disponibles precargados.
+- Agregar camino al proyecto abre el formulario existente de Caminos y tramos con nombre, ID de origen, tipo, superficie, longitud y geometría cuando están disponibles.
+- Un clic sigue mostrando la ficha informativa del camino.
+
+Instalación: reemplaza en la raíz del repositorio los seis archivos incluidos y espera el despliegue de GitHub Pages. No se requiere SQL adicional para esta mejora de interfaz.
+
+Nota: los puntos siguen guardándose temporalmente en la sesión del mapa; no se implementa persistencia de puntos en Supabase en esta versión. La creación de caminos utiliza el flujo de guardado existente en roads.js. Verifica ambos flujos en el sitio publicado.

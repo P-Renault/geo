@@ -299,27 +299,36 @@
   function openRviActionMenu(road, latlng) {
     if (!mapRef || !latlng) return;
     closeCard('geo-national-card');
-    const html = '<div class="geo-rvi-action-menu"><strong>¿Qué deseas hacer?</strong>'+
-      '<button type="button" data-geo-rvi-action="point">＋ Registrar punto</button>'+
-      '<button type="button" data-geo-rvi-action="road">↗ Agregar camino al proyecto</button></div>';
-    const popup=L.popup({closeButton:true,autoClose:true,closeOnClick:false,closeOnEscapeKey:true,maxWidth:270,className:'geo-rvi-action-popup'})
-      .setLatLng(latlng).setContent(html).openOn(mapRef);
-    popup.once('add',()=>{});
+    document.getElementById('geo-rvi-action-overlay')?.remove();
+    window.__geoRviPendingAction = { road, latlng: { lat: Number(latlng.lat), lng: Number(latlng.lng) } };
+    const overlay = document.createElement('div');
+    overlay.id = 'geo-rvi-action-overlay';
+    overlay.className = 'geo-rvi-action-overlay';
+    overlay.innerHTML = '<section class="geo-rvi-action-card" role="dialog" aria-modal="true" aria-labelledby="geo-rvi-action-title">' +
+      '<header><div><small>GEOTRACIA · ACCIONES VIALES</small><h2 id="geo-rvi-action-title">¿Qué deseas registrar?</h2><p>' + esc(road?.road_name || road?.road_ref || 'Vía seleccionada') + '</p></div>' +
+      '<button type="button" class="geo-rvi-action-close" aria-label="Cerrar">×</button></header>' +
+      '<div class="geo-rvi-action-buttons"><button type="button" data-geo-rvi-action="point"><span>1</span><span><b>Registrar punto</b><small>Guardar una referencia, inspección o incidencia en esta ubicación.</small></span></button>' +
+      '<button type="button" data-geo-rvi-action="road"><span>2</span><span><b>Agregar camino al proyecto</b><small>Crear el camino con los datos viales disponibles.</small></span></button></div></section>';
+    document.body.appendChild(overlay);
+    const close = () => { overlay.remove(); };
+    overlay.querySelector('.geo-rvi-action-close').addEventListener('click', close);
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+    overlay.querySelector('[data-geo-rvi-action="point"]').focus();
   }
-  document.addEventListener('click',event=>{
-    const button=event.target.closest('[data-geo-rvi-action]');
-    if(!button)return;
-    event.preventDefault();event.stopPropagation();
-    const action=button.dataset.geoRviAction;
-    const popupEl=button.closest('.leaflet-popup');
-    const latlng=mapRef?.mouseEventToLatLng ? null : null;
-    // El camino/posición se conserva en el último menú abierto.
-    const detail=window.__geoRviPendingAction;
-    if(mapRef)mapRef.closePopup();
-    if(!detail)return;
-    if(action==='point')window.dispatchEvent(new CustomEvent('geotracia:rvi-register-point',{detail:{latlng:detail.latlng,road:detail.road}}));
-    if(action==='road')window.dispatchEvent(new CustomEvent('geotracia:rvi-add-road',{detail:{road:detail.road}}));
-  },true);
+  document.addEventListener('click', event => {
+    const button = event.target.closest('[data-geo-rvi-action]');
+    if (!button) return;
+    event.preventDefault(); event.stopPropagation();
+    const action = button.dataset.geoRviAction;
+    const detail = window.__geoRviPendingAction;
+    document.getElementById('geo-rvi-action-overlay')?.remove();
+    if (!detail) { status('Selecciona una vía RVI antes de elegir una acción.', true); return; }
+    if (action === 'point') {
+      window.dispatchEvent(new CustomEvent('geotracia:rvi-register-point', { detail: { latlng: detail.latlng, road: detail.road } }));
+    } else if (action === 'road') {
+      window.dispatchEvent(new CustomEvent('geotracia:rvi-add-road', { detail: { road: detail.road } }));
+    }
+  }, true);
   function addNationalLayerControl(map) {
     nationalLayer=L.geoJSON({type:'FeatureCollection',features:[]},{
       style:()=>({color:'#0d9488',weight:4,opacity:.88,lineCap:'round',lineJoin:'round'}),
