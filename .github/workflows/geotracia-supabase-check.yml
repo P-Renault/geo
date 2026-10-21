@@ -1,0 +1,39 @@
+name: GEOTRACIA - Verificar conexión Supabase
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-supabase:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validar secretos configurados
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_URL" || { echo "::error::Falta SUPABASE_URL"; exit 1; }
+          test -n "$SUPABASE_SECRET_KEY" || { echo "::error::Falta SUPABASE_SECRET_KEY"; exit 1; }
+          echo "Secretos presentes."
+
+      - name: Probar conexión REST
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: |
+          set -euo pipefail
+          status=$(curl -sS -o /tmp/response.json -w '%{http_code}' \
+            "$SUPABASE_URL/rest/v1/geotracia_national_roads?select=id&limit=1" \
+            -H "apikey: $SUPABASE_SECRET_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SECRET_KEY")
+          if [ "$status" != "200" ]; then
+            echo "::error::Error HTTP $status al conectar con Supabase"
+            cat /tmp/response.json
+            exit 1
+          fi
+          echo "Conexión REST correcta. No se modificaron datos."
