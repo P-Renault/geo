@@ -293,7 +293,7 @@
       status('Red vial importada (OSM / Supabase): '+features.length+' geometrías cargadas en el área visible'+(rows.length>=250?' (límite de 250; acerca más el mapa para ver detalle).':'.'));
     } catch(e) {
       console.error('[GEOTRACIA red vial Supabase]',e);
-      status('No se pudo cargar la red vial importada desde Supabase: '+e.message+'. Verifica las funciones SQL incluidas en el paquete.',true);
+      status('No se pudo cargar RVI desde Supabase: '+e.message+'. Ejecuta de nuevo geotracia-national-search.sql completo en SQL Editor y espera unos segundos a que se actualice la caché de esquema.',true);
     } finally {nationalLayerBusy=false;}
   }
   function addNationalLayerControl(map) {
@@ -306,7 +306,7 @@
     });
     const Control=L.Control.extend({options:{position:'topright'},onAdd(){
       const wrap=L.DomUtil.create('div','leaflet-control geo-national-layer-control');
-      wrap.innerHTML='<label><input type="checkbox" aria-label="Activar red vial importada de Supabase"><span><b>Red vial importada</b><small>OSM · Supabase (1 millón de registros)</small></span></label>';
+      wrap.innerHTML='<label class="geo-national-layer-toggle" title="Red Vial Importada · OpenStreetMap / Supabase"><input type="checkbox" aria-label="Activar Red Vial Importada"><span class="geo-national-layer-short"><b>RVI</b><small>Supabase</small></span></label>';
       L.DomEvent.disableClickPropagation(wrap);L.DomEvent.disableScrollPropagation(wrap);
       const input=wrap.querySelector('input');
       L.DomEvent.on(input,'change',()=>{

@@ -1,7 +1,7 @@
-GEOTRACIA V2.3 — CAPA DE RED VIAL IMPORTADA (SUPABASE)
+GEOTRACIA V2.4 — CAPA DE RED VIAL IMPORTADA (SUPABASE)
 
 QUÉ CAMBIA
-- La casilla nueva “Red vial importada — OSM · Supabase (1 millón de registros)” consulta la tabla public.geotracia_national_roads.
+- La casilla nueva “RVI · Supabase” (control compacto de Red Vial Importada) consulta la tabla public.geotracia_national_roads.
 - Al activarla, carga únicamente geometrías dentro del área visible del mapa; no descarga los 800 MB ni el millón de registros al navegador.
 - Al mover el mapa, actualiza los caminos visibles. Acerca el mapa si aparece el aviso.
 - Cada camino permite abrir una ficha con referencia, tipo, superficie y longitud calculada a partir de su geometría.
@@ -9,7 +9,7 @@ QUÉ CAMBIA
 - La búsqueda por nombre/referencia usa la misma tabla importada. La búsqueda textual de localidad solo funcionará si ese texto existe en los atributos de la vía.
 
 INSTALACIÓN
-1. En Supabase > SQL Editor, pega y ejecuta TODO geotracia-national-search.sql. Crea/actualiza dos funciones RPC de solo lectura y no modifica ni vuelve a importar los registros.
+1. En Supabase > SQL Editor, pega y ejecuta TODO geotracia-national-search.sql. Crea/actualiza dos funciones RPC de solo lectura, refresca la caché de esquema y no modifica ni vuelve a importar los registros. Si antes salió “Could not find the function…”, ejecuta el SQL completo otra vez y espera 10–30 segundos.
 2. Sube a la raíz del repositorio los archivos de este paquete: index.html, map-gps-v10-longitud-vial.js, map-gps-v11-osm-longitud.js y map-gps-v11-osm-longitud.css. También se incluye map-gps-v10-longitud-vial.css para mantener el conjunto completo.
 3. Reemplaza los archivos existentes por los del ZIP y espera a que GitHub Pages termine el despliegue.
 4. Abre el sitio, recarga forzada o borra caché, entra a Mapa y GPS y activa la casilla “Red vial importada”. Acerca el mapa a nivel de calles.

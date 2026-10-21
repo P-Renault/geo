@@ -101,3 +101,13 @@
 .geo-national-popup dl{display:grid;grid-template-columns:1fr 1fr;gap:5px 9px;margin:0 0 8px}
 .geo-national-popup dt{color:#65788a}.geo-national-popup dd{margin:0;text-align:right;font-weight:700;overflow-wrap:anywhere}
 .geo-national-popup small{color:#6b7f90;font-size:10px;line-height:1.4}
+
+
+/* GEOTRACIA v2.4: control RVI compacto para no tapar el mapa en móvil */
+.geo-national-layer-control{margin-top:8px!important;border:0!important;background:transparent!important;box-shadow:none!important}
+.geo-national-layer-control .geo-national-layer-toggle{display:flex;align-items:center;gap:6px;min-width:0;padding:7px 9px;border:1px solid rgba(23,54,83,.12);border-radius:10px;background:rgba(255,255,255,.96);box-shadow:0 3px 12px rgba(7,28,50,.13);cursor:pointer}
+.geo-national-layer-control .geo-national-layer-toggle input{width:17px;height:17px;flex:0 0 17px;margin:0;accent-color:#0d9488}
+.geo-national-layer-control .geo-national-layer-short{display:flex;align-items:center;gap:5px}
+.geo-national-layer-control .geo-national-layer-short b{font:800 12px/1 \"DM Sans\",sans-serif;color:#173653;letter-spacing:.02em}
+.geo-national-layer-control .geo-national-layer-short small{font:500 9px/1 \"DM Sans\",sans-serif;color:#708193}
+@media(max-width:600px){.geo-national-layer-control .geo-national-layer-toggle{gap:5px;padding:6px 7px;border-radius:9px}.geo-national-layer-control .geo-national-layer-short{display:grid;gap:3px}.geo-national-layer-control .geo-national-layer-short b{font-size:11px}.geo-national-layer-control .geo-national-layer-short small{font-size:8px}.geo-national-layer-control .geo-national-layer-toggle input{width:16px;height:16px;flex-basis:16px}}
