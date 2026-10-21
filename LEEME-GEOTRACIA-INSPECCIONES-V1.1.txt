@@ -1,0 +1,21 @@
+GEOTRACIA · INSPECCIONES · CORRECCIÓN V1.1 · DELTA
+
+ARCHIVOS
+- app.js: reemplazo con conversión de estados del formulario al enum record_status y mensajes de error de Supabase visibles.
+- index.html: actualiza la versión de caché de app.js a inspecciones-1.1.
+
+INSTALACIÓN
+1. Haz copia de app.js e index.html actuales.
+2. Reemplaza únicamente esos dos archivos.
+3. Publica en GitHub Pages.
+4. En el navegador móvil, recarga la página completamente y abre Inspecciones.
+5. Crea una inspección de prueba.
+
+SQL
+No ejecutar otra migración para esta corrección. La tabla ya existe y, según el esquema revisado, incluye las columnas requeridas.
+
+CORRECCIÓN
+El formulario muestra estados en español, pero public.record_status acepta draft, open, in_progress, resolved, closed y archived. Ahora se envían valores compatibles (Pendiente=open, En curso=in_progress, Completada=resolved, Requiere acción=open). También se guarda inspected_at y se sincronizan notes/metadata con los campos del formulario. Los errores del insert se muestran con el mensaje original devuelto por Supabase.
+
+VALIDACIÓN
+Se verificó sintaxis con node --check. El guardado debe probarse en la instancia Supabase real; no se afirma validación de producción.
