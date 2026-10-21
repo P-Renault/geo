@@ -121,3 +121,13 @@
 .geo-national-layer-control .geo-national-layer-short b{display:block!important;font:800 11px/1 "DM Sans",sans-serif!important;letter-spacing:.03em!important;color:#173653!important}
 .geo-national-layer-control .geo-national-layer-short small{display:none!important}
 @media(max-width:600px){.geo-national-layer-control .geo-national-layer-toggle{gap:4px!important;padding:6px 7px!important;border-radius:8px!important}.geo-national-layer-control .geo-national-layer-toggle input{width:14px!important;height:14px!important;flex-basis:14px!important}.geo-national-layer-control .geo-national-layer-short b{font-size:10px!important}}
+
+
+/* GEOTRACIA v2.6 — ficha de camino RVI siempre sobre los controles del mapa. */
+.leaflet-popup-pane{z-index:1200!important}
+.leaflet-popup.geo-national-road-popup{z-index:1201!important}
+.geo-national-road-popup .leaflet-popup-content-wrapper{border-radius:14px;box-shadow:0 10px 30px rgba(7,28,50,.28);color:#173653}
+.geo-national-road-popup .leaflet-popup-content{margin:14px 16px;max-height:min(48dvh,360px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;font:13px/1.45 "DM Sans",sans-serif}
+.geo-national-road-popup .leaflet-popup-close-button{z-index:2!important;font-size:22px!important;padding:7px 8px 0 0!important;color:#173653!important}
+.geo-national-popup strong{font-size:15px}
+@media(max-width:600px){.geo-national-road-popup{max-width:calc(100vw - 32px)!important}.geo-national-road-popup .leaflet-popup-content{max-width:calc(100vw - 82px);max-height:42dvh;margin:13px 14px;font-size:13px}.geo-national-popup dl{gap:6px 10px}}

@@ -302,7 +302,7 @@
       onEachFeature:(feature,layer)=>layer.bindPopup(nationalPopup({
         road_name:feature.properties?.name,road_ref:feature.properties?.ref,road_type:feature.properties?.type,
         surface:feature.properties?.surface,length_m:feature.properties?.length_m
-      }))
+      }),{autoClose:false,closeOnClick:false,closeButton:true,keepInView:true,maxWidth:320,className:'geo-national-road-popup'})
     });
     const Control=L.Control.extend({options:{position:'topright'},onAdd(){
       const wrap=L.DomUtil.create('div','leaflet-control geo-national-layer-control');
