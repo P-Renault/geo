@@ -131,3 +131,28 @@
 .geo-national-road-popup .leaflet-popup-close-button{z-index:2!important;font-size:22px!important;padding:7px 8px 0 0!important;color:#173653!important}
 .geo-national-popup strong{font-size:15px}
 @media(max-width:600px){.geo-national-road-popup{max-width:calc(100vw - 32px)!important}.geo-national-road-popup .leaflet-popup-content{max-width:calc(100vw - 82px);max-height:42dvh;margin:13px 14px;font-size:13px}.geo-national-popup dl{gap:6px 10px}}
+
+/* GEOTRACIA RVI v2.7: ficha completa persistente al tocar geometría de la capa */
+.geo-data-card#geo-national-card{
+  position:fixed!important;
+  z-index:2147483647!important;
+  pointer-events:auto!important;
+  opacity:1!important;
+  visibility:visible!important;
+  animation:none!important;
+}
+.geo-data-card#geo-national-card .geo-data-card-body{
+  max-height:calc(82dvh - 100px);
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch;
+}
+.leaflet-popup.geo-national-road-popup{display:none!important}
+@media(max-width:600px){
+  .geo-data-card#geo-national-card{
+    bottom:calc(12px + env(safe-area-inset-bottom))!important;
+    max-height:72dvh!important;
+  }
+  .geo-data-card#geo-national-card .geo-data-card-body{
+    max-height:calc(72dvh - 90px);
+  }
+}

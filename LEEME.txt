@@ -1,0 +1,17 @@
+GEOTRACIA RVI V2.7 — FICHA PERSISTENTE
+
+Archivos:
+- index.html
+- map-gps-v11-osm-longitud.js
+- map-gps-v11-osm-longitud.css
+
+Instalación:
+1. Reemplazar estos tres archivos en la raíz del repositorio P-Renault/geo.
+2. Esperar el despliegue de GitHub Pages.
+3. Recargar la página; si persiste caché, cerrar la pestaña y abrir el sitio de nuevo.
+4. Activar RVI y tocar directamente una línea vial de color turquesa.
+
+Cambio principal:
+El clic en una geometría RVI ya no abre el pequeño popup/etiqueta de Leaflet. Abre la ficha completa de GEOTRACIA con los atributos disponibles y la longitud almacenada. La ficha permanece en pantalla hasta que el operador la cierre con ×. Se sube el z-index para que quede por encima de los controles del mapa.
+
+Esta corrección requiere que la consulta RVI ya esté funcionando y que los registros devuelvan geometría GeoJSON lineal.

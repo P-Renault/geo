@@ -299,10 +299,30 @@
   function addNationalLayerControl(map) {
     nationalLayer=L.geoJSON({type:'FeatureCollection',features:[]},{
       style:()=>({color:'#0d9488',weight:4,opacity:.88,lineCap:'round',lineJoin:'round'}),
-      onEachFeature:(feature,layer)=>layer.bindPopup(nationalPopup({
-        road_name:feature.properties?.name,road_ref:feature.properties?.ref,road_type:feature.properties?.type,
-        surface:feature.properties?.surface,length_m:feature.properties?.length_m
-      }),{autoClose:false,closeOnClick:false,closeButton:true,keepInView:true,maxWidth:320,className:'geo-national-road-popup'})
+      onEachFeature:(feature,layer)=>{
+        // Abrir la ficha persistente de GEOTRACIA, no el tooltip efímero de Leaflet.
+        layer.on('click',event=>{
+          if(event?.originalEvent)L.DomEvent.stopPropagation(event.originalEvent);
+          const p=feature.properties||{};
+          try {
+            showNationalRoad({
+              id:p.id,
+              road_name:p.name,
+              road_ref:p.ref,
+              road_type:p.type,
+              surface:p.surface,
+              length_m:p.length_m,
+              geometry:feature.geometry,
+              distance_m:null
+            },false);
+          } catch(error) {
+            console.error('[GEOTRACIA RVI ficha]',error);
+            status('No se pudo abrir la ficha de esta geometría vial: '+error.message,true);
+          }
+        });
+        layer.on('mouseover',()=>{ if(!layer.__geoRviSelected)layer.setStyle({weight:6}); });
+        layer.on('mouseout',()=>{ if(!layer.__geoRviSelected)nationalLayer.resetStyle(layer); });
+      }
     });
     const Control=L.Control.extend({options:{position:'topright'},onAdd(){
       const wrap=L.DomUtil.create('div','leaflet-control geo-national-layer-control');
