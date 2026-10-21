@@ -354,7 +354,8 @@
     const layers=paths.map(path=>L.polyline(path,{color:'#0d9488',weight:7,opacity:.97,lineCap:'round',lineJoin:'round'}));
     if(osmHighlight)mapRef.removeLayer(osmHighlight);
     osmHighlight=L.layerGroup(layers).addTo(mapRef);
-    const bounds=osmHighlight.getBounds();if(zoom&&bounds.isValid())mapRef.fitBounds(bounds.pad(.12),{maxZoom:16});
+    // L.LayerGroup no expone getBounds(); calcularlo con FeatureGroup usando las mismas polilíneas.
+    const bounds=L.featureGroup(layers).getBounds();if(zoom&&bounds.isValid())mapRef.fitBounds(bounds.pad(.12),{maxZoom:16});
     const length=Number(road.length_m);
     const rows=[
       ['Nombre del camino',road.road_name||'Camino sin nombre registrado'],
