@@ -174,3 +174,12 @@
 #geoPointQuickForm .geo-point-quick-cancel{background:#f7fafc;color:#173653}
 #geoPointQuickForm .geo-point-quick-save{background:#0d9488;border-color:#0d9488;color:white}
 @media(max-width:480px){.geo-point-quick-overlay{padding:10px}.geo-point-quick-card{border-radius:15px}.geo-point-quick-card header{padding:15px 14px 12px}#geoPointQuickForm{padding:14px}.geo-point-quick-coords{gap:7px}}
+
+/* Menú de acción al hacer doble clic en una geometría RVI. */
+.geo-rvi-action-popup .leaflet-popup-content-wrapper{border-radius:14px;padding:2px;box-shadow:0 12px 34px rgba(15,35,55,.24)}
+.geo-rvi-action-popup .leaflet-popup-content{margin:12px;min-width:215px}
+.geo-rvi-action-menu{display:grid;gap:8px;font:14px/1.35 system-ui,-apple-system,sans-serif;color:#18324a}
+.geo-rvi-action-menu strong{font-size:14px;margin:0 0 2px}
+.geo-rvi-action-menu button{border:1px solid #d9e3ec;border-radius:9px;background:#f8fafc;color:#18324a;padding:11px 12px;text-align:left;font-weight:650;min-height:42px;cursor:pointer}
+.geo-rvi-action-menu button:last-child{background:#0d9488;border-color:#0d9488;color:white}
+.geo-rvi-action-menu button:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}

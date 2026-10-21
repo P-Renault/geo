@@ -296,29 +296,46 @@
       status('No se pudo cargar RVI desde Supabase: '+e.message+'. Ejecuta de nuevo geotracia-national-search.sql completo en SQL Editor y espera unos segundos a que se actualice la caché de esquema.',true);
     } finally {nationalLayerBusy=false;}
   }
+  function openRviActionMenu(road, latlng) {
+    if (!mapRef || !latlng) return;
+    closeCard('geo-national-card');
+    const html = '<div class="geo-rvi-action-menu"><strong>¿Qué deseas hacer?</strong>'+
+      '<button type="button" data-geo-rvi-action="point">＋ Registrar punto</button>'+
+      '<button type="button" data-geo-rvi-action="road">↗ Agregar camino al proyecto</button></div>';
+    const popup=L.popup({closeButton:true,autoClose:true,closeOnClick:false,closeOnEscapeKey:true,maxWidth:270,className:'geo-rvi-action-popup'})
+      .setLatLng(latlng).setContent(html).openOn(mapRef);
+    popup.once('add',()=>{});
+  }
+  document.addEventListener('click',event=>{
+    const button=event.target.closest('[data-geo-rvi-action]');
+    if(!button)return;
+    event.preventDefault();event.stopPropagation();
+    const action=button.dataset.geoRviAction;
+    const popupEl=button.closest('.leaflet-popup');
+    const latlng=mapRef?.mouseEventToLatLng ? null : null;
+    // El camino/posición se conserva en el último menú abierto.
+    const detail=window.__geoRviPendingAction;
+    if(mapRef)mapRef.closePopup();
+    if(!detail)return;
+    if(action==='point')window.dispatchEvent(new CustomEvent('geotracia:rvi-register-point',{detail:{latlng:detail.latlng}}));
+    if(action==='road')window.dispatchEvent(new CustomEvent('geotracia:rvi-add-road',{detail:{road:detail.road}}));
+  },true);
   function addNationalLayerControl(map) {
     nationalLayer=L.geoJSON({type:'FeatureCollection',features:[]},{
       style:()=>({color:'#0d9488',weight:4,opacity:.88,lineCap:'round',lineJoin:'round'}),
       onEachFeature:(feature,layer)=>{
         // Abrir la ficha persistente de GEOTRACIA, no el tooltip efímero de Leaflet.
+        const getRoad=()=>{const p=feature.properties||{};return {id:p.id,source_id:String(p.id??''),road_name:p.name||'',road_ref:p.ref||'',road_type:p.type||'',surface:p.surface||'',length_m:p.length_m,geometry:feature.geometry,source:'osm',attributes:{source:'OSM / Geofabrik Chile',source_record_id:p.id,source_name:p.name||null,source_ref:p.ref||null,source_type:p.type||null,source_surface:p.surface||null}};};
         layer.on('click',event=>{
           if(event?.originalEvent)L.DomEvent.stopPropagation(event.originalEvent);
-          const p=feature.properties||{};
-          try {
-            showNationalRoad({
-              id:p.id,
-              road_name:p.name,
-              road_ref:p.ref,
-              road_type:p.type,
-              surface:p.surface,
-              length_m:p.length_m,
-              geometry:feature.geometry,
-              distance_m:null
-            },false);
-          } catch(error) {
-            console.error('[GEOTRACIA RVI ficha]',error);
-            status('No se pudo abrir la ficha de esta geometría vial: '+error.message,true);
-          }
+          try { showNationalRoad({...getRoad(),distance_m:null},false); }
+          catch(error) { console.error('[GEOTRACIA RVI ficha]',error); status('No se pudo abrir la ficha de esta geometría vial: '+error.message,true); }
+        });
+        layer.on('dblclick',event=>{
+          if(event?.originalEvent){L.DomEvent.stopPropagation(event.originalEvent);L.DomEvent.preventDefault(event.originalEvent);}
+          const road=getRoad();
+          window.__geoRviPendingAction={road,latlng:{lat:event.latlng.lat,lng:event.latlng.lng}};
+          openRviActionMenu(road,event.latlng);
         });
         layer.on('mouseover',()=>{ if(!layer.__geoRviSelected)layer.setStyle({weight:6}); });
         layer.on('mouseout',()=>{ if(!layer.__geoRviSelected)nationalLayer.resetStyle(layer); });
@@ -367,7 +384,7 @@
       ['Fuente','Red vial importada · Geofabrik Chile / OpenStreetMap'],
       ['ID de registro',String(road.id??'No informado')]
     ];
-    makeCard('geo-national-card','RED VIAL NACIONAL · SUPABASE',road.road_name||road.road_ref||'Camino vial',rows,
+    makeCard('geo-national-card','RVI · OSM / SUPABASE',road.road_name||road.road_ref||'Camino vial',rows,
       'Geometría obtenida del catálogo vial nacional importado en Supabase. La longitud se calcula siguiendo la geometría almacenada; puede corresponder a una entidad/segmento y no necesariamente a todo el camino ni a una distancia de conducción.',
       'Datos de OpenStreetMap · ODbL. No corresponde a cartografía oficial MOP.');
     status('Camino encontrado en el catálogo nacional: '+(Number.isFinite(length)&&length>0?fmtM(length):'geometría cargada')+'.');

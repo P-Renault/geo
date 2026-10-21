@@ -1,0 +1,31 @@
+GEOTRACIA RVI V3.0 — REGISTRO DIRECTO DESDE EL MAPA
+
+ARCHIVOS INCLUIDOS
+- index.html
+- map-gps.js
+- map-gps-v11-osm-longitud.js
+- map-gps-v11-osm-longitud.css
+- roads.js
+- roads.css
+
+INSTALACIÓN
+1. Copia los seis archivos de aplicación a la raíz del repositorio P-Renault/geo, reemplazando los existentes.
+2. No elimines otros archivos del proyecto. No requiere una nueva importación de los datos RVI.
+3. Espera el despliegue de GitHub Pages y recarga la aplicación.
+4. Abre Mapa y GPS, activa RVI y haz doble clic sobre una geometría vial.
+5. Elige Registrar punto o Agregar camino al proyecto.
+
+AGREGAR CAMINO
+- Precarga el ID de registro RVI, nombre, referencia, clasificación, superficie y longitud cuando están disponibles.
+- Sugiere un código interno OSM-<ID> cuando no existe referencia vial. El código interno puede editarse.
+- Guarda el origen, ID de origen, atributos y geometría en public.roads, asociado a la organización y al proyecto activo. La geometría LineString se convierte a MultiLineString para respetar el esquema de roads.
+- La longitud geométrica real se recalcula mediante el trigger de PostGIS cuando el esquema instalado incluye la migración de caminos y tramos.
+- Si no hay nombre, el campo queda vacío y es obligatorio completarlo antes de guardar. Los datos ausentes no se inventan.
+
+REGISTRAR PUNTO
+Abre el formulario rápido con las coordenadas del doble clic. Como en la versión previa, los puntos de mapa siguen siendo temporales en la sesión y no se sincronizan con Supabase.
+
+NOTAS
+- El ID de registro RVI es el identificador de la fila del catálogo consultado; se guarda separado del código interno de GEOTRACIA.
+- No vuelve a importar el archivo de red vial nacional.
+- Validación local: sintaxis JavaScript verificada; falta confirmar el flujo en la instancia Supabase y navegador publicados.
