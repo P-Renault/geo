@@ -1,0 +1,21 @@
+GEOTRACIA - DELTA MAPA Y GPS V3.1
+
+Archivos incluidos (solo archivos modificados):
+- roads.js: agrega al formulario de agregar/editar camino los campos Rol vial, Modalidad de contratación, Tipo de red, Kilómetro de inicio y Kilómetro de término. Conserva los campos existentes, incluida Superficie, con sus opciones actuales.
+- index.html: actualiza la versión de roads.js a 3.1 para evitar caché del navegador.
+
+Persistencia:
+Los cinco campos nuevos se guardan dentro de roads.attributes (JSONB ya utilizado por el modelo), con las claves:
+- institutional_road_role
+- contracting_modality
+- network_type
+- km_start
+- km_end
+Esto evita requerir una migración SQL y no reemplaza los atributos existentes. Al editar, se preservan los demás atributos del camino.
+
+Validación:
+- Comprobación sintáctica de roads.js con node --check.
+- No se ejecutaron pruebas contra el proyecto Supabase ni se hizo despliegue automático.
+
+Importante:
+Los kilómetros de inicio y término se registran como metadatos institucionales del camino en esta primera fase. No se crean ni modifican automáticamente registros en segments; la integración con Caminos y tramos queda para la siguiente etapa solicitada.
