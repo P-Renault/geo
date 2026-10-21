@@ -1,0 +1,17 @@
+GEOTRACIA · Inventario vial V1.3 — corrección integrada
+
+Archivos del delta:
+- app.js: calcula ubicación desde progresiva usando la geometría real del camino, muestra marcadores y conserva el scroll del formulario al cargar fotografías.
+- index.html: mejora el scroll interno del formulario móvil y renueva caché.
+- 202610210006_geotracia_inventory_progressive_geometry.sql: crea la función de solo lectura para devolver geometrías GeoJSON de caminos del proyecto.
+
+INSTALACIÓN
+1. Ejecuta la SQL incluida en Supabase.
+2. Sustituye únicamente app.js e index.html.
+3. Publica GitHub Pages y recarga con caché renovada.
+4. Abre Inventario vial y prueba el elemento existente con progresiva.
+
+IMPORTANTE
+- La ubicación se calcula sobre la geometría LineString/MultiLineString del camino. El cálculo supone que la progresiva está medida desde el inicio de la geometría y que length_m representa esa misma longitud de referencia. Si la progresiva oficial tiene un origen distinto, se necesita calibración de hitos de referencia; el sistema no inventa coordenadas.
+- Las columnas latitude/longitude añadidas por V1.2, si ya existen, se conservan, pero el nuevo flujo no depende de ellas.
+- No se ejecutó contra la instancia real de Supabase; la SQL y el comportamiento en producción deben validarse tras desplegar.
