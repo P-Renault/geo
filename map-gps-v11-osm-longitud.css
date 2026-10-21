@@ -183,3 +183,11 @@
 .geo-rvi-action-menu button{border:1px solid #d9e3ec;border-radius:9px;background:#f8fafc;color:#18324a;padding:11px 12px;text-align:left;font-weight:650;min-height:42px;cursor:pointer}
 .geo-rvi-action-menu button:last-child{background:#0d9488;border-color:#0d9488;color:white}
 .geo-rvi-action-menu button:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
+
+/* GEOTRACIA RVI V3.1: el doble clic abre acciones; un clic abre ficha tras una pausa breve. */
+.geo-point-road-context{display:grid;gap:5px;padding:11px 12px;border:1px solid #cfe8e4;border-radius:11px;background:#f0fdfa;color:#28566a;font-size:12px;font-weight:500}
+.geo-point-road-context strong{font-size:13px;color:#123b52}
+.geo-point-road-context span{overflow-wrap:anywhere}
+.geo-rvi-action-popup{z-index:1300!important}
+.geo-rvi-action-popup .leaflet-popup-content-wrapper{max-width:calc(100vw - 36px)}
+@media(max-width:480px){.geo-point-road-context{font-size:11px;padding:9px}.geo-point-road-context strong{font-size:12px}}

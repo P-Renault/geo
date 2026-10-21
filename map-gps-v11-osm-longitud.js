@@ -14,7 +14,7 @@
   const cache = new Map();
   let mapRef = null, osmActive = false, mopActive = false, osmHighlight = null;
   let osmBusy = false, mopBusy = false, activeController = null;
-  let nationalLayer = null, nationalLayerControl = null, nationalLayerEnabled = false, nationalLayerBusy = false, nationalMoveTimer = null;
+  let nationalLayer = null, nationalLayerControl = null, nationalLayerEnabled = false, nationalLayerBusy = false, nationalMoveTimer = null, nationalClickTimer = null;
   let osmButton = null, mopButton = null;
   let approxMode = false, approxPoints = [], approxLine = null, approxMarkers = [], approxBar = null;
   let latestOsmClick = null, latestMopClick = null;
@@ -317,7 +317,7 @@
     const detail=window.__geoRviPendingAction;
     if(mapRef)mapRef.closePopup();
     if(!detail)return;
-    if(action==='point')window.dispatchEvent(new CustomEvent('geotracia:rvi-register-point',{detail:{latlng:detail.latlng}}));
+    if(action==='point')window.dispatchEvent(new CustomEvent('geotracia:rvi-register-point',{detail:{latlng:detail.latlng,road:detail.road}}));
     if(action==='road')window.dispatchEvent(new CustomEvent('geotracia:rvi-add-road',{detail:{road:detail.road}}));
   },true);
   function addNationalLayerControl(map) {
@@ -326,14 +326,22 @@
       onEachFeature:(feature,layer)=>{
         // Abrir la ficha persistente de GEOTRACIA, no el tooltip efímero de Leaflet.
         const getRoad=()=>{const p=feature.properties||{};return {id:p.id,source_id:String(p.id??''),road_name:p.name||'',road_ref:p.ref||'',road_type:p.type||'',surface:p.surface||'',length_m:p.length_m,geometry:feature.geometry,source:'osm',attributes:{source:'OSM / Geofabrik Chile',source_record_id:p.id,source_name:p.name||null,source_ref:p.ref||null,source_type:p.type||null,source_surface:p.surface||null}};};
+        // Retrasa la ficha de un clic para distinguirla de un doble clic.
+        // Si llega el doble clic, se cancela la ficha y se abre el menú de acciones.
         layer.on('click',event=>{
           if(event?.originalEvent)L.DomEvent.stopPropagation(event.originalEvent);
-          try { showNationalRoad({...getRoad(),distance_m:null},false); }
-          catch(error) { console.error('[GEOTRACIA RVI ficha]',error); status('No se pudo abrir la ficha de esta geometría vial: '+error.message,true); }
+          clearTimeout(nationalClickTimer);
+          const road=getRoad();
+          nationalClickTimer=setTimeout(()=>{
+            try { showNationalRoad({...road,distance_m:null},false); }
+            catch(error) { console.error('[GEOTRACIA RVI ficha]',error); status('No se pudo abrir la ficha de esta geometría vial: '+error.message,true); }
+          },320);
         });
         layer.on('dblclick',event=>{
+          clearTimeout(nationalClickTimer);
           if(event?.originalEvent){L.DomEvent.stopPropagation(event.originalEvent);L.DomEvent.preventDefault(event.originalEvent);}
           const road=getRoad();
+          closeCard('geo-national-card');
           window.__geoRviPendingAction={road,latlng:{lat:event.latlng.lat,lng:event.latlng.lng}};
           openRviActionMenu(road,event.latlng);
         });

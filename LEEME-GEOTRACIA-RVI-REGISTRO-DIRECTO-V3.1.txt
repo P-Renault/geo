@@ -1,0 +1,24 @@
+GEOTRACIA RVI V3.1 — DOBLE CLIC Y ACCIONES CONTEXTUALES
+
+Archivos de este paquete:
+- index.html
+- map-gps.js
+- map-gps-v11-osm-longitud.js
+- map-gps-v11-osm-longitud.css
+- roads.js
+- roads.css
+
+Instalación:
+1. Copia estos archivos a la raíz del repositorio P-Renault/geo y reemplaza los existentes.
+2. Espera a que GitHub Pages publique el cambio.
+3. Abre Mapa y GPS, activa RVI y prueba:
+   - Un clic sobre una línea RVI: abre la ficha informativa tras una pausa breve.
+   - Doble clic sobre la misma línea: cancela la ficha y abre el menú de acciones.
+   - Registrar punto: abre el formulario con coordenadas y datos de la vía seleccionada.
+   - Agregar camino al proyecto: abre el formulario del módulo Caminos y tramos con ID de origen, nombre, tipo, superficie, longitud y geometría precargados cuando existan.
+
+Notas:
+- La pausa de 320 ms en el clic simple evita que la ficha cubra el segundo clic e impida detectar el doble clic.
+- Los puntos continúan siendo temporales en la sesión del mapa, según la implementación actual; este paquete no agrega persistencia de puntos a Supabase.
+- El registro de caminos usa la tabla roads y requiere que la migración de esquema existente incluya source_id, geom, attributes y data_source. No se vuelve a importar la red vial nacional.
+- Los datos importados proceden de OpenStreetMap/Geofabrik Chile, no son cartografía oficial MOP.
