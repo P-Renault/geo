@@ -156,3 +156,21 @@
     max-height:calc(72dvh - 90px);
   }
 }
+
+/* GEOTRACIA v2.8: registro de punto solo con doble clic, sin interferir con selección RVI */
+.geo-point-quick-overlay{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(6,22,38,.56);backdrop-filter:blur(3px)}
+.geo-point-quick-card{width:min(460px,100%);max-height:min(88dvh,700px);overflow:auto;background:#fff;color:#173653;border-radius:18px;box-shadow:0 24px 80px rgba(4,19,35,.42);font:14px/1.45 "DM Sans",sans-serif}
+.geo-point-quick-card header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 18px 14px;border-bottom:1px solid #e7edf2}
+.geo-point-quick-card header small{font-size:10px;font-weight:800;letter-spacing:.06em;color:#0d9488}
+.geo-point-quick-card h2{margin:5px 0;font:800 21px/1.2 "Manrope","DM Sans",sans-serif}
+.geo-point-quick-card p{margin:0;color:#6b7f90;font-size:12px}
+.geo-point-quick-close{width:38px;height:38px;flex:0 0 38px;border:1px solid #dbe4eb;border-radius:10px;background:#f7fafc;color:#173653;font-size:25px}
+#geoPointQuickForm{display:grid;gap:13px;padding:16px 18px 18px}
+#geoPointQuickForm label{display:grid;gap:6px;font-weight:700;font-size:12px;color:#53697b}
+#geoPointQuickForm input,#geoPointQuickForm select{width:100%;min-width:0;height:44px;padding:0 11px;border:1px solid #d3dfe7;border-radius:10px;background:#fff;color:#173653;font:14px "DM Sans",sans-serif}
+.geo-point-quick-coords{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#geoPointQuickForm footer{display:flex;gap:9px;justify-content:flex-end;padding-top:4px}
+#geoPointQuickForm footer button{min-height:42px;padding:0 14px;border:1px solid #d3dfe7;border-radius:10px;font-weight:800}
+#geoPointQuickForm .geo-point-quick-cancel{background:#f7fafc;color:#173653}
+#geoPointQuickForm .geo-point-quick-save{background:#0d9488;border-color:#0d9488;color:white}
+@media(max-width:480px){.geo-point-quick-overlay{padding:10px}.geo-point-quick-card{border-radius:15px}.geo-point-quick-card header{padding:15px 14px 12px}#geoPointQuickForm{padding:14px}.geo-point-quick-coords{gap:7px}}

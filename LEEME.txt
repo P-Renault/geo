@@ -1,17 +1,26 @@
-GEOTRACIA RVI V2.7 — FICHA PERSISTENTE
+GEOTRACIA RVI V2.8 — REGISTRO DE PUNTO POR DOBLE CLIC
 
-Archivos:
+Archivos incluidos:
 - index.html
+- map-gps.js
 - map-gps-v11-osm-longitud.js
 - map-gps-v11-osm-longitud.css
 
+Cambios:
+1. Un clic en una geometría de RVI queda disponible para abrir la ficha persistente del camino.
+2. Registrar un punto desde el mapa ahora se inicia con doble clic, no con un clic simple.
+3. El doble clic abre un formulario modal sobre el mapa con latitud y longitud precargadas.
+4. Se desactiva el zoom de Leaflet por doble clic para que no compita con el formulario.
+5. Al guardar, el punto se añade a la sesión actual y aparece en la lista existente.
+6. Se actualizan las versiones de caché a 2.8.
+
 Instalación:
-1. Reemplazar estos tres archivos en la raíz del repositorio P-Renault/geo.
-2. Esperar el despliegue de GitHub Pages.
-3. Recargar la página; si persiste caché, cerrar la pestaña y abrir el sitio de nuevo.
-4. Activar RVI y tocar directamente una línea vial de color turquesa.
+Reemplaza los cuatro archivos incluidos en la raíz del repositorio GitHub. No elimines otros archivos.
+Espera el despliegue de GitHub Pages y recarga la página.
+Prueba:
+- Un clic sobre una línea RVI: debe abrir la ficha de información del camino.
+- Doble clic sobre el mapa o una vía: debe abrir “Registrar punto”.
+- Completa el nombre, confirma coordenadas y pulsa “Registrar punto”.
 
-Cambio principal:
-El clic en una geometría RVI ya no abre el pequeño popup/etiqueta de Leaflet. Abre la ficha completa de GEOTRACIA con los atributos disponibles y la longitud almacenada. La ficha permanece en pantalla hasta que el operador la cierre con ×. Se sube el z-index para que quede por encima de los controles del mapa.
-
-Esta corrección requiere que la consulta RVI ya esté funcionando y que los registros devuelvan geometría GeoJSON lineal.
+Nota:
+Los puntos continúan siendo temporales de la sesión, tal como funciona actualmente el módulo; esta corrección no añade sincronización de puntos a Supabase.
