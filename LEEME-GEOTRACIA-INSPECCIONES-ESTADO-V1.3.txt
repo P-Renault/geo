@@ -1,0 +1,25 @@
+GEOTRACIA — Inspecciones V1.3: edición de estado
+
+CONTENIDO DEL DELTA
+- app.js: añade la acción «Editar estado» en cada fila y una tarjeta que permite cambiar únicamente el estado.
+- index.html: actualiza la versión de caché de app.js.
+
+INSTALACIÓN
+1. Conserva una copia de app.js e index.html actuales.
+2. Sustituye únicamente esos dos archivos por los incluidos en este ZIP.
+3. Publica en GitHub Pages.
+4. Recarga la aplicación. Si es necesario, cierra y vuelve a abrir la página para evitar caché antigua.
+5. En Inspecciones, usa «Editar estado» en un registro. Cambia el estado y pulsa «Guardar estado».
+
+ESTADOS
+- draft = Borrador
+- open = Pendiente
+- in_progress = En curso
+- resolved = Completada
+- closed = Cerrada
+- archived = Archivada
+
+El formulario de edición solo modifica la columna status y la marca de auditoría updated_at. No cambia título, fecha, camino, tramo, progresiva, condición, hallazgos, recomendaciones ni fotografía. Usa el cliente Supabase y las políticas RLS existentes; no requiere una nueva query SQL.
+
+VALIDACIÓN
+Se comprobó la sintaxis de app.js con node --check. No se ha probado contra la instancia de Supabase del usuario; validar la actualización en el sitio publicado.
