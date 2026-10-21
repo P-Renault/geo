@@ -1,0 +1,29 @@
+GEOTRACIA — Inventario vial V1.2 (mapa + fotografía)
+
+DELTA: solo archivos que se agregan o reemplazan.
+
+REEMPLAZAR:
+- app.js
+- index.html
+
+NUEVO:
+- 202610210005_geotracia_inventory_map_photos.sql
+
+INSTALACIÓN:
+1. En Supabase SQL Editor, ejecutar 202610210005_geotracia_inventory_map_photos.sql.
+2. Reemplazar app.js e index.html en el repositorio actual.
+3. Publicar en GitHub Pages y recargar la página.
+4. Abrir Inventario vial y editar un elemento para asignarle ubicación: pulsar sobre el mapa del formulario o escribir latitud y longitud.
+5. En el mismo formulario, usar “Tomar fotografía” o “Elegir de galería”. Guardar.
+6. Verificar que el marcador aparece en el mapa general; un clic selecciona el activo y doble clic abre su ficha con fotografía.
+
+DETALLES:
+- Coordenadas opcionales; no se inventan a partir de la progresiva.
+- Las fotografías se suben al bucket privado geotracia-evidencias bajo la carpeta organization_id/road-inventory/{inventory_id}/...
+- La referencia de la foto queda en metadata.inventory_photo.
+- La migración agrega solo latitud y longitud y un índice; no elimina ni recrea registros existentes.
+- Requiere que ya esté instalado el bucket privado geotracia-evidencias y sus políticas de Storage de la integración de fotografías. No vuelve a crear políticas de acceso.
+- El mapa usa Leaflet y OpenStreetMap, ya cargados por index.html.
+
+VALIDACIÓN:
+Se comprobará sintaxis JavaScript en esta entrega. El guardado, subida de fotos y permisos deben probarse en el Supabase real tras publicar.
