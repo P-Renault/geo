@@ -1,0 +1,20 @@
+GEOTRACIA — Reparación de mapas en Inspecciones, Incidencias e Inventario
+Delta para aplicar sobre el proyecto completo actual.
+
+Archivos:
+- app.js: recupera el ciclo de renderizado del mapa de incidencias e inventario y agrega mapa a Inspecciones. Incluye selección de marcador/fila, ubicación por progresiva y geometría de camino, y altura explícita para los contenedores Leaflet.
+
+Instalación:
+1. Descomprime este paquete.
+2. Reemplaza el app.js de la raíz del repositorio por el incluido.
+3. Publica el cambio en GitHub Pages.
+4. Prueba los módulos Inspecciones, Incidencias e Inventario vial.
+
+Notas:
+- No incluye index.html ni migraciones SQL; utiliza Leaflet y la función RPC existente
+  public.geotracia_inventory_road_geometries(p_project_id).
+- La ubicación de inspecciones e incidencias se calcula en el cliente desde km_progressive
+  y la geometría del camino; no se guardan coordenadas duplicadas.
+- Si un registro no tiene progresiva válida o el camino no tiene geom, se mostrará en la tabla
+  pero no tendrá marcador en el mapa.
+- Validación ejecutada: node --check app.js. No se ejecutó contra el Supabase ni el despliegue real.
