@@ -39,10 +39,24 @@ def api(path, method="GET", payload=None, prefer=None):
     try:
         with urlopen(req, timeout=180) as response:
             raw = response.read()
-            return json.loads(raw) if raw else None
+            if not raw:
+                return {
+                    "_empty_response": True,
+                    "_http_status": getattr(response, "status", None),
+                    "_endpoint": path,
+                }
+            try:
+                return json.loads(raw.decode("utf-8"))
+            except json.JSONDecodeError as exc:
+                preview = raw[:500].decode("utf-8", "replace")
+                raise RuntimeError(
+                    f"Respuesta no JSON desde {path}; "
+                    f"HTTP {getattr(response, 'status', 'desconocido')}; "
+                    f"contenido inicial: {preview!r}"
+                ) from exc
     except HTTPError as exc:
         detail = exc.read().decode("utf-8", "replace")[:1200]
-        raise RuntimeError(f"HTTP {exc.code}: {detail}") from exc
+        raise RuntimeError(f"HTTP {exc.code} en {path}: {detail}") from exc
 
 
 def first(props, *keys):
@@ -77,7 +91,7 @@ def main():
             f"https://drive.google.com/uc?id={DRIVE_ID}",
             str(archive),
             quiet=False,
-            
+            fuzzy=True,
         )
         if not result or not zipfile.is_zipfile(archive):
             raise RuntimeError(
@@ -139,14 +153,30 @@ def main():
         read_count = inserted = updated = skipped = 0
 
         def send(rows):
-            return api(
+            result = api(
                 "/rest/v1/rpc/geotracia_import_national_roads",
                 method="POST",
+                prefer="return=representation",
                 payload={
                     "p_import_id": import_id,
                     "p_rows": rows,
                 },
             )
+            if isinstance(result, dict) and result.get("_empty_response"):
+                raise RuntimeError(
+                    "Supabase devolvió una respuesta HTTP vacía al importar "
+                    f"un lote mediante {result.get('_endpoint')} "
+                    f"(HTTP {result.get('_http_status')}). "
+                    "No se puede confirmar el resultado del lote; "
+                    "se detuvo la importación por seguridad."
+                )
+            if not isinstance(result, dict):
+                raise RuntimeError(
+                    "La RPC de importación no devolvió un objeto JSON. "
+                    f"Tipo recibido: {type(result).__name__}; "
+                    f"valor: {str(result)[:500]}"
+                )
+            return result
 
         try:
             with geojsonl.open(encoding="utf-8") as source:
