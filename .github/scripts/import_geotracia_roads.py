@@ -91,7 +91,7 @@ def main():
             f"https://drive.google.com/uc?id={DRIVE_ID}",
             str(archive),
             quiet=False,
-            fuzzy=True,
+            
         )
         if not result or not zipfile.is_zipfile(archive):
             raise RuntimeError(
