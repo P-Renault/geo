@@ -1,0 +1,20 @@
+GEOTRACIA — Integración Proyectos → Caminos y Tramos
+Versión 1.1 | Archivo principal: app.js
+
+CONTENIDO
+- app.js: archivo completo, basado en el app.js del paquete Gestión de Proyectos v1.0, con acciones nuevas para consultar y registrar caminos y tramos asociados al proyecto.
+- 202610190003_geotracia_roads_segments.sql: migración existente de las tablas roads y segments, incluida como referencia. No la ejecutes otra vez si ya la aplicaste correctamente.
+
+ANTES DE PUBLICAR
+1. En Supabase, confirma que existen public.roads y public.segments y que sus políticas RLS están activas.
+2. Haz una copia del app.js actual de tu repositorio.
+3. En GitHub, abre el archivo app.js en la rama main y reemplaza TODO su contenido por el app.js de este ZIP. No subas el ZIP como archivo de la aplicación.
+4. Confirma el commit y espera el despliegue de GitHub Pages.
+5. Abre GEOTRACIA, entra a Proyectos, abre la ficha de un proyecto y pulsa “Caminos y tramos”.
+6. Crea primero un camino; después podrás crear tramos con progresivas inicial y final en kilómetros.
+
+IMPORTANTE
+- La función requiere sesión activa, organización seleccionada y permisos RLS para insertar/leer public.roads y public.segments.
+- El módulo no asigna geometrías ni importa automáticamente la red nacional. La longitud declarada se guarda separada de la longitud geométrica.
+- La migración SQL de caminos y tramos tiene dependencias con organizations, projects, members, member_role y funciones de autorización. Si las tablas ya están instaladas, no vuelvas a ejecutar una migración sin revisar su estado.
+- Validación realizada en este paquete: comprobación sintáctica de app.js con node --check. No se pudo ejecutar contra la instancia real de Supabase desde este entorno; prueba las operaciones tras el despliegue.
