@@ -14,23 +14,23 @@ jobs:
       - name: Validar secretos configurados
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
           test -n "$SUPABASE_URL" || { echo "::error::Falta SUPABASE_URL"; exit 1; }
-          test -n "$SUPABASE_SECRET_KEY" || { echo "::error::Falta SUPABASE_SECRET_KEY"; exit 1; }
+          test -n "$SUPABASE_SERVICE_ROLE_KEY" || { echo "::error::Falta SUPABASE_SERVICE_ROLE_KEY"; exit 1; }
           echo "Secretos presentes."
 
       - name: Probar conexión REST
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
           status=$(curl -sS -o /tmp/response.json -w '%{http_code}' \
             "$SUPABASE_URL/rest/v1/geotracia_national_roads?select=id&limit=1" \
-            -H "apikey: $SUPABASE_SECRET_KEY" \
-            -H "Authorization: Bearer $SUPABASE_SECRET_KEY")
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY")
           if [ "$status" != "200" ]; then
             echo "::error::Error HTTP $status al conectar con Supabase"
             cat /tmp/response.json

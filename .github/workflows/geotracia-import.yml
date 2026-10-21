@@ -1,4 +1,3 @@
-
 name: GEOTRACIA - Importar red vial nacional
 
 on:
@@ -25,7 +24,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-        
 
       - name: Instalar GDAL y herramientas
         run: |
@@ -43,31 +41,30 @@ jobs:
       - name: Validar secretos de Supabase
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           python - <<'PY'
           import os
           import sys
 
           url = os.environ.get("SUPABASE_URL", "").strip()
-          key = os.environ.get("SUPABASE_SECRET_KEY", "").strip()
+          key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
 
           if not url or not key:
-              print("ERROR: faltan SUPABASE_URL o SUPABASE_SECRET_KEY.")
+              print("ERROR: faltan SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY.")
               sys.exit(1)
 
           if not url.startswith("https://"):
               print("ERROR: SUPABASE_URL debe comenzar con https://")
               sys.exit(1)
 
-          print("Variables de Supabase presentes.")
-          print("No se muestran las credenciales por seguridad.")
+          print("Variables de Supabase presentes; credenciales ocultas.")
           PY
 
-      - name: Comprobar acceso a Supabase
+      - name: Comprobar acceso RPC sin modificar datos
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           python - <<'PY'
           import os
@@ -75,65 +72,46 @@ jobs:
           import requests
 
           base_url = os.environ["SUPABASE_URL"].rstrip("/")
-          key = os.environ["SUPABASE_SECRET_KEY"]
-
+          key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
           headers = {
               "apikey": key,
               "Authorization": f"Bearer {key}",
               "Content-Type": "application/json",
+              "Accept": "application/json",
           }
-
-          # Prueba de autorización sin insertar ni modificar registros.
-          url = (
-              f"{base_url}/rest/v1/rpc/"
-              "geotracia_import_national_roads"
-          )
-
+          url = f"{base_url}/rest/v1/rpc/geotracia_import_national_roads"
           payload = {
               "p_import_id": "00000000-0000-0000-0000-000000000000",
               "p_rows": [],
           }
 
           try:
-              response = requests.post(
-                  url,
-                  headers=headers,
-                  json=payload,
-                  timeout=30,
-              )
+              response = requests.post(url, headers=headers, json=payload, timeout=30)
           except requests.RequestException as exc:
               print(f"ERROR de conexión con Supabase: {exc}")
               sys.exit(1)
 
           if response.status_code not in (200, 204):
-              print(
-                  "ERROR: la prueba RPC no fue autorizada "
-                  "o la función devolvió un error."
-              )
+              print("ERROR: la prueba RPC falló.")
               print(f"HTTP: {response.status_code}")
               print(f"Respuesta: {response.text[:1500]}")
-              print(
-                  "No se iniciará la importación. "
-                  "Revisa la clave, la función RPC y sus permisos."
-              )
               sys.exit(1)
 
-          print("Prueba RPC superada.")
-          print("No se enviaron registros de carreteras.")
-          print(f"Respuesta: {response.text[:500]}")
+          print("Prueba RPC superada; no se enviaron carreteras.")
+          print(response.text[:500])
           PY
 
-      - name: Verificar script de importación
+      - name: Verificar ruta del script
         run: |
           test -f .github/scripts/import_geotracia_roads.py || {
-            echo "ERROR: no existe .github/scripts/import_geotracia_roads.py"
+            echo "::error::No existe .github/scripts/import_geotracia_roads.py"
             exit 1
           }
 
       - name: Importar red vial nacional
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           PYTHONUNBUFFERED: "1"
         run: |
           python -u .github/scripts/import_geotracia_roads.py
@@ -147,6 +125,5 @@ jobs:
       - name: Informar fallo
         if: failure()
         run: |
-          echo "La ejecución falló."
-          echo "Revisa el paso que aparece en rojo en GitHub Actions."
+          echo "La ejecución falló. Revisa el paso en rojo."
           echo "No compartas claves ni secretos en los registros."
