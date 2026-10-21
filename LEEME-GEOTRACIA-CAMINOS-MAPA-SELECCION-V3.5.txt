@@ -1,0 +1,21 @@
+GEOTRACIA — Caminos y tramos · Delta V3.5
+
+Archivos incluidos: index.html, roads.js, roads.css y migración SQL para exponer las geometrías de los caminos como GeoJSON.
+
+CAMBIOS
+- Mapa Leaflet con trazados de todos los caminos con geometría del proyecto activo.
+- Selección sincronizada entre mapa, lista del mapa y filas del inventario.
+- Botón Mostrar todos para quitar selección y ajustar la vista a la red completa.
+- Muestra rol vial, modalidad de contratación, tipo de red y progresivas inicial/final en la fila.
+- Lee los cinco campos nuevos directamente desde public.roads y mantiene fallback de atributos para datos anteriores.
+- Guarda esos campos en sus columnas y conserva attributes existentes al editar/crear.
+
+INSTALACIÓN
+1. Ejecutar 202610210008_geotracia_project_road_geometries.sql en Supabase SQL Editor.
+2. Copiar index.html, roads.js y roads.css a la raíz del repositorio, reemplazando los archivos correspondientes.
+3. Publicar en GitHub Pages y recargar con caché actualizada.
+
+NOTAS
+- Solo se dibujan caminos que tienen geometría válida almacenada en roads.geom. Los que no tengan geometría siguen en la lista y quedan sin trazado hasta que se asocie una geometría real.
+- La función es SECURITY INVOKER para respetar RLS del usuario.
+- No se han modificado ni borrado registros existentes.
