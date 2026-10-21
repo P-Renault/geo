@@ -1,0 +1,29 @@
+GEOTRACIA · INSPECCIONES V1.0 · DELTA
+
+CONTENIDO
+- app.js: reemplazar el archivo actual. El módulo Inspecciones ahora consulta y guarda registros en Supabase; no usa los registros de demostración del navegador.
+- index.html: reemplazar el archivo actual. Solo actualiza la versión de caché de app.js.
+- 202610210002_geotracia_inspections.sql: nueva migración de base de datos.
+
+INSTALACIÓN
+1. Guarda una copia de app.js e index.html actuales.
+2. En Supabase > SQL Editor, ejecuta el contenido completo de 202610210002_geotracia_inspections.sql.
+3. Reemplaza solo app.js e index.html por los de este paquete y publica en GitHub Pages.
+4. Abre GEOTRACIA, entra en Inspecciones y pulsa Actualizar.
+5. Selecciona el proyecto que contiene el camino, crea una inspección, guarda y confirma que aparece en el historial después de recargar la página.
+
+DEPENDENCIAS
+- La sesión autenticada de Supabase debe estar activa.
+- Deben existir organizations, members, projects, roads y segments.
+- Deben existir public.member_role, public.is_org_member(uuid) y public.has_org_role(uuid, public.member_role[]).
+- Los caminos y tramos deben haberse migrado previamente.
+
+ALCANCE
+- Consulta inspecciones, caminos y tramos reales del proyecto seleccionado.
+- Crea inspecciones vinculadas a organización, proyecto y camino, con tramo opcional.
+- Valida la relación camino/tramo y la progresiva dentro del rango del tramo.
+- Los errores de tabla ausente o RLS se muestran en el módulo.
+- Fotografías/documentos NO se cargan todavía en esta entrega; se integrarán mediante el componente transversal Evidencias.
+
+VALIDACIÓN
+Se comprobó sintaxis JavaScript con node --check. No se ejecutó esta migración contra el proyecto Supabase del usuario; debe verificarse allí durante la primera prueba.
