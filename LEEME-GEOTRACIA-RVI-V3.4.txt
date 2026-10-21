@@ -1,0 +1,7 @@
+GEOTRACIA RVI V3.4
+
+Cambios: el formulario abierto desde “Agregar camino al proyecto” muestra el botón final “Agregar camino”. Al guardar, mantiene la vinculación a organización/proyecto y presenta confirmación específica. Se añadió comprobación preventiva para evitar agregar dos veces el mismo source_id al mismo proyecto.
+
+Instalación: reemplazar en la raíz del repositorio los archivos incluidos: index.html, roads.js, map-gps-v11-osm-longitud.js, map-gps-v11-osm-longitud.css, map-gps.js y roads.css. No ejecutar SQL ni reimportar los datos para este cambio de interfaz.
+
+Nota: el esquema de Supabase debe tener roads.source_id y permitir la escritura de geom/attributes conforme a la migración del proyecto. Si el esquema no tiene source_id, la comprobación preventiva mostrará un error de columna; adaptar el esquema antes de publicar. Validar el guardado con una sesión real en Supabase.
