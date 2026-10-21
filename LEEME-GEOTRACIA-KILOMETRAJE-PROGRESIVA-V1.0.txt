@@ -1,0 +1,25 @@
+GEOTRACIA — KILOMETRAJE Y PROGRESIVA V1.0
+DELTA: SOLO ARCHIVOS MODIFICADOS
+
+ARCHIVOS INCLUIDOS
+- app.js: reemplazar. Implementa una vista propia de Kilometraje y progresiva, consulta caminos y tramos reales de Supabase y elimina las cifras demostrativas de esa vista.
+- index.html: reemplazar. Actualiza la versión de caché de app.js para que el navegador cargue el módulo nuevo.
+
+QUÉ HACE
+- Selección de proyecto desde los proyectos cargados de la organización autenticada.
+- Consulta de public.roads y public.segments filtrando por organization_id y project_id.
+- Resumen de caminos, tramos, tramos en mal estado y tramos sin evaluar.
+- Tabla de longitudes/rangos por camino y tabla de progresivas inicial/final por tramo.
+- Muestra errores de consulta en la interfaz; no sustituye errores por datos ficticios.
+- No crea ni modifica datos y no requiere una nueva migración SQL.
+
+REQUISITOS
+- Tener desplegada la versión funcional actual de GEOTRACIA y la migración 202610190003_geotracia_roads_segments.sql aplicada.
+- La sesión debe estar autenticada y tener acceso a la organización/proyecto.
+- Reemplaza únicamente app.js e index.html por estos archivos. Conserva respaldo previo.
+
+AUDITORÍA
+- Antes de este cambio, el módulo Kilometraje y progresiva caía en generic(), con KPIs de demostración.
+- Caminos y tramos ya consulta public.roads y public.segments desde el módulo Proyectos; el módulo nuevo reutiliza esas tablas existentes.
+- Este módulo es de consulta para la primera auditoría. No incorpora edición de progresivas, cálculo geométrico nuevo ni migraciones.
+- Validación ejecutada: node --check app.js. No se ha probado contra la instancia real de Supabase del usuario.
