@@ -1,0 +1,14 @@
+GEOTRACIA RVI V3.5 — CORRECCIÓN DE DOBLE CLIC Y AGREGAR CAMINO
+
+Archivos incluidos: index.html, map-gps.js, map-gps-v11-osm-longitud.js, map-gps-v11-osm-longitud.css, roads.js y roads.css.
+
+Flujo esperado:
+- Un clic sobre una vía RVI: abre la ficha informativa después de una breve espera para distinguirlo del doble clic.
+- Doble clic sobre una vía RVI: cancela la ficha y muestra la tarjeta con dos botones verticales: Registrar punto y Agregar camino al proyecto.
+- Registrar punto: abre el formulario con coordenadas y datos de la vía precargados.
+- Agregar camino al proyecto: abre el formulario de Caminos y tramos con los datos de origen, nombre, referencia/código sugerido, tipo, superficie, longitud y geometría cuando estén disponibles.
+- Botón final Agregar camino: guarda en Supabase y asocia al proyecto activo; si falla, muestra el error y conserva el formulario.
+
+Instalación: reemplazar los seis archivos de aplicación en la raíz del repositorio P-Renault/geo. No requiere volver a importar la red vial ni ejecutar SQL si ya se aplicó la migración roads/segments y existen las columnas source_id, geom y attributes.
+
+Nota: el registro de puntos continúa siendo temporal en la sesión del mapa; no se sincroniza a Supabase en esta versión. Probar el guardado del camino con una sesión real después del despliegue.

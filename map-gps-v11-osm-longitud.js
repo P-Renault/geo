@@ -348,6 +348,9 @@
         });
         layer.on('dblclick',event=>{
           clearTimeout(nationalClickTimer);
+          // Evita que el doble clic sobre una geometría RVI también active
+          // el manejador genérico del mapa que abre directamente Registrar punto.
+          window.__geoRviHandledDoubleClickAt=Date.now();
           if(event?.originalEvent){L.DomEvent.stopPropagation(event.originalEvent);L.DomEvent.preventDefault(event.originalEvent);}
           const road=getRoad();
           closeCard('geo-national-card');
