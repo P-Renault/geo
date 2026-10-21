@@ -1,0 +1,27 @@
+GEOTRACIA · INSPECCIONES + FOTOGRAFÍA · V1.2 · DELTA
+
+ARCHIVOS INCLUIDOS
+- app.js: agrega captura con cámara del teléfono, selección desde galería, vista previa, optimización y carga privada de fotografía asociada a la inspección. En la vista de inspección muestra la imagen mediante URL firmada temporal.
+- index.html: invalida caché de app.js a inspecciones-1.2.
+- 202610210003_geotracia_inspection_photos.sql: crea/configura el bucket privado y políticas Storage por organización. No crea ni modifica tablas de inspecciones.
+
+INSTALACIÓN
+1. Conserva una copia de app.js e index.html actuales.
+2. En Supabase SQL Editor, ejecuta el contenido de 202610210003_geotracia_inspection_photos.sql.
+3. Reemplaza solo app.js e index.html por los incluidos.
+4. Publica los cambios en GitHub Pages y recarga la aplicación.
+5. Abre Inspecciones > Nueva inspección. Usa “Tomar fotografía” para abrir la cámara del dispositivo o “Elegir de galería”. Guarda la inspección.
+6. Abre el registro en “Ver” para comprobar la fotografía.
+
+COMPORTAMIENTO
+- La foto es opcional; la inspección puede guardarse sin imagen.
+- Se aceptan JPG, PNG y WebP de hasta 10 MB antes de optimizar.
+- La imagen se reduce a un máximo de 1600 px y se comprime a JPEG cuando el navegador puede procesarla.
+- La foto se guarda en Supabase Storage (bucket privado geotracia-evidencias); en public.inspections.metadata se guarda solo la ruta y metadatos, no el binario.
+- La vista usa una URL firmada temporal de 5 minutos.
+- Si la inspección se guarda pero falla la carga de la foto, el mensaje indica que el registro sí quedó guardado y la carga de imagen falló.
+
+IMPORTANTE
+- Requiere que el usuario tenga una sesión autenticada y uno de los roles owner/admin/manager/inspector en la organización.
+- Esta entrega presupone que public.is_org_member(uuid), public.has_org_role(uuid, public.member_role[]) y public.member_role ya existen, como en el esquema inspeccionado.
+- La sintaxis JavaScript se comprobó con node --check. No se ha ejecutado el SQL ni probado la cámara contra la instancia real; valida ambos en tu entorno.
