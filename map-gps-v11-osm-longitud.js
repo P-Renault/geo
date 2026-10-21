@@ -306,7 +306,7 @@
     });
     const Control=L.Control.extend({options:{position:'topright'},onAdd(){
       const wrap=L.DomUtil.create('div','leaflet-control geo-national-layer-control');
-      wrap.innerHTML='<label class="geo-national-layer-toggle" title="Red Vial Importada · OpenStreetMap / Supabase"><input type="checkbox" aria-label="Activar Red Vial Importada"><span class="geo-national-layer-short"><b>RVI</b><small>Supabase</small></span></label>';
+      wrap.innerHTML='<label class="geo-national-layer-toggle" title="RVI · Red vial importada desde Supabase"><input type="checkbox" aria-label="Activar RVI"><span class="geo-national-layer-short"><b>RVI</b></span></label>';
       L.DomEvent.disableClickPropagation(wrap);L.DomEvent.disableScrollPropagation(wrap);
       const input=wrap.querySelector('input');
       L.DomEvent.on(input,'change',()=>{
