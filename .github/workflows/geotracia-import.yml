@@ -1,1 +1,152 @@
 
+name: GEOTRACIA - Importar red vial nacional
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: geotracia-national-roads-import
+  cancel-in-progress: false
+
+jobs:
+  import-national-roads:
+    name: Validar e importar red vial
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Instalar GDAL y herramientas
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin
+          python -m pip install --upgrade pip
+          python -m pip install gdown requests
+
+      - name: Verificar herramientas
+        run: |
+          python --version
+          ogrinfo --version
+          ogr2ogr --version
+
+      - name: Validar secretos de Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: |
+          python - <<'PY'
+          import os
+          import sys
+
+          url = os.environ.get("SUPABASE_URL", "").strip()
+          key = os.environ.get("SUPABASE_SECRET_KEY", "").strip()
+
+          if not url or not key:
+              print("ERROR: faltan SUPABASE_URL o SUPABASE_SECRET_KEY.")
+              sys.exit(1)
+
+          if not url.startswith("https://"):
+              print("ERROR: SUPABASE_URL debe comenzar con https://")
+              sys.exit(1)
+
+          print("Variables de Supabase presentes.")
+          print("No se muestran las credenciales por seguridad.")
+          PY
+
+      - name: Comprobar acceso a Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: |
+          python - <<'PY'
+          import os
+          import sys
+          import requests
+
+          base_url = os.environ["SUPABASE_URL"].rstrip("/")
+          key = os.environ["SUPABASE_SECRET_KEY"]
+
+          headers = {
+              "apikey": key,
+              "Authorization": f"Bearer {key}",
+              "Content-Type": "application/json",
+          }
+
+          # Prueba de autorización sin insertar ni modificar registros.
+          url = (
+              f"{base_url}/rest/v1/rpc/"
+              "geotracia_import_national_roads"
+          )
+
+          payload = {
+              "p_import_id": "00000000-0000-0000-0000-000000000000",
+              "p_rows": [],
+          }
+
+          try:
+              response = requests.post(
+                  url,
+                  headers=headers,
+                  json=payload,
+                  timeout=30,
+              )
+          except requests.RequestException as exc:
+              print(f"ERROR de conexión con Supabase: {exc}")
+              sys.exit(1)
+
+          if response.status_code not in (200, 204):
+              print(
+                  "ERROR: la prueba RPC no fue autorizada "
+                  "o la función devolvió un error."
+              )
+              print(f"HTTP: {response.status_code}")
+              print(f"Respuesta: {response.text[:1500]}")
+              print(
+                  "No se iniciará la importación. "
+                  "Revisa la clave, la función RPC y sus permisos."
+              )
+              sys.exit(1)
+
+          print("Prueba RPC superada.")
+          print("No se enviaron registros de carreteras.")
+          print(f"Respuesta: {response.text[:500]}")
+          PY
+
+      - name: Verificar script de importación
+        run: |
+          test -f .github/scripts/import_geotracia_roads.py || {
+            echo "ERROR: no existe .github/scripts/import_geotracia_roads.py"
+            exit 1
+          }
+
+      - name: Importar red vial nacional
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          PYTHONUNBUFFERED: "1"
+        run: |
+          python -u .github/scripts/import_geotracia_roads.py
+
+      - name: Resultado
+        if: success()
+        run: |
+          echo "El script de importación finalizó correctamente."
+          echo "Verifica los contadores y el estado en Supabase."
+
+      - name: Informar fallo
+        if: failure()
+        run: |
+          echo "La ejecución falló."
+          echo "Revisa el paso que aparece en rojo en GitHub Actions."
+          echo "No compartas claves ni secretos en los registros."
