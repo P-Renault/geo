@@ -14,6 +14,7 @@
   const cache = new Map();
   let mapRef = null, osmActive = false, mopActive = false, osmHighlight = null;
   let osmBusy = false, mopBusy = false, activeController = null;
+  let nationalLayer = null, nationalLayerControl = null, nationalLayerEnabled = false, nationalLayerBusy = false, nationalMoveTimer = null;
   let osmButton = null, mopButton = null;
   let approxMode = false, approxPoints = [], approxLine = null, approxMarkers = [], approxBar = null;
   let latestOsmClick = null, latestMopClick = null;
@@ -246,6 +247,78 @@
     if(!res.ok) throw new Error(body?.message||body?.hint||('Supabase respondió HTTP '+res.status));
     return Array.isArray(body)?body:[];
   }
+  async function searchVisibleNationalRoads(bounds, limit=250) {
+    const cfg=window.GEOTRACIA_SUPABASE_CONFIG||{};
+    if(!cfg.url||!cfg.anonKey) throw new Error('Falta la configuración pública de Supabase.');
+    const params={
+      p_west:bounds.getWest(),p_south:bounds.getSouth(),
+      p_east:bounds.getEast(),p_north:bounds.getNorth(),p_limit:limit
+    };
+    const res=await fetch(cfg.url.replace(/\/$/,'')+'/rest/v1/rpc/geotracia_visible_national_roads',{
+      method:'POST',headers:{'Content-Type':'application/json','apikey':cfg.anonKey,'Authorization':'Bearer '+cfg.anonKey,'Accept':'application/json'},
+      body:JSON.stringify(params),signal:AbortSignal.timeout(12000),cache:'no-store'
+    });
+    const body=await res.json().catch(()=>null);
+    if(!res.ok) throw new Error(body?.message||body?.hint||('Supabase respondió HTTP '+res.status));
+    return Array.isArray(body)?body:[];
+  }
+  function nationalPopup(road) {
+    const name=road.road_name||road.road_ref||'Camino sin nombre';
+    const len=Number(road.length_m);
+    return '<div class="geo-national-popup"><strong>'+esc(name)+'</strong><dl>'+
+      '<dt>Referencia</dt><dd>'+esc(road.road_ref||'No informada')+'</dd>'+
+      '<dt>Tipo de vía</dt><dd>'+esc(road.road_type||'No informado')+'</dd>'+
+      '<dt>Superficie</dt><dd>'+esc(road.surface||'No informada')+'</dd>'+
+      '<dt>Longitud geométrica</dt><dd>'+esc(Number.isFinite(len)&&len>0?fmtM(len):'No calculada')+'</dd>'+
+      '</dl><small>Fuente: OpenStreetMap / Geofabrik Chile. No es una longitud oficial MOP.</small></div>';
+  }
+  async function refreshNationalLayer() {
+    if(!mapRef||!nationalLayerEnabled||nationalLayerBusy)return;
+    if(mapRef.getZoom()<10){nationalLayer.clearLayers();status('Red vial importada activada. Acerca el mapa a nivel de caminos para cargar los datos de Supabase.');return;}
+    const b=mapRef.getBounds();
+    if((b.getNorth()-b.getSouth())>.20||(b.getEast()-b.getWest())>.20){
+      nationalLayer.clearLayers();status('Red vial importada activada. Acerca el mapa para consultar solo el área visible.',false);return;
+    }
+    nationalLayerBusy=true;status('Consultando red vial importada en Supabase para el área visible…');
+    try {
+      const rows=await searchVisibleNationalRoads(b,250);
+      const features=rows.map(r=>{
+        let g=r.geometry;if(typeof g==='string'){try{g=JSON.parse(g)}catch{g=null}}
+        if(g?.type==='Feature')g=g.geometry;
+        if(!g||!['LineString','MultiLineString'].includes(g.type))return null;
+        return {type:'Feature',geometry:g,properties:{id:r.id,name:r.road_name,ref:r.road_ref,type:r.road_type,surface:r.surface,length_m:r.length_m,source:'OSM / Geofabrik Chile'}};
+      }).filter(Boolean);
+      nationalLayer.clearLayers();
+      nationalLayer.addData({type:'FeatureCollection',features});
+      status('Red vial importada (OSM / Supabase): '+features.length+' geometrías cargadas en el área visible'+(rows.length>=250?' (límite de 250; acerca más el mapa para ver detalle).':'.'));
+    } catch(e) {
+      console.error('[GEOTRACIA red vial Supabase]',e);
+      status('No se pudo cargar la red vial importada desde Supabase: '+e.message+'. Verifica las funciones SQL incluidas en el paquete.',true);
+    } finally {nationalLayerBusy=false;}
+  }
+  function addNationalLayerControl(map) {
+    nationalLayer=L.geoJSON({type:'FeatureCollection',features:[]},{
+      style:()=>({color:'#0d9488',weight:4,opacity:.88,lineCap:'round',lineJoin:'round'}),
+      onEachFeature:(feature,layer)=>layer.bindPopup(nationalPopup({
+        road_name:feature.properties?.name,road_ref:feature.properties?.ref,road_type:feature.properties?.type,
+        surface:feature.properties?.surface,length_m:feature.properties?.length_m
+      }))
+    });
+    const Control=L.Control.extend({options:{position:'topright'},onAdd(){
+      const wrap=L.DomUtil.create('div','leaflet-control geo-national-layer-control');
+      wrap.innerHTML='<label><input type="checkbox" aria-label="Activar red vial importada de Supabase"><span><b>Red vial importada</b><small>OSM · Supabase (1 millón de registros)</small></span></label>';
+      L.DomEvent.disableClickPropagation(wrap);L.DomEvent.disableScrollPropagation(wrap);
+      const input=wrap.querySelector('input');
+      L.DomEvent.on(input,'change',()=>{
+        nationalLayerEnabled=input.checked;
+        if(nationalLayerEnabled){if(!map.hasLayer(nationalLayer))nationalLayer.addTo(map);refreshNationalLayer();}
+        else {if(map.hasLayer(nationalLayer))map.removeLayer(nationalLayer);status('Capa de red vial importada desactivada. La capa oficial MOP se controla por separado.');}
+      });
+      return wrap;
+    }});
+    nationalLayerControl=new Control();nationalLayerControl.addTo(map);
+    map.on('moveend',()=>{if(!nationalLayerEnabled)return;clearTimeout(nationalMoveTimer);nationalMoveTimer=setTimeout(()=>refreshNationalLayer(),450);});
+  }
   function roadGeoPaths(geometry) {
     if(!geometry)return [];
     let g=geometry;
@@ -270,12 +343,12 @@
       ['Superficie',road.surface||'No informada'],
       ['Longitud de geometría',Number.isFinite(length)&&length>0?fmtM(length):'No calculada'],
       ['Distancia al punto consultado',Number.isFinite(Number(road.distance_m))?fmtM(Number(road.distance_m)):'Búsqueda por nombre/localidad'],
-      ['Fuente','Catálogo vial nacional GEOTRACIA · Geofabrik Chile / OpenStreetMap'],
+      ['Fuente','Red vial importada · Geofabrik Chile / OpenStreetMap'],
       ['ID de registro',String(road.id??'No informado')]
     ];
     makeCard('geo-national-card','RED VIAL NACIONAL · SUPABASE',road.road_name||road.road_ref||'Camino vial',rows,
       'Geometría obtenida del catálogo vial nacional importado en Supabase. La longitud se calcula siguiendo la geometría almacenada; puede corresponder a una entidad/segmento y no necesariamente a todo el camino ni a una distancia de conducción.',
-      'Datos de OpenStreetMap · ODbL.');
+      'Datos de OpenStreetMap · ODbL. No corresponde a cartografía oficial MOP.');
     status('Camino encontrado en el catálogo nacional: '+(Number.isFinite(length)&&length>0?fmtM(length):'geometría cargada')+'.');
     return true;
   }
@@ -477,6 +550,7 @@
   }
   function setup(map) {
     if(!map||mapRef===map)return;mapRef=map;
+    addNationalLayerControl(map);
     addControl(map,'national','Buscar','Buscar camino por nombre, referencia o localidad en la red vial nacional',()=>openNationalSearch());
     addControl(map,'osm','OSM','Seleccionar y medir geometría cartográfica OSM',btn=>{
       osmActive=!osmActive;btn.classList.toggle('is-active',osmActive);btn.setAttribute('aria-pressed',String(osmActive));

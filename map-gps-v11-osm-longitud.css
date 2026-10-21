@@ -87,3 +87,17 @@
 .geo-national-result span{margin-top:4px;color:#637789;font-size:11px}
 .geo-national-result:active{background:#e2f5f2;border-color:#0d9488}
 .geo-national-state.is-error{color:#b42318}
+
+
+/* GEOTRACIA v2.3 — capa de red vial importada desde Supabase (OSM/Geofabrik). */
+.geo-national-layer-control{background:rgba(255,255,255,.98);border:1px solid rgba(19,48,72,.16);border-radius:10px;box-shadow:0 5px 18px rgba(7,28,50,.18);padding:10px 12px;max-width:min(250px,calc(100vw - 88px));font:12px/1.35 "DM Sans",sans-serif;color:#173653}
+.geo-national-layer-control label{display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin:0}
+.geo-national-layer-control input{flex:0 0 auto;margin:3px 0 0;accent-color:#0d9488;width:16px;height:16px}
+.geo-national-layer-control label span{display:grid;gap:4px;min-width:0}
+.geo-national-layer-control b{font-size:12px;font-weight:800}
+.geo-national-layer-control small{font-size:10px;line-height:1.35;color:#6b7f90}
+.geo-national-popup{min-width:205px;font:12px/1.4 "DM Sans",sans-serif;color:#173653}
+.geo-national-popup strong{display:block;font-size:14px;margin-bottom:8px}
+.geo-national-popup dl{display:grid;grid-template-columns:1fr 1fr;gap:5px 9px;margin:0 0 8px}
+.geo-national-popup dt{color:#65788a}.geo-national-popup dd{margin:0;text-align:right;font-weight:700;overflow-wrap:anywhere}
+.geo-national-popup small{color:#6b7f90;font-size:10px;line-height:1.4}

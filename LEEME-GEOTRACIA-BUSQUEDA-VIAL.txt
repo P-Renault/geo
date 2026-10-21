@@ -1,27 +1,22 @@
-GEOTRACIA — integración de búsqueda de red vial nacional (v2.2)
+GEOTRACIA V2.3 — CAPA DE RED VIAL IMPORTADA (SUPABASE)
 
-ARCHIVOS
-- map-gps-v11-osm-longitud.js: añade botón Buscar, búsqueda por nombre/referencia/atributos, dibujo de geometría almacenada y respaldo espacial al fallar OSM/MOP.
-- map-gps-v11-osm-longitud.css: estilos del buscador y resultados.
-- geotracia-national-search.sql: RPC de solo lectura que devuelve geometría GeoJSON, longitud y distancia.
+QUÉ CAMBIA
+- La casilla nueva “Red vial importada — OSM · Supabase (1 millón de registros)” consulta la tabla public.geotracia_national_roads.
+- Al activarla, carga únicamente geometrías dentro del área visible del mapa; no descarga los 800 MB ni el millón de registros al navegador.
+- Al mover el mapa, actualiza los caminos visibles. Acerca el mapa si aparece el aviso.
+- Cada camino permite abrir una ficha con referencia, tipo, superficie y longitud calculada a partir de su geometría.
+- La capa “Red vial oficial MOP” queda separada y sigue dependiendo del servicio cartográfico oficial MOP.
+- La búsqueda por nombre/referencia usa la misma tabla importada. La búsqueda textual de localidad solo funcionará si ese texto existe en los atributos de la vía.
 
-PASO OBLIGATORIO ANTES DE PROBAR
-1. En Supabase, abre SQL Editor.
-2. Ejecuta completo geotracia-national-search.sql.
-3. En GitHub, reemplaza los dos archivos map-gps-v11-osm-longitud.js y map-gps-v11-osm-longitud.css en la raíz del repositorio.
-4. En index.html, cambia las referencias existentes a estas versiones para invalidar caché:
-   map-gps-v11-osm-longitud.css?v=2.2
-   map-gps-v11-osm-longitud.js?v=2.2
-5. Publica y abre el sitio; recarga forzada o limpia caché.
+INSTALACIÓN
+1. En Supabase > SQL Editor, pega y ejecuta TODO geotracia-national-search.sql. Crea/actualiza dos funciones RPC de solo lectura y no modifica ni vuelve a importar los registros.
+2. Sube a la raíz del repositorio los archivos de este paquete: index.html, map-gps-v10-longitud-vial.js, map-gps-v11-osm-longitud.js y map-gps-v11-osm-longitud.css. También se incluye map-gps-v10-longitud-vial.css para mantener el conjunto completo.
+3. Reemplaza los archivos existentes por los del ZIP y espera a que GitHub Pages termine el despliegue.
+4. Abre el sitio, recarga forzada o borra caché, entra a Mapa y GPS y activa la casilla “Red vial importada”. Acerca el mapa a nivel de calles.
+5. Para buscar por nombre, pulsa el control “Buscar” y escribe una referencia o parte del nombre.
 
-PRUEBA
-- En Mapa y GPS, pulsa Buscar (nuevo control en el mapa).
-- Busca una parte del nombre o referencia vial. Los resultados proceden de geotracia_national_roads.
-- Pulsa un resultado para dibujar la geometría almacenada y mostrar la longitud geométrica.
-- Para una prueba espacial, pulsa Buscar y luego “Buscar cerca del mapa”. Busca a 500 m del centro actual del mapa.
+FUENTE Y PRECISIÓN
+La tabla fue importada desde Geofabrik Chile / OpenStreetMap (OSM); NO es cartografía oficial MOP. La capa MOP externa se identifica por separado. La longitud mostrada es longitud geodésica de la geometría OSM, no longitud oficial MOP ni distancia de conducción. Datos OSM sujetos a ODbL.
 
-IMPORTANTE
-- El buscador consulta nombres, referencias, tipo vial y atributos originales importados. Si la localidad no está presente en los atributos del camino, la búsqueda por localidad puede no encontrarlo; en ese caso usa nombre/referencia o búsqueda cerca del mapa.
-- La consulta espacial es solo de lectura y no vuelve a importar ni altera el millón de registros.
-- La longitud es la de la geometría almacenada; puede representar un segmento OSM y no necesariamente el camino completo ni una ruta de conducción.
-- Si Supabase devuelve error de permisos o de función inexistente, revisa que la migración se haya ejecutado en el mismo proyecto configurado en supabase-config.js.
+SEGURIDAD / CUOTA
+Las funciones son de solo lectura y limitan las consultas espaciales a un área acotada y un máximo de 400 resultados. No expongas una clave service_role en el frontend. La consulta usa la clave pública ya configurada en supabase-config.js y requiere que las funciones RPC sean ejecutables por anon/authenticated.

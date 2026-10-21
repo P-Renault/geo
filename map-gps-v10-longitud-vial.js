@@ -9,7 +9,7 @@
 
   const ROOT = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/';
   const DEFINITIONS = [
-    { label: 'Red vial nacional MOP', endpoint: 'Red_Vial_Chile/MapServer', opacity: .78, minZoom: 5, active: false },
+    { label: 'Red vial oficial MOP', endpoint: 'Red_Vial_Chile/MapServer', opacity: .78, minZoom: 5, active: false },
     { label: 'Puentes y pasos superiores', endpoint: 'Puentes/MapServer', opacity: .95, minZoom: 7, active: false },
     { label: 'Emergencias viales MOP', endpoint: 'Emergencias_Vialidad/MapServer', opacity: .98, minZoom: 5, active: false },
     { label: 'Infraestructura vial', endpoint: 'Infraestructura_Vial/MapServer', opacity: .88, minZoom: 7, active: false },
