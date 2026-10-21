@@ -308,7 +308,7 @@
       '<header><div><small>GEOTRACIA · ACCIONES VIALES</small><h2 id="geo-rvi-action-title">¿Qué deseas registrar?</h2><p>' + esc(road?.road_name || road?.road_ref || 'Vía seleccionada') + '</p></div>' +
       '<button type="button" class="geo-rvi-action-close" aria-label="Cerrar">×</button></header>' +
       '<div class="geo-rvi-action-buttons"><button type="button" data-geo-rvi-action="point"><span>1</span><span><b>Registrar punto</b><small>Guardar una referencia, inspección o incidencia en esta ubicación.</small></span></button>' +
-      '<button type="button" data-geo-rvi-action="road"><span>2</span><span><b>Agregar camino al proyecto</b><small>Crear el camino con los datos viales disponibles.</small></span></button></div></section>';
+      '<button type="button" data-geo-rvi-action="road"><span>2</span><span><b>Agregar camino al proyecto</b><small>Revisar los datos detectados y agregar la vía al proyecto activo.</small></span></button></div></section>';
     document.body.appendChild(overlay);
     const close = () => { overlay.remove(); };
     overlay.querySelector('.geo-rvi-action-close').addEventListener('click', close);
@@ -344,7 +344,7 @@
           nationalClickTimer=setTimeout(()=>{
             try { showNationalRoad({...road,distance_m:null},false); }
             catch(error) { console.error('[GEOTRACIA RVI ficha]',error); status('No se pudo abrir la ficha de esta geometría vial: '+error.message,true); }
-          },320);
+          },450);
         });
         layer.on('dblclick',event=>{
           clearTimeout(nationalClickTimer);

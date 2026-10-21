@@ -1,0 +1,11 @@
+GEOTRACIA RVI V3.6 — AJUSTE DEL FLUJO
+
+Archivos actualizados:
+- index.html: referencias de caché v3.6
+- map-gps.js: evita que el doble clic ya gestionado por RVI abra además el formulario genérico de punto
+- map-gps-v11-osm-longitud.js: espera de clic único ampliada para distinguirlo mejor del doble clic; menú RVI con acciones verticales
+- roads.js: mensajes de error de Supabase más concretos y estado visible del botón mientras agrega el camino
+
+Instalación: reemplaza estos archivos en la raíz del repositorio y publica. No requiere volver a importar la red vial ni ejecutar SQL nuevo si la migración de roads/segments ya está aplicada.
+
+Pruebas pendientes en el sitio real: un clic abre ficha; doble clic abre menú; Registrar punto abre formulario; Agregar camino al proyecto abre formulario precargado; Agregar camino guarda en Supabase. Si el guardado falla, el formulario debe permanecer abierto y mostrar el error de Supabase.
