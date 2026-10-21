@@ -1,0 +1,16 @@
+GEOTRACIA · Incidencias V1.0 — DELTA
+
+Archivos incluidos:
+- app.js: módulo Incidencias conectado a Supabase, lista, indicadores, progresiva, mapa, fotografía y estado.
+- index.html: referencia de caché actualizada.
+- 202610210007_geotracia_road_incidents.sql: tabla, índices, validación y RLS.
+
+INSTALACIÓN
+1) Ejecuta el SQL en Supabase SQL Editor.
+2) Sustituye únicamente app.js e index.html en el repositorio existente.
+3) Publica GitHub Pages y recarga.
+4) En Incidencias selecciona el proyecto, registra un evento con camino, progresiva y fotografía, y verifica su permanencia tras recargar.
+
+La ubicación se calcula mediante la función geotracia_inventory_road_geometries(p_project_id), creada para Inventario V1.3, y la geometría del camino. Reutiliza el bucket privado geotracia-evidencias y las políticas ya configuradas.
+
+No se ha ejecutado contra la instancia real del usuario; validar RLS, carga de fotos y geometría en terreno antes de uso operacional.
