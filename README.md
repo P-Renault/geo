@@ -1,49 +1,33 @@
-# GEOTRACIA Framework v0.2 — backend y autenticación
+# GEOTRACIA — paquete de ajustes preliminares
 
-## Incluye
-- Login real con Supabase Auth: correo/contraseña, sesión persistente, cierre de sesión y recuperación de contraseña.
-- Pantalla de configuración si no se han pegado las credenciales.
-- Migración PostgreSQL con organizaciones, miembros, roles, proyectos, caminos, tramos, inspecciones, activos, incidencias, archivos y auditoría.
-- Políticas RLS para aislar datos por organización y limitar operaciones por rol.
-- Framework visual v0.1 preservado.
+Este ZIP contiene los archivos del menú lateral y una guía para integrar el logotipo.
+**No es todavía la integración completa de la red vial nacional.** La consulta de
+`public.geotracia_national_roads` requiere ajustar el módulo de caminos según el
+esquema exacto de esa tabla y el mecanismo de consulta actual. No se debe desplegar
+como si esa parte ya estuviera resuelta.
 
-## Despliegue
-1. En Supabase crea un proyecto y guarda la URL y la clave `anon`/`publishable` del proyecto. Nunca uses `service_role` en frontend.
-2. En Supabase → SQL Editor ejecuta `supabase/migrations/202610190001_initial_geotracia.sql`. Comprueba que termine sin errores.
-3. En Authentication → URL Configuration configura la URL de Cloudflare Pages en Site URL y Redirect URLs. Para recuperación añade exactamente la URL de tu despliegue.
-4. Edita `supabase-config.js`: sustituye `https://TU-PROYECTO.supabase.co` y `PEGA_AQUI_TU_CLAVE_ANON_O_PUBLISHABLE`. Estos valores son públicos por diseño; RLS protege la base. No subas secretos de servidor.
-5. Publica el contenido de esta carpeta en Cloudflare Pages. La carga de Supabase JS se hace desde jsDelivr.
-6. En Supabase → Authentication → Users crea un usuario inicial (o habilita el registro solo si quieres auto-registro). Si creas el usuario por dashboard, la migración crea su perfil, pero no crea automáticamente una organización; para ese primer usuario puedes crear organización y membresía con SQL usando su UUID.
+## Archivos incluidos
+- `sidebar-toggle.js`: elimina el control visible de cierre; el menú se cierra al tocar
+  fuera, seleccionar un módulo o pulsar Escape.
+- `sidebar-toggle.css`: estilos para ocultar el botón de cierre y mostrar el logotipo.
+- `INTEGRACION.md`: pasos para integrar la marca y comprobar el módulo vial.
 
-## Crear el primer espacio de trabajo
-Después de crear un usuario en Authentication → Users, copia su UUID y ejecuta en SQL Editor, reemplazando ambos valores:
+## Aplicar menú lateral
+1. Haz una copia de seguridad de los archivos actuales.
+2. Reemplaza `sidebar-toggle.js` y `sidebar-toggle.css` por los incluidos.
+3. En `index.html`, dentro de `<a class="brand" data-go="dashboard">`, reemplaza
+   el elemento visual `<span class="logo">G</span>` por:
+   `<img class="brand-logo-image" src="geotracia-logo.png" alt="GEOTRACIA">`
+4. Verifica que `geotracia-logo.png` exista en la raíz del repositorio. Si el archivo
+   es otro, ajusta únicamente la ruta de `src`.
+5. Confirma que `sidebar-toggle.css` y `sidebar-toggle.js` sigan cargándose desde
+   `index.html`.
+6. Despliega y prueba el menú en móvil.
 
-```sql
-insert into public.organizations (name, created_by)
-values ('Mi organización', 'UUID-DEL-USUARIO')
-returning id;
-```
-
-Usa el `id` retornado para ejecutar:
-
-```sql
-insert into public.members (organization_id, user_id, role)
-values ('UUID-DE-LA-ORGANIZACION', 'UUID-DEL-USUARIO', 'owner');
-```
-
-## Roles iniciales
-- `owner`: propietario del espacio.
-- `admin`: administración del espacio.
-- `manager`: gestión operativa.
-- `inspector`: crea y actualiza datos de terreno.
-- `viewer`: consulta.
-
-## Límites importantes de esta entrega
-- El login sí usa Supabase Auth cuando configuras el proyecto.
-- El esquema y las políticas RLS sí quedan definidos en PostgreSQL al ejecutar la migración.
-- Los módulos del framework visual todavía muestran datos demostrativos y sus formularios aún no están conectados a estas tablas. Este ZIP no debe presentarse como sistema operativo completo.
-- Aún faltan: registro/invitación de usuarios desde panel, selector real de organización/proyecto, CRUD conectado tabla por tabla, auditoría mediante triggers/Edge Functions, políticas y pruebas de Storage privado, cartografía real, sincronización offline, pruebas automatizadas y revisión de seguridad antes de producción.
-- La migración activa PostGIS en el esquema `extensions`; valida que esté disponible en tu instancia Supabase.
-
-## Seguridad
-No desactives RLS. No coloques `service_role` en archivos frontend. Antes de producción revisa las políticas con cuentas de cada rol y dos organizaciones distintas.
+## Integración vial pendiente
+La tabla nacional contiene más de un millón de registros y ocupa gran parte de la
+base de datos. No hay que copiar sus geometrías a `roads`. La integración correcta
+debe consultar la tabla nacional y, al seleccionar un camino, guardar una referencia
+a su `source_id`/identificador en el registro de proyecto o camino asociado. Antes
+de generar ese cambio hace falta verificar las columnas exactas de `geotracia_national_roads`
+y el esquema de la migración actual. No ejecutar importaciones masivas adicionales.
