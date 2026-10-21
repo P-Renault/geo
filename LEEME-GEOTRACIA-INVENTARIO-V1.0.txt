@@ -1,0 +1,30 @@
+GEOTRACIA · INVENTARIO VIAL V1.0 — DELTA DE INTEGRACIÓN
+
+Contenido:
+- app.js: integra Inventario vial con consultas y persistencia reales en Supabase.
+- index.html: referencia de caché actualizada.
+- 202610210004_geotracia_road_inventory.sql: tabla, integridad, índices y RLS del inventario.
+
+INSTALACIÓN
+1. Conserva copia de los archivos actuales.
+2. En Supabase SQL Editor, ejecuta TODO 202610210004_geotracia_road_inventory.sql.
+3. Reemplaza solamente app.js e index.html por los incluidos aquí.
+4. Publica en GitHub Pages y recarga con caché actualizado.
+5. Abre Inventario vial, selecciona el proyecto y pulsa Actualizar.
+6. Registra un elemento asociado al camino y, opcionalmente, a un tramo. Verifica que aparece en la tabla y permanece después de recargar.
+
+FUNCIONALIDAD
+- Consulta los proyectos, caminos y tramos reales del usuario autenticado.
+- Consulta y guarda elementos en public.road_inventory.
+- Incluye código, nombre, tipo de activo, condición, estado operativo, camino, tramo, progresiva, cantidad/unidad, fecha de instalación y observaciones.
+- Validación de coherencia camino/tramo y progresiva.
+- RLS por organización y roles autorizados; eliminación solo owner/admin a nivel de base de datos.
+- No agrega datos de demostración al inventario.
+
+REQUISITOS
+- Deben existir public.organizations, public.projects, public.members, public.roads y public.segments.
+- Deben existir public.member_role, public.is_org_member(uuid) y public.has_org_role(uuid, public.member_role[]).
+- No se requiere modificar tablas de caminos, tramos o inspecciones.
+
+VALIDACIÓN
+El JavaScript se verificó sintácticamente con node --check. La migración SQL y las operaciones CRUD deben validarse en la instancia real de Supabase; no se ejecutaron contra el proyecto remoto.
