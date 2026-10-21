@@ -1,0 +1,27 @@
+GEOTRACIA — integración de búsqueda de red vial nacional (v2.2)
+
+ARCHIVOS
+- map-gps-v11-osm-longitud.js: añade botón Buscar, búsqueda por nombre/referencia/atributos, dibujo de geometría almacenada y respaldo espacial al fallar OSM/MOP.
+- map-gps-v11-osm-longitud.css: estilos del buscador y resultados.
+- geotracia-national-search.sql: RPC de solo lectura que devuelve geometría GeoJSON, longitud y distancia.
+
+PASO OBLIGATORIO ANTES DE PROBAR
+1. En Supabase, abre SQL Editor.
+2. Ejecuta completo geotracia-national-search.sql.
+3. En GitHub, reemplaza los dos archivos map-gps-v11-osm-longitud.js y map-gps-v11-osm-longitud.css en la raíz del repositorio.
+4. En index.html, cambia las referencias existentes a estas versiones para invalidar caché:
+   map-gps-v11-osm-longitud.css?v=2.2
+   map-gps-v11-osm-longitud.js?v=2.2
+5. Publica y abre el sitio; recarga forzada o limpia caché.
+
+PRUEBA
+- En Mapa y GPS, pulsa Buscar (nuevo control en el mapa).
+- Busca una parte del nombre o referencia vial. Los resultados proceden de geotracia_national_roads.
+- Pulsa un resultado para dibujar la geometría almacenada y mostrar la longitud geométrica.
+- Para una prueba espacial, pulsa Buscar y luego “Buscar cerca del mapa”. Busca a 500 m del centro actual del mapa.
+
+IMPORTANTE
+- El buscador consulta nombres, referencias, tipo vial y atributos originales importados. Si la localidad no está presente en los atributos del camino, la búsqueda por localidad puede no encontrarlo; en ese caso usa nombre/referencia o búsqueda cerca del mapa.
+- La consulta espacial es solo de lectura y no vuelve a importar ni altera el millón de registros.
+- La longitud es la de la geometría almacenada; puede representar un segmento OSM y no necesariamente el camino completo ni una ruta de conducción.
+- Si Supabase devuelve error de permisos o de función inexistente, revisa que la migración se haya ejecutado en el mismo proyecto configurado en supabase-config.js.

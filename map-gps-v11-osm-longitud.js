@@ -234,6 +234,77 @@
     card.querySelector('.geo-data-close').addEventListener('click',()=>card.remove());
     card.querySelector('.geo-approx-launch').addEventListener('click',()=>{card.remove();if(source==='mop')selectMop(latlng);else selectOsm(latlng);});
   }
+  async function searchNationalRoads({query='',latlng=null,limit=20}={}) {
+    const cfg=window.GEOTRACIA_SUPABASE_CONFIG||{};
+    if(!cfg.url||!cfg.anonKey) throw new Error('Falta la configuración pública de Supabase.');
+    const payload={p_query:query.trim()||null,p_lat:latlng?latlng.lat:null,p_lon:latlng?latlng.lng:null,p_limit:limit};
+    const res=await fetch(cfg.url.replace(/\/$/,'')+'/rest/v1/rpc/geotracia_search_national_roads',{
+      method:'POST',headers:{'Content-Type':'application/json','apikey':cfg.anonKey,'Authorization':'Bearer '+cfg.anonKey,'Accept':'application/json'},
+      body:JSON.stringify(payload),signal:AbortSignal.timeout(9000),cache:'no-store'
+    });
+    const body=await res.json().catch(()=>null);
+    if(!res.ok) throw new Error(body?.message||body?.hint||('Supabase respondió HTTP '+res.status));
+    return Array.isArray(body)?body:[];
+  }
+  function roadGeoPaths(geometry) {
+    if(!geometry)return [];
+    let g=geometry;
+    if(typeof g==='string'){try{g=JSON.parse(g)}catch{return []}}
+    if(g.type==='Feature')g=g.geometry;
+    if(!g||!Array.isArray(g.coordinates))return [];
+    const raw=g.type==='LineString'?[g.coordinates]:g.type==='MultiLineString'?g.coordinates:[];
+    return raw.filter(path=>Array.isArray(path)&&path.length>1).map(path=>path.map(c=>[Number(c[1]),Number(c[0])]).filter(c=>Number.isFinite(c[0])&&Number.isFinite(c[1]))).filter(path=>path.length>1);
+  }
+  function showNationalRoad(road,zoom=true) {
+    const paths=roadGeoPaths(road.geometry);
+    if(!paths.length)throw new Error('El registro encontrado no contiene geometría lineal válida.');
+    const layers=paths.map(path=>L.polyline(path,{color:'#0d9488',weight:7,opacity:.97,lineCap:'round',lineJoin:'round'}));
+    if(osmHighlight)mapRef.removeLayer(osmHighlight);
+    osmHighlight=L.layerGroup(layers).addTo(mapRef);
+    const bounds=osmHighlight.getBounds();if(zoom&&bounds.isValid())mapRef.fitBounds(bounds.pad(.12),{maxZoom:16});
+    const length=Number(road.length_m);
+    const rows=[
+      ['Nombre del camino',road.road_name||'Camino sin nombre registrado'],
+      ['Referencia vial',road.road_ref||'No informada'],
+      ['Tipo de vía',road.road_type||'No informado'],
+      ['Superficie',road.surface||'No informada'],
+      ['Longitud de geometría',Number.isFinite(length)&&length>0?fmtM(length):'No calculada'],
+      ['Distancia al punto consultado',Number.isFinite(Number(road.distance_m))?fmtM(Number(road.distance_m)):'Búsqueda por nombre/localidad'],
+      ['Fuente','Catálogo vial nacional GEOTRACIA · Geofabrik Chile / OpenStreetMap'],
+      ['ID de registro',String(road.id??'No informado')]
+    ];
+    makeCard('geo-national-card','RED VIAL NACIONAL · SUPABASE',road.road_name||road.road_ref||'Camino vial',rows,
+      'Geometría obtenida del catálogo vial nacional importado en Supabase. La longitud se calcula siguiendo la geometría almacenada; puede corresponder a una entidad/segmento y no necesariamente a todo el camino ni a una distancia de conducción.',
+      'Datos de OpenStreetMap · ODbL.');
+    status('Camino encontrado en el catálogo nacional: '+(Number.isFinite(length)&&length>0?fmtM(length):'geometría cargada')+'.');
+    return true;
+  }
+  function openNationalSearch() {
+    const old=document.getElementById('geo-national-search');if(old){old.remove();return;}
+    const card=document.createElement('section');card.id='geo-national-search';card.className='geo-data-card';card.setAttribute('role','dialog');card.setAttribute('aria-label','Buscar en la red vial nacional');
+    card.innerHTML='<header class="geo-data-card-head"><div><span class="geo-data-kicker">GEOTRACIA · CATÁLOGO NACIONAL</span><h2>Buscar camino por nombre o localidad</h2></div><button type="button" class="geo-data-close" aria-label="Cerrar búsqueda">×</button></header><div class="geo-data-card-body"><form class="geo-national-search-form"><label class="geo-national-label" for="geo-national-query">Nombre, ruta, referencia o localidad</label><div class="geo-national-search-row"><input id="geo-national-query" name="query" type="search" placeholder="Ej. Ruta R-720, camino rural, localidad…" minlength="2" autocomplete="off" required><button type="submit" class="geo-national-submit">Buscar</button></div></form><p class="geo-national-hint">También puedes dejar el campo vacío y usar “Buscar cerca del mapa” para consultar la geometría vial próxima al centro del mapa.</p><button type="button" class="geo-national-near">⌖ Buscar cerca del mapa</button><div class="geo-national-results" aria-live="polite"></div></div>';
+    document.body.appendChild(card);
+    card.querySelector('.geo-data-close').addEventListener('click',()=>card.remove());
+    const form=card.querySelector('form'),input=card.querySelector('#geo-national-query'),results=card.querySelector('.geo-national-results');
+    async function run(query,near=false){results.innerHTML='<p class="geo-national-state">Consultando Supabase…</p>';try{
+      const latlng=near&&mapRef?mapRef.getCenter():null;
+      const roads=await searchNationalRoads({query,latlng,limit:20});
+      if(!roads.length){results.innerHTML='<p class="geo-national-state">No hay coincidencias. Prueba con parte del nombre, referencia vial o una localidad distinta.</p>';return;}
+      results.replaceChildren();roads.forEach((road,i)=>{const b=document.createElement('button');b.type='button';b.className='geo-national-result';const name=road.road_name||road.road_ref||'Camino sin nombre';const meta=[road.road_ref,road.road_type,Number.isFinite(Number(road.length_m))&&Number(road.length_m)>0?fmtM(Number(road.length_m)):null].filter(Boolean).join(' · ');b.innerHTML='<strong>'+esc(name)+'</strong><span>'+esc(meta||'Red vial nacional')+'</span>';b.addEventListener('click',()=>{try{showNationalRoad(road,true);card.remove();}catch(e){results.innerHTML='<p class="geo-national-state is-error">'+esc(e.message)+'</p>';}});results.appendChild(b);});
+    }catch(e){console.error('[GEOTRACIA catálogo nacional]',e);results.innerHTML='<p class="geo-national-state is-error">No se pudo consultar el catálogo: '+esc(e.message)+'. Verifica que hayas ejecutado la migración SQL de búsqueda y que Supabase permita la consulta.</p>';}}
+    form.addEventListener('submit',e=>{e.preventDefault();const q=input.value.trim();if(q.length<2)return;run(q,false)});
+    card.querySelector('.geo-national-near').addEventListener('click',()=>run('',true));
+    setTimeout(()=>input.focus(),50);
+  }
+  async function tryNationalFallback(latlng) {
+    try {
+      const roads=await searchNationalRoads({latlng,limit:8});
+      const valid=roads.map(r=>({...r,_distance:Number(r.distance_m)})).filter(r=>roadGeoPaths(r.geometry).length&&(!Number.isFinite(r._distance)||r._distance<=500));
+      if(!valid.length)return false;
+      valid.sort((a,b)=>(Number.isFinite(a._distance)?a._distance:Infinity)-(Number.isFinite(b._distance)?b._distance:Infinity));
+      return showNationalRoad(valid[0],false);
+    } catch(e) { console.warn('[GEOTRACIA catálogo nacional]',e); return false; }
+  }
   async function tryMopFallback(latlng) {
     const found=await queryMop(latlng);
     if(!found||found.distance>160)return false;
@@ -268,7 +339,7 @@
     if(osmBusy){status('La consulta anterior sigue en curso. Espera un momento.');return;} osmBusy=true; loadingCard('geo-osm-card','Buscando camino…','Identificando la vía más cercana y calculando automáticamente la longitud de su geometría.');
     try {
       const ways=await fetchWays(latlng.lat,latlng.lng);
-      if(!ways.length){closeCard('geo-osm-card');status('OSM no devolvió geometría. Consultando respaldo MOP…');const recovered=await tryMopFallback(latlng);if(!recovered){status('No se obtuvo geometría desde OSM ni desde MOP. No se calculó una longitud.',true);showRetryCard('Ninguna fuente devolvió geometría vial. Acerca el mapa o inténtalo más tarde; no se calculará una línea recta.',latlng);}return;}
+      if(!ways.length){closeCard('geo-osm-card');status('OSM no devolvió geometría. Consultando respaldo MOP…');let recovered=await tryMopFallback(latlng);if(!recovered)recovered=await tryNationalFallback(latlng);if(!recovered){status('OSM, MOP y catálogo nacional no devolvieron geometría. No se calculó una longitud.',true);showRetryCard('Ninguna fuente devolvió geometría vial. Usa “Buscar” para localizar el camino por nombre o referencia, o acerca el mapa; no se calculará una línea recta.',latlng);}return;}
       const p=[latlng.lat,latlng.lng];
       // La distancia visual en pantalla decide primero: es más intuitiva en móvil que un radio fijo en metros.
       const candidates=ways.map(way=>({way,pixels:pixelDistance(mapRef,latlng,way.geometry),meters:nearestMeters(p,way.geometry)}));
@@ -311,10 +382,11 @@
     } catch(e) {
       console.warn('[GEOTRACIA v2.1 OSM; respaldo MOP]',e); closeCard('geo-osm-card');
       status('OSM no respondió dentro del tiempo límite. Consultando respaldo MOP…');
-      const recovered=await tryMopFallback(latlng);
+      let recovered=await tryMopFallback(latlng);
+      if(!recovered)recovered=await tryNationalFallback(latlng);
       if(!recovered) {
-        status('OSM y MOP no entregaron geometría vial. No se calculó una longitud.',true);
-        showRetryCard('Los servicios cartográficos no devolvieron geometría. Inténtalo de nuevo más tarde; GEOTRACIA no usará una línea recta ni pedirá dibujar el camino.',latlng);
+        status('OSM, MOP y catálogo nacional no entregaron geometría vial. No se calculó una longitud.',true);
+        showRetryCard('Los servicios externos y el catálogo nacional no devolvieron geometría. Pulsa “Buscar” para probar por nombre o referencia; no se utilizará una línea recta.',latlng);
       }
     } finally {osmBusy=false;}
   }
@@ -396,7 +468,7 @@
       const wrap=L.DomUtil.create('div','leaflet-bar geo-v13-control');
       const btn=L.DomUtil.create('button','geo-v13-button',wrap);btn.type='button';btn.textContent=label;btn.title=title;
       btn.setAttribute('aria-label',title);btn.setAttribute('aria-pressed','false');
-      if(kind==='osm')osmButton=btn;else mopButton=btn;
+      if(kind==='osm')osmButton=btn;else if(kind==='mop')mopButton=btn;
       L.DomEvent.disableClickPropagation(wrap);
       L.DomEvent.on(btn,'click',()=>{callback(btn);});
       return wrap;
@@ -405,6 +477,7 @@
   }
   function setup(map) {
     if(!map||mapRef===map)return;mapRef=map;
+    addControl(map,'national','Buscar','Buscar camino por nombre, referencia o localidad en la red vial nacional',()=>openNationalSearch());
     addControl(map,'osm','OSM','Seleccionar y medir geometría cartográfica OSM',btn=>{
       osmActive=!osmActive;btn.classList.toggle('is-active',osmActive);btn.setAttribute('aria-pressed',String(osmActive));
       map.getContainer().classList.toggle('geo-osm-select-mode',osmActive);

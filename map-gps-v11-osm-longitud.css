@@ -69,3 +69,21 @@
 /* GEOTRACIA v2.1: tarjetas móviles con desplazamiento interno */
 .geo-data-card{max-height:min(82dvh,760px);overflow:hidden;display:flex;flex-direction:column}
 .geo-data-card .geo-data-card-body{overflow-y:auto;overscroll-behavior:contain}
+
+/* GEOTRACIA v2.2 — búsqueda del catálogo vial nacional */
+.geo-national-control{margin-top:8px!important;border:0!important;box-shadow:0 4px 16px rgba(7,28,50,.2)!important}
+.geo-national-control .geo-v13-button{width:54px;font-size:11px;letter-spacing:-.02em}
+.geo-national-search-form{margin:8px 0 10px}
+.geo-national-label{display:block;margin:0 0 7px;font-weight:800;color:#173653}
+.geo-national-search-row{display:flex;gap:8px}
+.geo-national-search-row input{flex:1;min-width:0;height:44px;padding:0 12px;border:1px solid #d3dfe7;border-radius:10px;background:#fff;color:#173653;font:14px "DM Sans",sans-serif}
+.geo-national-submit,.geo-national-near{border:0;border-radius:10px;padding:0 15px;background:#0d9488;color:#fff;font:800 13px "DM Sans",sans-serif;cursor:pointer}
+.geo-national-near{width:100%;min-height:42px;margin:2px 0 10px;background:#173653}
+.geo-national-hint,.geo-national-state{font-size:12px;line-height:1.5;color:#667b8d}
+.geo-national-results{display:grid;gap:8px;margin-top:8px}
+.geo-national-result{display:block;width:100%;padding:12px;border:1px solid #dce6ec;border-radius:11px;background:#f7fafc;color:#173653;text-align:left;cursor:pointer}
+.geo-national-result strong,.geo-national-result span{display:block;overflow-wrap:anywhere}
+.geo-national-result strong{font-size:14px}
+.geo-national-result span{margin-top:4px;color:#637789;font-size:11px}
+.geo-national-result:active{background:#e2f5f2;border-color:#0d9488}
+.geo-national-state.is-error{color:#b42318}
