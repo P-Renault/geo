@@ -1,13 +1,20 @@
-GEOTRACIA — Corrección focalizada de Inspecciones (V1.4)
+GEOTRACIA — Inspecciones V1.5 (delta sobre geo-Desarrollo restaurado)
 
-Archivos incluidos: app.js e index.html. Se parte del paquete geo-Desarrollo.zip restaurado. No modifica styles.css ni la lógica de los mapas de Inventario e Incidencias.
+Incluye únicamente app.js e index.html, además de este LEEME. No modifica styles.css ni la lógica de los mapas de Inventario e Incidencias.
 
-Cambios:
-- El mapa de Inspecciones dibuja la línea del segmento asociado usando start_km y end_km.
-- La progresiva puntual se representa adicionalmente como marcador cuando existe.
-- El contador/status distingue tramos, puntos y registros sin ubicación.
-- Se invalida la caché del navegador mediante versión en la referencia a app.js.
+Correcciones:
+- Dibuja el tramo de trabajo vinculado a cada inspección entre start_km y end_km.
+- El contador cuenta tanto tramos dibujados como progresivas puntuales.
+- Añade «Asignar tramo» / «Cambiar tramo» en cada inspección existente. Guarda segment_id en Supabase y permite opcionalmente una progresiva puntual dentro del rango.
+- En nuevas inspecciones, exige seleccionar tramo cuando el camino tenga segmentos registrados.
+- Actualiza el parámetro de versión de app.js para evitar caché antigua.
 
-Integración: reemplaza app.js e index.html por los incluidos en este ZIP y publica el proyecto. Mantén una copia previa.
+Instalación:
+1. Parte del paquete geo-Desarrollo restaurado que mantiene Inventario e Incidencias operativos.
+2. Sustituye app.js e index.html por los de este delta.
+3. Publica en GitHub Pages y recarga completamente la página.
+4. En Inspecciones, pulsa «Asignar tramo» para cada registro antiguo que diga «Camino completo», selecciona el tramo real y guarda.
 
-Validación: node --check app.js sin errores. No se ha probado contra la instancia productiva de Supabase. El tramo solo se podrá dibujar si el registro tiene segment_id válido y la geometría del camino existe en roads.geom.
+Importante: los registros actuales mostrados en las capturas no tienen segment_id ni km_progressive. No es correcto inventarles un tramo automáticamente; hay que asociar el tramo real. Después de guardar, el mapa lo dibuja usando roads.geom y las progresivas del segmento.
+
+Validación: node --check app.js correcto. No se ha probado contra la instancia productiva de Supabase.
