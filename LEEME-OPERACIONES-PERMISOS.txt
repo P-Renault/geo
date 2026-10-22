@@ -1,0 +1,22 @@
+GEOTRACIA · Operaciones y permisos · Delta v1
+Fecha: 22-10-2026
+
+ARCHIVOS
+- app.js: módulo Operaciones y permisos con operaciones/servicios, asignaciones, roles por proyecto y exportación CSV.
+- 202610220004_geotracia_operations_permissions.sql: tablas, índices, función de autorización y políticas RLS.
+
+INSTALACIÓN
+1. Realiza una copia de seguridad de tu app.js actual.
+2. En Supabase > SQL Editor, ejecuta el contenido completo de 202610220004_geotracia_operations_permissions.sql.
+3. Reemplaza app.js por el incluido en el ZIP y publica el despliegue.
+4. Fuerza la recarga de la aplicación.
+5. Abre Proyectos y verifica que la organización/proyectos estén cargados. Luego abre Operaciones y permisos.
+6. Crea una operación de prueba y confirma que aparece después de recargar.
+
+NOTAS IMPORTANTES
+- El delta incluye solamente app.js y la migración SQL, más este archivo de instrucciones. Conserva el index.html y los estilos de la versión validada.
+- Las asignaciones requieren el UUID de un usuario que exista en Supabase Auth.
+- La primera asignación de acceso al proyecto debe realizarla un miembro con rol de organización owner/admin/administrator, o un project_admin ya autorizado.
+- La función RLS presupone public.members con organization_id, user_id, role y active, y public.organizations/projects con UUID como en el esquema actual del proyecto.
+- El registro de auditoría intenta insertar en public.audit_logs; si el esquema de auditoría difiere, la operación principal se guarda igualmente y el evento debe adaptarse al esquema real.
+- Verificaciones realizadas: node --check app.js e integridad del ZIP. No se ha ejecutado la migración en la instancia real de Supabase ni se ha realizado una prueba E2E autenticada. Validar RLS con dos usuarios de prueba antes de producción.
