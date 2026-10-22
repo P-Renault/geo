@@ -1,0 +1,21 @@
+GEOTRACIA — Corrección del mapa de Mantenimiento
+Fecha: 22-10-2026
+
+ARCHIVO
+- app.js
+
+CAMBIOS
+- Se agregó un panel cartográfico visible en la pantalla principal de Mantenimiento.
+- Se consulta el RPC geotracia_inventory_road_geometries usado por los módulos de Inspecciones e Inventario.
+- Se dibujan las geometrías de los caminos del proyecto.
+- Las órdenes con progresivas inicial y final se dibujan como tramos resaltados; las órdenes sin progresivas específicas se marcan sobre el camino cuando hay geometría.
+- Se ajusta el tamaño de Leaflet después del renderizado y se destruye la instancia anterior al cambiar de módulo para evitar mapas en blanco.
+- El estado del mapa informa si no se recibieron geometrías del RPC.
+
+INSTALACIÓN
+1. Reemplaza el app.js actual por el incluido en este ZIP.
+2. Publica el cambio.
+3. Recarga la aplicación limpiando la caché del navegador.
+
+IMPORTANTE
+La implementación reutiliza el RPC de geometrías que ya emplean Inspecciones e Inventario. Si el estado informa que el RPC no entregó geometrías, revisar esa función y sus permisos en Supabase. La sintaxis JS fue validada con node --check; no se ha podido probar contra la instancia remota del usuario.
