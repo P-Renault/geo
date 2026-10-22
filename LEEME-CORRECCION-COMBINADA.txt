@@ -1,0 +1,18 @@
+GEOTRACIA — Corrección combinada (22-10-2026)
+
+IMPORTANTE: Este delta combina la versión de Formularios y Fichas que incluye exportación PDF/impresión, Excel XLSX, CSV y previsualización de PDF con los cambios del mapa de Mantenimiento. No usar el app.js del ZIP de mapa v3 anterior por separado, porque ese archivo no contenía todos los controles de exportación de formularios.
+
+Archivos incluidos:
+- app.js: mantiene exportación CSV, XLSX, vista imprimible/PDF y vista previa del PDF adjunto en Formularios y Fichas; incorpora panel y renderizado del mapa de Mantenimiento.
+- index.html: conserva la carga de la biblioteca XLSX requerida para la exportación a Excel.
+
+Instalación:
+1. Haz una copia de seguridad de los archivos actuales.
+2. Reemplaza app.js e index.html por los incluidos.
+3. Publica los cambios y fuerza recarga del navegador (limpiar caché).
+4. Abre Formularios y Fichas y verifica que sigan visibles los botones CSV, Excel y PDF.
+5. Abre Mantenimiento y verifica el panel del mapa.
+
+No volver a ejecutar la migración SQL de documentos si ya fue ejecutada.
+
+Validaciones realizadas: node --check app.js e integridad del ZIP. No se ha probado contra la instancia real de Supabase; el dibujo de caminos requiere que el RPC geotracia_inventory_road_geometries entregue geometrías válidas.
