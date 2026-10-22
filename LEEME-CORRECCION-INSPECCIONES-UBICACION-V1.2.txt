@@ -1,0 +1,19 @@
+GEOTRACIA — Corrección de ubicación en Inspecciones V1.2
+
+Archivos:
+- app.js: cálculo de ubicación corregido para inspecciones.
+- styles.css: estilos del mapa que ya estaban en la reparación anterior.
+
+Correcciones:
+1. Intenta primero la RPC geotracia_project_road_geometries y usa geotracia_inventory_road_geometries como compatibilidad.
+2. Acepta las claves geojson y road_geojson.
+3. Usa la longitud declarada en la geometría o la longitud del registro roads.
+4. Si la inspección no tiene km_progressive pero sí un tramo vinculado al mismo camino, calcula una ubicación aproximada en el inicio del tramo.
+5. Si no puede calcular la ubicación, muestra la causa concreta.
+
+Instalación:
+1. Reemplazar app.js y styles.css en la raíz del repositorio.
+2. Publicar en GitHub Pages y recargar Inspecciones.
+3. La ubicación aproximada en el inicio del tramo se usa solo cuando km_progressive está vacío; para precisión, registrar la progresiva real.
+
+No requiere migración SQL adicional si ya existe al menos una de las RPC de geometría mencionadas. No modifica los registros almacenados.
