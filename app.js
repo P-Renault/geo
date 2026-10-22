@@ -193,7 +193,16 @@ async function loadInspectionData(projectId=inspectionProjectId){
   const g=await client.rpc('geotracia_inventory_road_geometries',{p_project_id:inspectionProjectId});
   if(g.error)throw new Error('No se pudieron cargar geometrías para ubicar inspecciones: '+g.error.message);
   for(const x of(g.data||[])){let geom=x.road_geojson||x.geojson||x.geom_geojson;if(typeof geom==='string'){try{geom=JSON.parse(geom)}catch{geom=null}}if(x.road_id&&geom)inspectionRoadGeometries[x.road_id]={geojson:geom,length_m:x.length_m==null?null:Number(x.length_m)}}
-  inspectionRows=inspectionRows.map(x=>{const geom=inspectionRoadGeometries[x.road_id];const p=geom?inventoryLinePoint(geom.geojson,x.km_progressive,geom.length_m):null;return {...x,_mapLat:p?.lat??null,_mapLng:p?.lng??null}});
+  // La inspección se ubica con su tramo asociado; la progresiva puntual es complementaria.
+  const segmentById=id=>inspectionSegments.find(s=>String(s.id)===String(id));
+  inspectionRows=inspectionRows.map(x=>{
+   const geom=inspectionRoadGeometries[x.road_id];
+   const segment=segmentById(x.segment_id);
+   const line=geom&&segment&&Number.isFinite(Number(segment.start_km))&&Number.isFinite(Number(segment.end_km))
+    ?inventoryLineSlice(geom.geojson,Number(segment.start_km),Number(segment.end_km),geom.length_m):null;
+   const p=geom&&x.km_progressive!=null?inventoryLinePoint(geom.geojson,x.km_progressive,geom.length_m):null;
+   return {...x,_mapLine:line,_mapLat:p?.lat??null,_mapLng:p?.lng??null,_mapStartKm:segment?.start_km??null,_mapEndKm:segment?.end_km??null,_mapGeometryError:!!segment&&!line};
+  });
  }catch(e){inspectionError=inspectionErrorMessage(e);inspectionRows=[];}
  finally{inspectionLoading=false;if(active==='inspecciones')show()}
 }
@@ -214,8 +223,54 @@ function inspectionsModule(){
  <section class="panel" style="margin-top:12px"><div class="panel-head"><div><h2>Mapa de inspecciones</h2><div class="sub">Ubicación calculada desde la progresiva y la geometría del camino. Un clic selecciona; doble clic abre la ficha.</div></div><span class="badge">${inspectionRows.filter(x=>x._mapLat!=null&&x._mapLng!=null).length} ubicadas</span></div><div class="panel-body"><div id="inspectionMap" class="inventory-map" style="height:360px;min-height:300px;width:100%;border-radius:12px;overflow:hidden" role="application" aria-label="Mapa de inspecciones"></div><div id="inspectionMapStatus" class="sub" style="margin-top:8px">${inspectionRows.some(x=>x._mapLat!=null&&x._mapLng!=null)?'Selecciona un marcador o una fila para ubicar la inspección.':'No hay inspecciones con progresiva y geometría calculable.'}</div></div></section>
  <div class="note" style="margin-top:12px">Las inspecciones mantienen sus registros, estados y evidencias. La ubicación cartográfica se calcula sin guardar coordenadas duplicadas.</div>`;
 }
-function renderInspectionMap(){const el=$('#inspectionMap');if(!el||!window.L)return;if(inspectionMapInstance){try{inspectionMapInstance.remove()}catch{}inspectionMapInstance=null;inspectionMapMarkers={}}const map=L.map(el,{doubleClickZoom:false}).setView([-38.7359,-72.5904],7);inspectionMapInstance=map;L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);const located=inspectionRows.filter(x=>x._mapLat!=null&&x._mapLng!=null&&Number.isFinite(Number(x._mapLat))&&Number.isFinite(Number(x._mapLng)));located.forEach(x=>{const selected=x.id===selectedInspectionId;const m=L.circleMarker([Number(x._mapLat),Number(x._mapLng)],{radius:selected?10:7,color:selected?'#0f766e':'#7c3aed',weight:selected?4:2,fillColor:selected?'#2dd4bf':'#c4b5fd',fillOpacity:.9});m.bindTooltip(`${esc(x.code)} · ${esc(x.title)}`);m.on('click',()=>selectInspectionOnMap(x.id,false));m.on('dblclick',e=>{L.DomEvent.stop(e);viewInspection(x.id)});m.addTo(map);inspectionMapMarkers[x.id]=m});if(located.length){map.fitBounds(L.latLngBounds(located.map(x=>[Number(x._mapLat),Number(x._mapLng)])),{padding:[24,24],maxZoom:16});if(located.length===1)map.setZoom(16)}setTimeout(()=>map.invalidateSize(),100)}
-function selectInspectionOnMap(id,openDetail=false){const x=inspectionRows.find(r=>r.id===id);if(!x)return;selectedInspectionId=id;document.querySelectorAll('#content .inventory-row-selected').forEach(r=>r.classList.remove('inventory-row-selected'));const row=[...document.querySelectorAll('#content tbody tr')].find(r=>r.querySelector(`[data-id="${CSS.escape(id)}"]`));if(row)row.classList.add('inventory-row-selected');const marker=inspectionMapMarkers[id];if(marker&&inspectionMapInstance){inspectionMapInstance.setView(marker.getLatLng(),Math.max(inspectionMapInstance.getZoom(),15),{animate:true});Object.entries(inspectionMapMarkers).forEach(([key,m])=>m.setStyle(key===id?{radius:11,color:'#0f766e',weight:4,fillColor:'#2dd4bf'}:{radius:7,color:'#7c3aed',weight:2,fillColor:'#c4b5fd'}));const status=$('#inspectionMapStatus');if(status)status.textContent=`Seleccionada: ${x.code} · ${x.title}`;}else{const status=$('#inspectionMapStatus');if(status)status.textContent=`${x.code} no tiene ubicación calculable. Verifica su progresiva y la geometría del camino.`;$('#inspectionMap')?.scrollIntoView({behavior:'smooth',block:'center'})}if(openDetail)viewInspection(id)}
+function renderInspectionMap(){
+ const el=$('#inspectionMap');if(!el||!window.L)return;
+ if(inspectionMapInstance){try{inspectionMapInstance.remove()}catch{}inspectionMapInstance=null;inspectionMapMarkers={}}
+ const map=L.map(el,{doubleClickZoom:false}).setView([-38.7359,-72.5904],7);inspectionMapInstance=map;
+ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);
+ const bounds=[];let drawable=0;
+ inspectionRows.forEach(x=>{
+  const selected=x.id===selectedInspectionId;
+  if(Array.isArray(x._mapLine)&&x._mapLine.length>=2){
+   const parts=[];let current=[];for(const c of x._mapLine){if(!c){if(current.length>=2)parts.push(current);current=[];continue}current.push([Number(c[1]),Number(c[0])])}if(current.length>=2)parts.push(current);const latlngs=parts.flat();
+   if(latlngs.length>=2&&latlngs.every(p=>Number.isFinite(p[0])&&Number.isFinite(p[1]))){
+    const line=L.polyline(parts,{color:selected?'#0f766e':'#7c3aed',weight:selected?9:6,opacity:.95,lineCap:'round',lineJoin:'round'}).addTo(map);
+    line.bindTooltip(`${esc(x.code)} · ${esc(x.title)} · Km ${Number(x._mapStartKm).toFixed(3)}–${Number(x._mapEndKm).toFixed(3)}`);
+    line.on('click',()=>selectInspectionOnMap(x.id,false));line.on('dblclick',e=>{L.DomEvent.stop(e);viewInspection(x.id)});
+    inspectionMapMarkers[x.id]={line,point:null};latlngs.forEach(p=>bounds.push(p));drawable++;
+   }
+  }
+  if(x._mapLat!=null&&x._mapLng!=null&&Number.isFinite(Number(x._mapLat))&&Number.isFinite(Number(x._mapLng))){
+   const point=L.circleMarker([Number(x._mapLat),Number(x._mapLng)],{radius:selected?9:6,color:selected?'#0f766e':'#ea580c',weight:selected?4:2,fillColor:selected?'#2dd4bf':'#fdba74',fillOpacity:.95}).addTo(map);
+   point.bindTooltip(`${esc(x.code)} · ${esc(x.title)} · Km ${Number(x.km_progressive).toFixed(3)}`);
+   point.on('click',()=>selectInspectionOnMap(x.id,false));point.on('dblclick',e=>{L.DomEvent.stop(e);viewInspection(x.id)});
+   if(!inspectionMapMarkers[x.id])inspectionMapMarkers[x.id]={line:null,point};else inspectionMapMarkers[x.id].point=point;
+   bounds.push([Number(x._mapLat),Number(x._mapLng)]);drawable++;
+  }
+ });
+ if(bounds.length){map.fitBounds(L.latLngBounds(bounds),{padding:[28,28],maxZoom:16});if(bounds.length===1)map.setZoom(16)}
+ const status=$('#inspectionMapStatus');
+ if(status){
+  const lines=inspectionRows.filter(x=>Array.isArray(x._mapLine)&&x._mapLine.length>=2).length;
+  const points=inspectionRows.filter(x=>x._mapLat!=null&&x._mapLng!=null).length;
+  const without=inspectionRows.filter(x=>!x._mapLine&&! (x._mapLat!=null&&x._mapLng!=null)).length;
+  status.textContent=drawable?`${lines} tramo(s) resaltado(s) · ${points} progresiva(s) puntual(es) · ${without} inspección(es) sin ubicación calculable.`:'No hay geometrías/progresivas disponibles. Comprueba que el proyecto tenga geometría vial y que la inspección tenga un tramo o progresiva.';
+ }
+ setTimeout(()=>map.invalidateSize(),100);
+}
+function selectInspectionOnMap(id,openDetail=false){
+ const x=inspectionRows.find(r=>r.id===id);if(!x)return;selectedInspectionId=id;
+ document.querySelectorAll('#content .inventory-row-selected').forEach(r=>r.classList.remove('inventory-row-selected'));
+ const row=[...document.querySelectorAll('#content tbody tr')].find(r=>r.querySelector(`[data-id="${CSS.escape(id)}"]`));if(row)row.classList.add('inventory-row-selected');
+ const layers=inspectionMapMarkers[id];
+ if(layers&&inspectionMapInstance){
+  if(layers.line){layers.line.setStyle({color:'#0f766e',weight:9,opacity:1});inspectionMapInstance.fitBounds(layers.line.getBounds(),{padding:[35,35],maxZoom:16})}
+  if(layers.point){const ll=layers.point.getLatLng();inspectionMapInstance.setView(ll,Math.max(inspectionMapInstance.getZoom(),15),{animate:true});layers.point.setStyle({radius:10,color:'#0f766e',weight:4,fillColor:'#2dd4bf'})}
+  Object.entries(inspectionMapMarkers).forEach(([key,group])=>{if(key===id)return;if(group.line)group.line.setStyle({color:'#7c3aed',weight:6,opacity:.95});if(group.point)group.point.setStyle({radius:6,color:'#ea580c',weight:2,fillColor:'#fdba74'})});
+  const status=$('#inspectionMapStatus');if(status)status.textContent=`Seleccionada: ${x.code} · ${x.title}${x._mapLine?` · tramo km ${Number(x._mapStartKm).toFixed(3)}–${Number(x._mapEndKm).toFixed(3)}`:x.km_progressive!=null?` · progresiva km ${Number(x.km_progressive).toFixed(3)}`:' · sin ubicación calculable'}`;
+ }else{const status=$('#inspectionMapStatus');if(status)status.textContent=`${x.code} no tiene ubicación calculable. Verifica el tramo asociado, sus progresivas y la geometría del camino.`;$('#inspectionMap')?.scrollIntoView({behavior:'smooth',block:'center'})}
+ if(openDetail)viewInspection(id)
+}
 function newInspection(){
  if(!geoOrg||!inspectionProjectId)return toast('Selecciona un proyecto válido.');
  if(!inspectionRoads.length)return toast('Este proyecto no tiene caminos registrados.');
@@ -309,6 +364,28 @@ function inventoryLinePoint(geojson, progressKm, declaredLengthM){
  const lengths=[];let total=0;for(let i=1;i<pts.length;i++){const d=hav(pts[i-1],pts[i]);lengths.push(d);total+=d}if(total<=0)return null;
  const target=Number(progressKm)*1000;const max=Number(declaredLengthM)>0?Number(declaredLengthM):total;const fraction=Math.max(0,Math.min(1,target/max));let remaining=fraction*total;
  for(let i=1;i<pts.length;i++){const d=lengths[i-1];if(remaining<=d||i===pts.length-1){const f=d?Math.max(0,Math.min(1,remaining/d)):0;return {lat:Number(pts[i-1][1])+(Number(pts[i][1])-Number(pts[i-1][1]))*f,lng:Number(pts[i-1][0])+(Number(pts[i][0])-Number(pts[i-1][0]))*f}}remaining-=d}return null;
+}
+function inventoryLineSlice(geojson,startKm,endKm,declaredLengthM){
+ if(!geojson||!Number.isFinite(Number(startKm))||!Number.isFinite(Number(endKm))||Number(startKm)<0||Number(endKm)<=Number(startKm))return null;
+ let lines=[];
+ if(geojson.type==='LineString')lines=[geojson.coordinates||[]];
+ else if(geojson.type==='MultiLineString')lines=geojson.coordinates||[];
+ else if(geojson.type==='Feature')return inventoryLineSlice(geojson.geometry,startKm,endKm,declaredLengthM);
+ else if(geojson.type==='GeometryCollection')lines=(geojson.geometries||[]).flatMap(g=>g.type==='LineString'?[g.coordinates||[]]:g.type==='MultiLineString'?(g.coordinates||[]):[]);
+ const validLines=lines.map(line=>line.filter(c=>Array.isArray(c)&&c.length>=2&&Number.isFinite(Number(c[0]))&&Number.isFinite(Number(c[1])))).filter(line=>line.length>=2);
+ if(!validLines.length)return null;
+ const hav=(a,b)=>{const rad=x=>x*Math.PI/180,dLat=rad(b[1]-a[1]),dLon=rad(b[0]-a[0]),q=Math.sin(dLat/2)**2+Math.cos(rad(a[1]))*Math.cos(rad(b[1]))*Math.sin(dLon/2)**2;return 6371008.8*2*Math.atan2(Math.sqrt(q),Math.sqrt(Math.max(0,1-q)))};
+ const pieces=[];let geometricTotal=0;
+ for(const line of validLines){const lengths=[];let total=0;for(let i=1;i<line.length;i++){const d=hav(line[i-1],line[i]);lengths.push(d);total+=d}pieces.push({line,lengths,total,start:geometricTotal,end:geometricTotal+total});geometricTotal+=total}
+ if(geometricTotal<=0)return null;
+ const declared=Number(declaredLengthM)>0?Number(declaredLengthM):geometricTotal;
+ const from=Math.max(0,Math.min(geometricTotal,Number(startKm)*1000/declared*geometricTotal));
+ const to=Math.max(0,Math.min(geometricTotal,Number(endKm)*1000/declared*geometricTotal));if(to<=from)return null;
+ const pointAt=(piece,target)=>{let remaining=Math.max(0,Math.min(piece.total,target-piece.start));for(let i=1;i<piece.line.length;i++){const d=piece.lengths[i-1];if(remaining<=d||i===piece.line.length-1){const f=d?Math.max(0,Math.min(1,remaining/d)):0;return [Number(piece.line[i-1][0])+(Number(piece.line[i][0])-Number(piece.line[i-1][0]))*f,Number(piece.line[i-1][1])+(Number(piece.line[i][1])-Number(piece.line[i-1][1]))*f]}remaining-=d}return piece.line[piece.line.length-1]};
+ const result=[];
+ for(const piece of pieces){const a=Math.max(from,piece.start),b=Math.min(to,piece.end);if(b<=a)continue;const part=[pointAt(piece,a)];for(let i=1;i<piece.line.length-1;i++){const pos=piece.start+piece.lengths.slice(0,i).reduce((sum,v)=>sum+v,0);if(pos>a&&pos<b)part.push(piece.line[i])}part.push(pointAt(piece,b));if(part.length>=2)result.push(...(result.length? [null]:[]),...part)}
+ // MultiLineString parts are kept separate by null separators; Leaflet receives each part as its own polyline.
+ return result.length>=2?result:null;
 }
 function inventoryPointFor(item){const g=inventoryRoadGeometries[item?.road_id];const derived=g?inventoryLinePoint(g.geojson,item?.km_progressive,g.length_m):null;if(derived)return {...derived,derived:true};if(item?.latitude!=null&&item?.longitude!=null&&Number.isFinite(Number(item.latitude))&&Number.isFinite(Number(item.longitude)))return {lat:Number(item.latitude),lng:Number(item.longitude),legacy:true};return null}
 function refreshInventoryDerivedPoints(){inventoryRows=inventoryRows.map(x=>{const p=inventoryPointFor(x);return {...x,_mapLat:p?.lat??null,_mapLng:p?.lng??null}})}

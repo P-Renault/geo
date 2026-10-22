@@ -1,26 +1,13 @@
-GEOTRACIA RVI V2.8 — REGISTRO DE PUNTO POR DOBLE CLIC
+GEOTRACIA — Corrección focalizada de Inspecciones (V1.4)
 
-Archivos incluidos:
-- index.html
-- map-gps.js
-- map-gps-v11-osm-longitud.js
-- map-gps-v11-osm-longitud.css
+Archivos incluidos: app.js e index.html. Se parte del paquete geo-Desarrollo.zip restaurado. No modifica styles.css ni la lógica de los mapas de Inventario e Incidencias.
 
 Cambios:
-1. Un clic en una geometría de RVI queda disponible para abrir la ficha persistente del camino.
-2. Registrar un punto desde el mapa ahora se inicia con doble clic, no con un clic simple.
-3. El doble clic abre un formulario modal sobre el mapa con latitud y longitud precargadas.
-4. Se desactiva el zoom de Leaflet por doble clic para que no compita con el formulario.
-5. Al guardar, el punto se añade a la sesión actual y aparece en la lista existente.
-6. Se actualizan las versiones de caché a 2.8.
+- El mapa de Inspecciones dibuja la línea del segmento asociado usando start_km y end_km.
+- La progresiva puntual se representa adicionalmente como marcador cuando existe.
+- El contador/status distingue tramos, puntos y registros sin ubicación.
+- Se invalida la caché del navegador mediante versión en la referencia a app.js.
 
-Instalación:
-Reemplaza los cuatro archivos incluidos en la raíz del repositorio GitHub. No elimines otros archivos.
-Espera el despliegue de GitHub Pages y recarga la página.
-Prueba:
-- Un clic sobre una línea RVI: debe abrir la ficha de información del camino.
-- Doble clic sobre el mapa o una vía: debe abrir “Registrar punto”.
-- Completa el nombre, confirma coordenadas y pulsa “Registrar punto”.
+Integración: reemplaza app.js e index.html por los incluidos en este ZIP y publica el proyecto. Mantén una copia previa.
 
-Nota:
-Los puntos continúan siendo temporales de la sesión, tal como funciona actualmente el módulo; esta corrección no añade sincronización de puntos a Supabase.
+Validación: node --check app.js sin errores. No se ha probado contra la instancia productiva de Supabase. El tramo solo se podrá dibujar si el registro tiene segment_id válido y la geometría del camino existe en roads.geom.
