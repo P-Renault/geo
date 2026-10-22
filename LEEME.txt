@@ -1,26 +1,14 @@
-GEOTRACIA RVI V2.8 — REGISTRO DE PUNTO POR DOBLE CLIC
+GEOTRACIA — Corrección de mapa de inspecciones
 
-Archivos incluidos:
-- index.html
-- map-gps.js
-- map-gps-v11-osm-longitud.js
-- map-gps-v11-osm-longitud.css
+Contenido del delta:
+- app.js: carga las geometrías viales de Supabase, recorta el trazo según start_km/end_km del segmento asociado a cada inspección, representa inspecciones puntuales por km_progressive y añade la acción «Ubicar».
+- styles.css: estilos del mapa y resaltado de la inspección seleccionada.
 
-Cambios:
-1. Un clic en una geometría de RVI queda disponible para abrir la ficha persistente del camino.
-2. Registrar un punto desde el mapa ahora se inicia con doble clic, no con un clic simple.
-3. El doble clic abre un formulario modal sobre el mapa con latitud y longitud precargadas.
-4. Se desactiva el zoom de Leaflet por doble clic para que no compita con el formulario.
-5. Al guardar, el punto se añade a la sesión actual y aparece en la lista existente.
-6. Se actualizan las versiones de caché a 2.8.
+Integración:
+1. Haz una copia de seguridad de los app.js y styles.css actuales.
+2. Reemplaza esos dos archivos en la raíz del proyecto por los incluidos aquí.
+3. Publica el proyecto como lo haces habitualmente.
 
-Instalación:
-Reemplaza los cuatro archivos incluidos en la raíz del repositorio GitHub. No elimines otros archivos.
-Espera el despliegue de GitHub Pages y recarga la página.
-Prueba:
-- Un clic sobre una línea RVI: debe abrir la ficha de información del camino.
-- Doble clic sobre el mapa o una vía: debe abrir “Registrar punto”.
-- Completa el nombre, confirma coordenadas y pulsa “Registrar punto”.
+La corrección reutiliza el RPC existente geotracia_inventory_road_geometries(p_project_id). La geometría debe estar cargada en Supabase y las inspecciones deben tener segment_id para resaltar un tramo; si solo tienen km_progressive, se muestra un marcador puntual.
 
-Nota:
-Los puntos continúan siendo temporales de la sesión, tal como funciona actualmente el módulo; esta corrección no añade sincronización de puntos a Supabase.
+Validación realizada en este paquete: comprobación sintáctica de app.js con Node.js. No se ha ejecutado contra una instancia real de Supabase ni desplegado a GitHub Pages.
