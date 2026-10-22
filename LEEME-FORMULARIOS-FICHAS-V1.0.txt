@@ -1,0 +1,16 @@
+GEOTRACIA — Formularios y fichas técnicas V1.0
+
+Incluye: app.js, styles.css, index.html, migración SQL y este instructivo.
+
+Funcionalidad: biblioteca de plantillas; configuración de campos JSON con validación; completar y editar fichas; estados borrador/enviada/completada; filtros y búsqueda; asociación opcional a proyecto/camino y progresivas; captura GPS; fotografía a Storage; exportación CSV; borradores locales si falla la sincronización y acción de sincronización manual. Interfaz responsive escritorio/móvil.
+
+Instalación:
+1. Respalda app.js, styles.css e index.html.
+2. En Supabase SQL Editor, ejecuta completa la migración 202610220002_geotracia_forms_and_sheets.sql. Requiere las funciones existentes public.is_org_member(uuid), public.has_org_role(uuid, public.member_role[]) y las tablas organizations/projects/members.
+3. Reemplaza los tres archivos web de este ZIP en la raíz del proyecto.
+4. Publica en GitHub Pages, inicia sesión y abre Formularios y fichas.
+5. Crea una plantilla y prueba una ficha. Para foto se requiere bucket privado geotracia-evidencias con permisos de Storage para el usuario autenticado. La captura GPS requiere permiso del navegador y HTTPS.
+
+Formato de campos: cada elemento JSON requiere key, label y type (text, textarea, number, date, select, checkbox); required es booleano y select acepta options como arreglo de cadenas.
+
+Nota: no se ejecutó la migración en tu Supabase ni se probó con credenciales productivas en este entorno. Si las funciones/roles de seguridad de tu esquema difieren, comparte el error exacto para ajustar la migración.
