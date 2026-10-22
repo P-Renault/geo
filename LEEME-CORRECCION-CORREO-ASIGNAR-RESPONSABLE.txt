@@ -1,0 +1,19 @@
+GEOTRACIA — Asignación de responsable por correo electrónico
+
+Archivo modificado: app.js
+
+Cambios:
+- El formulario ya no pide copiar el UUID de Supabase Auth.
+- El usuario ingresa el correo electrónico del responsable.
+- La aplicación busca ese correo entre los miembros activos cargados para el proyecto y obtiene internamente el user_id.
+- El nombre visible se completa si el registro del miembro tiene nombre.
+- Si el correo no pertenece a un miembro activo con acceso al proyecto, se muestra un mensaje claro. Primero debe otorgarse acceso al usuario desde la gestión de permisos del proyecto.
+- Se conserva la tabla geotracia_operation_assignments y el vínculo por user_id; no requiere migración SQL.
+
+Instalación:
+1. Haz una copia de seguridad del app.js desplegado.
+2. Reemplázalo por el app.js de este ZIP.
+3. Despliega los cambios y recarga la aplicación.
+
+Validación realizada: node --check app.js.
+No se ha probado contra la instancia real de Supabase. Para que la búsqueda funcione, geotracia_project_access debe contener el correo electrónico y user_id de los miembros activos.
