@@ -1,14 +1,14 @@
-GEOTRACIA — Corrección de selección de tramo en Inspecciones
+GEOTRACIA — Delta V1.3: restauración de mapas y tramos de inspección
 
-Archivos incluidos:
-- app.js: exige seleccionar un tramo de trabajo al crear una inspección, agrega la acción «Asignar tramo» para inspecciones existentes y carga geometrías con un RPC alternativo cuando corresponde.
-- styles.css: estilos originales incluidos sin alterar para conservar la presentación actual.
+Archivos incluidos: app.js y styles.css originales modificados.
 
-Integración:
-1. Haz una copia de seguridad de app.js y styles.css actuales.
-2. Reemplaza ambos archivos por los de este paquete en la raíz del proyecto.
-3. Publica el cambio y recarga la aplicación sin caché.
-4. En Inspecciones, en los registros existentes que muestran «Sin tramo asociado» o «Camino completo», pulsa «Asignar tramo», elige el tramo real y guarda.
-5. El contador del mapa debe actualizarse cuando la geometría vial esté disponible en Supabase. El trazo representa las progresivas inicial y final del segmento seleccionado.
+Cambios:
+- Define dimensiones explícitas para los mapas de Inventario, Incidencias e Inspecciones.
+- Mantiene el renderizado de los mapas existentes y vuelve a inicializar el mapa correspondiente al cambiar de módulo.
+- Añade mapa de inspecciones, selección Ubicar y dibujo del tramo según start_km/end_km del segmento vinculado.
+- Para inspecciones puntuales usa km_progressive sobre la geometría vial.
+- El estado del mapa informa cuando faltan geometría o progresivas; no dibuja el camino completo como sustituto.
 
-Importante: esta corrección no puede adivinar qué tramo corresponde a una inspección antigua que fue guardada sin segment_id. Debe asignarse explícitamente desde la interfaz. La sintaxis JavaScript se validó con node --check; no se probó contra la instancia productiva de Supabase ni se desplegó a GitHub Pages.
+Integración: reemplaza app.js y styles.css en la raíz del proyecto. Conserva respaldo previo.
+
+Validación: sintaxis JavaScript revisada. No se ha probado contra la instancia productiva de Supabase ni desplegado a GitHub Pages. La RPC geotracia_inventory_road_geometries debe devolver road_id y una geometría en road_geojson, geojson o geom_geojson. Para dibujar un tramo, la inspección debe tener segment_id válido y el segmento start_km/end_km.

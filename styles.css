@@ -11,5 +11,7 @@
 @media(max-width:1000px){.mobile-brand{display:flex}}
 @media(max-width:700px){.mobile-brand{display:flex}.mobile-brand b{font-size:12px}}
 
-/* GEOTRACIA: mapa de tramos de inspección */
-.inspection-map{height:390px;width:100%;min-height:260px;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#eef3f7;z-index:1}.inspection-row-selected{background:#eaf8f5!important;box-shadow:inset 3px 0 #0f766e}.inspection-row-selected td{color:#164e48}@media(max-width:700px){.inspection-map{height:300px;min-height:250px}}
+/* GEOTRACIA mapas: altura explícita para evitar mapas colapsados en móvil */
+.inventory-map{display:block;width:100%;height:420px;min-height:320px;position:relative;z-index:0;overflow:hidden;border-radius:14px;background:#e8f0f2}
+#inspectionMap,#inventoryMap,#incidentMap{height:420px;min-height:320px;width:100%}
+@media(max-width:700px){.inventory-map,#inspectionMap,#inventoryMap,#incidentMap{height:380px;min-height:300px}}
