@@ -780,15 +780,15 @@ function assignOperation(){
  <div class="full"><label class="field-label" for="opsAssignEmail">Correo electrónico del responsable</label><input class="field" id="opsAssignEmail" type="email" list="opsAssignEmails" autocomplete="email" placeholder="nombre@empresa.cl" required>${memberOptions?`<datalist id="opsAssignEmails">${memberOptions}</datalist>`:''}<small class="sub">Ingresa el correo registrado en los miembros con acceso al proyecto. El identificador de Supabase se resolverá automáticamente.</small></div>
  ${field('Nombre visible del responsable','opsAssignName','Nombre y apellido')}
  <div><label class="field-label" for="opsAssignRole">Función en la operación</label><select class="field" id="opsAssignRole"><option>Responsable</option><option>Supervisor</option><option>Inspector</option><option>Ejecutor</option><option>Apoyo técnico</option></select></div>
- <div class="full note">La asignación se guardará en Supabase y quedará vinculada a la operación y al proyecto actual.</div><div class="full sub" id="opsAssignStatus" role="status" aria-live="polite"></div>
+ <div class="full note">La asignación se guardará en Supabase y quedará vinculada a la operación y al proyecto actual.</div><div class="full sub" id="opsAssignStatus" role="status" aria-live="polite" style="overflow-wrap:anywhere;white-space:normal"></div>
  </form>`,`<button class="btn" data-close>Cancelar</button><button class="btn primary" data-action="ops-assign-save">Guardar asignación</button>`);
  const email=$('#opsAssignEmail'),name=$('#opsAssignName');
  email?.addEventListener('change',()=>{const member=membersWithEmail.find(m=>String(m.email||'').trim().toLowerCase()===email.value.trim().toLowerCase());if(member&&!name.value.trim())name.value=member.display_name||member.member_name||''});
 }
 async function saveOperationAssignment(){
  const form=$('#opsAssignForm'),button=$('#dialogFoot [data-action="ops-assign-save"]'),status=$('#opsAssignStatus');
- const report=message=>{if(status)status.textContent=message;toast(message)};
- if(!form)return report('No se encontró el formulario de asignación. Cierra la ventana y vuelve a abrirla.');
+ const report=message=>{if(status){status.textContent=message;status.style.color='#b42318';status.style.background='#fff1f0';status.style.border='1px solid #f3b7b3';status.style.borderRadius='8px';status.style.padding='10px 12px';status.scrollIntoView({block:'nearest',behavior:'smooth'})}else console.error('[GEOTRACIA] '+message)};
+ if(!form)return report('No se encontró el formulario. Cierra la ventana y vuelve a abrirla.');
  if(!form.reportValidity())return report('Completa la operación y el correo electrónico del responsable.');
  if(!window.geoSupabase)return report('Supabase no está disponible.');
  if(!geoOrg?.id||!opsProjectId)return report('Selecciona una organización y un proyecto.');
@@ -796,10 +796,42 @@ async function saveOperationAssignment(){
  const email=$('#opsAssignEmail')?.value.trim().toLowerCase();
  if(!opsRows.some(o=>o.id===operationId))return report('Selecciona una operación válida del proyecto.');
  if(!email)return report('Ingresa el correo electrónico del responsable.');
- const member=opsMembers.find(m=>m.user_id&&m.active!==false&&String(m.email||'').trim().toLowerCase()===email);
- if(!member)return report('No se encontró ese correo entre los miembros con acceso al proyecto. Primero concede acceso al proyecto a esa persona y verifica que su correo esté registrado.');
- const payload={organization_id:geoOrg.id,project_id:opsProjectId,operation_id:operationId,user_id:member.user_id,member_name:$('#opsAssignName')?.value.trim()||member.display_name||member.member_name||email,assignment_role:$('#opsAssignRole')?.value||'Responsable',status:'Activa',created_by:geoCurrentUser?.id||null};
- try{if(button){button.disabled=true;button.textContent='Guardando…'}if(status)status.textContent='Guardando asignación en Supabase…';const {error}=await window.geoSupabase.from('geotracia_operation_assignments').insert(payload);if(error)throw error;$('#dialog').close();toast('Responsable asignado correctamente.');await loadOperationsData(opsProjectId)}catch(e){console.error('[GEOTRACIA] Error al asignar responsable',e);report('No se pudo asignar el responsable: '+(e?.message||'error desconocido de Supabase'))}finally{if(button){button.disabled=false;button.textContent='Guardar asignación'}}}
+ try{
+  if(button){button.disabled=true;button.textContent='Verificando usuario…'}
+  if(status){status.style.color='';status.style.background='#eff6ff';status.style.border='1px solid #bfdbfe';status.textContent='Buscando correo y verificando membresía de la organización…'}
+  // Resolve email from the app's public profile table; never query auth.users from the browser.
+  const profileResult=await window.geoSupabase.from('profiles').select('id,full_name,email').ilike('email',email).limit(2);
+  if(profileResult.error)throw new Error('No se pudo consultar profiles: '+profileResult.error.message);
+  const profiles=profileResult.data||[];
+  const profile=profiles.find(p=>String(p.email||'').trim().toLowerCase()===email);
+  if(!profile)return report('No encontramos ese correo en profiles. Verifica que la persona tenga un perfil registrado con ese correo.');
+  if(profiles.filter(p=>String(p.email||'').trim().toLowerCase()===email).length>1)return report('Hay más de un perfil con ese correo. Debe corregirse la duplicidad antes de asignar.');
+  const memberResult=await window.geoSupabase.from('members').select('id,user_id,organization_id,active').eq('organization_id',geoOrg.id).eq('user_id',profile.id).limit(1);
+  if(memberResult.error)throw new Error('No se pudo verificar la membresía: '+memberResult.error.message);
+  const orgMember=(memberResult.data||[])[0];
+  if(!orgMember||orgMember.active!==true)return report('El correo existe, pero el usuario no tiene una membresía activa en esta organización. Solicita que se habilite antes de asignarlo.');
+  if(button)button.textContent='Verificando acceso al proyecto…';
+  const accessResult=await window.geoSupabase.from('geotracia_project_access').select('id,user_id,display_name,email,project_role,active').eq('organization_id',geoOrg.id).eq('project_id',opsProjectId).eq('user_id',profile.id).limit(1);
+  if(accessResult.error)throw new Error('No se pudo verificar el acceso al proyecto: '+accessResult.error.message);
+  let access=(accessResult.data||[])[0];
+  if(access&&access.active===false)return report('El usuario tiene acceso al proyecto, pero está desactivado. Actívalo desde Accesos y roles antes de asignarlo.');
+  if(!access){
+   if(button)button.textContent='Creando acceso al proyecto…';
+   const accessPayload={organization_id:geoOrg.id,project_id:opsProjectId,user_id:profile.id,display_name:profile.full_name||$('#opsAssignName')?.value.trim()||email,email:profile.email||email,project_role:'operator',active:true,created_by:geoCurrentUser?.id||null,updated_at:new Date().toISOString()};
+   const created=await window.geoSupabase.from('geotracia_project_access').insert(accessPayload).select('id,user_id,display_name,email,project_role,active').single();
+   if(created.error)throw new Error('El usuario pertenece a la organización, pero no se pudo conceder acceso al proyecto. Revisa los permisos RLS: '+created.error.message);
+   access=created.data;
+  }
+  if(button)button.textContent='Guardando asignación…';
+  if(status){status.style.color='';status.style.background='#eff6ff';status.style.border='1px solid #bfdbfe';status.textContent='Usuario validado. Guardando asignación…'}
+  const payload={organization_id:geoOrg.id,project_id:opsProjectId,operation_id:operationId,user_id:profile.id,member_name:$('#opsAssignName')?.value.trim()||access.display_name||profile.full_name||email,assignment_role:$('#opsAssignRole')?.value||'Responsable',status:'Activa',created_by:geoCurrentUser?.id||null};
+  const saved=await window.geoSupabase.from('geotracia_operation_assignments').insert(payload).select('id').single();
+  if(saved.error)throw new Error('El usuario fue validado, pero Supabase rechazó la asignación: '+saved.error.message);
+  if(!saved.data?.id)throw new Error('Supabase no confirmó la creación de la asignación.');
+  $('#dialog').close();toast('Responsable asignado correctamente.');await loadOperationsData(opsProjectId);
+ }catch(e){console.error('[GEOTRACIA] Error al asignar responsable',e);report('No se pudo completar la asignación: '+(e?.message||'error desconocido de Supabase'))}
+ finally{if(button){button.disabled=false;button.textContent='Guardar asignación'}}
+}
 function manageProjectAccess(item=null){const x=item||{};dialog(x.id?'Cambiar rol de proyecto':'Dar acceso al proyecto',`<form id="opsAccessForm" class="form-grid">${x.id?`<div class="full note">Miembro: ${esc(x.display_name||x.email||x.user_id)}</div>`:field('ID de usuario Supabase','opsAccessUser','UUID del usuario')}${field('Nombre visible','opsAccessName','Nombre del miembro',x.display_name||'')}${field('Correo','opsAccessEmail','correo@empresa.cl',x.email||'')}<div class="full"><label class="field-label" for="opsAccessRole">Rol</label><select class="field" id="opsAccessRole">${Object.entries(opsRoleLabel).map(([v,l])=>`<option value="${v}" ${(x.project_role||'viewer')===v?'selected':''}>${l}</option>`).join('')}</select></div><div class="full"><label><input type="checkbox" id="opsAccessActive" ${x.active===false?'':'checked'}> Acceso activo</label></div></form><div class="note">El usuario debe existir en Supabase Auth y pertenecer a la organización. Las políticas RLS siguen siendo la autoridad final.</div>`,`<button class="btn" data-close>Cancelar</button><button class="btn primary" data-action="ops-access-save" data-id="${esc(x.id||'')}">Guardar permisos</button>`)}
 async function saveProjectAccess(id=''){if(!geoOrg||!opsProjectId)return;const user=$('#opsAccessUser')?.value.trim();if(!id&&!user)return toast('Ingresa el UUID del usuario.');const payload={organization_id:geoOrg.id,project_id:opsProjectId,user_id:user||undefined,display_name:$('#opsAccessName').value.trim()||null,email:$('#opsAccessEmail').value.trim()||null,project_role:$('#opsAccessRole').value,active:$('#opsAccessActive').checked,updated_at:new Date().toISOString()};try{const q=id?window.geoSupabase.from('geotracia_project_access').update(payload).eq('id',id).eq('organization_id',geoOrg.id).eq('project_id',opsProjectId):window.geoSupabase.from('geotracia_project_access').insert({...payload,created_by:geoCurrentUser?.id||null});const {error}=await q;if(error)throw error;try{await window.geoSupabase.from('audit_logs').insert({organization_id:geoOrg.id,actor_id:geoCurrentUser?.id||null,action:id?'project_access.updated':'project_access.created',entity_table:'geotracia_project_access',entity_id:id||null,details:{project_id:opsProjectId,user_id:user||null,role:payload.project_role,active:payload.active}})}catch{}$('#dialog').close();toast('Permisos guardados');await loadOperationsData(opsProjectId)}catch(e){toast('No se pudieron guardar permisos: '+e.message)}}
 function exportOperations(){const cols=['code','kind','title','location','status','priority','assignee_name','start_date','due_date','description','notes'];const labels=['Código','Tipo','Título','Ubicación','Estado','Prioridad','Responsable','Inicio','Fecha límite','Descripción','Notas'];const csv=[labels,...opsRows.map(x=>cols.map(k=>x[k]??''))].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');exportFile('geotracia-operaciones.csv','\ufeff'+csv,'text/csv;charset=utf-8');toast('Operaciones exportadas a CSV')}
