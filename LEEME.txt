@@ -1,20 +1,17 @@
-GEOTRACIA — Inspecciones V1.5 (delta sobre geo-Desarrollo restaurado)
+GEOTRACIA — Corrección Inspecciones: marcación por progresiva
 
-Incluye únicamente app.js e index.html, además de este LEEME. No modifica styles.css ni la lógica de los mapas de Inventario e Incidencias.
+Paquete construido sobre geo-Desarrollo.zip (versión restaurada).
+Archivos: app.js, index.html.
 
-Correcciones:
-- Dibuja el tramo de trabajo vinculado a cada inspección entre start_km y end_km.
-- El contador cuenta tanto tramos dibujados como progresivas puntuales.
-- Añade «Asignar tramo» / «Cambiar tramo» en cada inspección existente. Guarda segment_id en Supabase y permite opcionalmente una progresiva puntual dentro del rango.
-- En nuevas inspecciones, exige seleccionar tramo cuando el camino tenga segmentos registrados.
-- Actualiza el parámetro de versión de app.js para evitar caché antigua.
+Qué hace:
+- Reutiliza inventoryLinePoint(), la misma función que ubica puntos en Inventario e Incidencias.
+- Cada inspección se marca como punto en la progresiva km_progressive del camino; no dibuja la geometría completa ni una línea de tramo.
+- Las inspecciones existentes sin progresiva tienen la acción “Asignar progresiva”.
+- Al guardar una progresiva, el sistema busca el segmento cuyo rango start_km–end_km la contiene y asocia su segment_id.
+- Las inspecciones nuevas requieren progresiva y se validan contra la geometría vial.
+- index.html actualiza la versión de caché de app.js.
 
-Instalación:
-1. Parte del paquete geo-Desarrollo restaurado que mantiene Inventario e Incidencias operativos.
-2. Sustituye app.js e index.html por los de este delta.
-3. Publica en GitHub Pages y recarga completamente la página.
-4. En Inspecciones, pulsa «Asignar tramo» para cada registro antiguo que diga «Camino completo», selecciona el tramo real y guarda.
+Instalación: reemplaza app.js e index.html en la raíz de tu proyecto restaurado y publica en GitHub Pages.
 
-Importante: los registros actuales mostrados en las capturas no tienen segment_id ni km_progressive. No es correcto inventarles un tramo automáticamente; hay que asociar el tramo real. Después de guardar, el mapa lo dibuja usando roads.geom y las progresivas del segmento.
-
-Validación: node --check app.js correcto. No se ha probado contra la instancia productiva de Supabase.
+Importante: los registros existentes que no tienen km_progressive no pueden ubicarse hasta ingresar su progresiva real. No se inventa una ubicación.
+La sintaxis se valida localmente; no se ha probado contra la instancia productiva de Supabase.
