@@ -1,0 +1,21 @@
+GEOTRACIA — Delta de mantenimiento y formularios/fichas
+
+ARCHIVOS INCLUIDOS
+- app.js: mapa de referencia vial en la orden de mantenimiento, usando la geometría vial y la progresiva cuando el RPC de geometrías está disponible; exportación de fichas a CSV, XLSX y vista imprimible para guardar como PDF; adjunto PDF con validación de tipo/tamaño y vista previa antes de guardar.
+- index.html: carga de SheetJS para exportar XLSX y actualización del parámetro de versión de app.js.
+- 202610220003_geotracia_form_pdf_documents.sql: migración idempotente para metadatos del PDF, bucket privado y políticas de Storage por membresía de organización.
+
+INSTALACIÓN
+1. Haz una copia de seguridad de los archivos actuales.
+2. Reemplaza app.js e index.html por los archivos incluidos, conservando el resto del proyecto.
+3. En Supabase > SQL Editor, pega y ejecuta el contenido completo de 202610220003_geotracia_form_pdf_documents.sql.
+4. Publica los archivos y recarga la aplicación sin caché.
+
+USO
+- Mantenimiento: abre una orden, selecciona camino y progresiva inicial. El mapa intenta dibujar la geometría y estimar el punto a partir del RPC geotracia_inventory_road_geometries. Si el RPC no está disponible o el camino no tiene geometría, el formulario sigue operativo y el mapa informa la limitación.
+- Formularios y fichas: CSV descarga un archivo separado por punto y coma; Excel genera XLSX; PDF abre una vista de impresión del navegador, donde debes elegir “Guardar como PDF”.
+- PDF adjunto: selecciona un PDF de hasta 15 MB; se muestra la vista previa antes de guardar. El archivo se guarda en el bucket privado geotracia-form-documents.
+
+VALIDACIÓN REALIZADA
+- Sintaxis JavaScript comprobada con node --check.
+- No se dispone de acceso a la instancia Supabase del usuario, por lo que no se ha probado la ejecución de la migración, permisos RLS/Storage, disponibilidad del RPC ni guardado real de registros/archivos. Debe verificarse en el entorno desplegado.
