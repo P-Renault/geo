@@ -1,0 +1,31 @@
+GEOTRACIA · MÓDULO MANTENIMIENTO V1.0
+Paquete delta sobre geo-Desarrollo (1).zip
+
+ARCHIVOS INCLUIDOS
+- app.js: nuevo módulo de órdenes de trabajo preventivas/correctivas con consulta, alta, edición, selección de proyecto/camino/tramo, fechas, prioridad, responsable, recursos y costos.
+- styles.css: ajustes responsivos del módulo.
+- index.html: actualización del parámetro de versión de app.js para evitar caché antigua.
+- 202610220001_geotracia_maintenance_orders.sql: migración nueva para Supabase con tabla, índices, validación de relaciones, trigger y políticas RLS.
+
+INSTALACIÓN
+1. Haz una copia de seguridad de app.js, styles.css e index.html actuales.
+2. En Supabase SQL Editor, ejecuta el archivo 202610220001_geotracia_maintenance_orders.sql completo. Requiere las tablas base organizations, projects, roads y segments, además de las funciones is_org_member(uuid) y has_org_role(uuid, member_role[]).
+3. Sustituye app.js, styles.css e index.html en la raíz del proyecto por los archivos de este paquete.
+4. Publica el proyecto actualizado en GitHub Pages.
+5. Inicia sesión y abre Mantenimiento. Selecciona un proyecto y crea una orden preventiva o correctiva.
+6. Prueba guardar y editar una orden; verifica que aparezca en el historial después de recargar.
+
+FUNCIONES
+- Órdenes persistidas en public.maintenance_orders.
+- Tipos preventivo/correctivo; prioridades baja/normal/alta/crítica.
+- Estados programada, en ejecución, suspendida, terminada y cancelada.
+- Asociación con camino y, opcionalmente, tramo vial.
+- Progresivas inicial/final opcionales; si se selecciona tramo, se cargan automáticamente.
+- Fechas, responsable/cuadrilla, recursos/materiales, descripción, observaciones, costos estimados y reales (CLP).
+- Filtros por texto y estado; KPIs de ejecución, vencimientos y costos.
+- RLS para limitar lecturas a miembros de la organización y escrituras a roles autorizados.
+
+NOTAS
+- El SQL debe ejecutarse antes de usar el módulo; sin migración, la interfaz mostrará un mensaje claro.
+- No se ha ejecutado esta migración contra la instancia productiva ni se ha probado con credenciales reales de Supabase. La sintaxis de app.js fue validada con node --check y el ZIP fue verificado.
+- Los costos son campos de seguimiento; no realizan pagos ni facturación.

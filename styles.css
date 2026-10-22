@@ -13,3 +13,8 @@
 
 /* GEOTRACIA fix: keep Leaflet maps below the mobile navigation drawer */
 .leaflet-container{z-index:0!important;isolation:isolate;position:relative}.sidebar{z-index:120!important}.overlay{z-index:110!important}.topbar{z-index:90!important}dialog{z-index:1000}
+
+/* GEOTRACIA Mantenimiento: órdenes de trabajo */
+#maintenanceProjectSelect{max-width:100%}
+#maintenanceSearch{font-size:10px}
+@media(max-width:700px){#maintenanceSearch{width:100%!important}.panel-head:has(#maintenanceSearch){align-items:stretch;flex-direction:column}.panel-head:has(#maintenanceSearch) .actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);width:100%}.panel-head:has(#maintenanceSearch) .actions .field{width:100%!important;min-width:0}}
