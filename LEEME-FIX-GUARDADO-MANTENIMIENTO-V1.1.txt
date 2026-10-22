@@ -1,0 +1,20 @@
+GEOTRACIA — Corrección guardado de Mantenimiento V1.1
+
+Contenido:
+- app.js (archivo original completo con corrección del guardado)
+- LEEME-FIX-GUARDADO-MANTENIMIENTO-V1.1.txt
+
+Qué corrige:
+- Evita que el botón Guardar falle silenciosamente si falta sesión, organización, proyecto o formulario.
+- Expone el error real de Supabase en un aviso visible dentro del formulario y en un mensaje breve.
+- Maneja errores habituales: tabla/migración inexistente, RLS, código duplicado, FK y columnas desactualizadas.
+- Mantiene la inserción/actualización en Supabase y no cambia Inventario, Incidencias ni Inspecciones.
+
+Instalación:
+1. Respalda el app.js actual.
+2. Reemplaza geo-Desarrollo/app.js por el incluido.
+3. Publica en GitHub Pages y recarga sin caché.
+4. Intenta guardar una orden. Si falla, copia el mensaje que aparece en pantalla: ahora incluirá la causa concreta.
+
+Importante:
+Este delta no ejecuta la migración SQL. La tabla public.maintenance_orders debe existir y las políticas RLS deben permitir INSERT/UPDATE para el rol actual.

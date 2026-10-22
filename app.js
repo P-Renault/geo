@@ -215,11 +215,85 @@ function newMaintenanceOrder(item=null){
  const road=$('#moRoad'),seg=$('#moSegment');const filterSegs=()=>{const chosen=seg.value;seg.innerHTML='<option value="">Camino completo</option>'+maintenanceSegments.filter(s=>s.road_id===road.value).map(s=>`<option value="${esc(s.id)}">${esc(s.code+` · Km ${s.start_km}–${s.end_km}`)}</option>`).join('');if([...seg.options].some(o=>o.value===chosen))seg.value=chosen;syncRange()};const syncRange=()=>{const s=maintenanceSegments.find(x=>x.id===seg.value);if(s){$('#moStartKm').value=s.start_km??'';$('#moEndKm').value=s.end_km??''}else if(!item){$('#moStartKm').value='';$('#moEndKm').value=''}};road.addEventListener('change',filterSegs);seg.addEventListener('change',syncRange);
 }
 async function saveMaintenanceOrder(id=''){
- const f=$('#maintenanceForm');if(!f?.reportValidity()||!geoOrg||!maintenanceProjectId||!window.geoSupabase)return;
- const road=maintenanceRoads.find(r=>r.id===$('#moRoad').value);if(!road)return toast('Selecciona un camino válido.');const segmentId=$('#moSegment').value||null,seg=maintenanceSegments.find(s=>s.id===segmentId);if(segmentId&&(!seg||seg.road_id!==road.id))return toast('El tramo no pertenece al camino seleccionado.');
- const start=$('#moStartKm').value===''?null:Number($('#moStartKm').value),end=$('#moEndKm').value===''?null:Number($('#moEndKm').value);if((start==null)!==(end==null))return toast('Ingresa ambas progresivas o deja ambas vacías.');if(start!=null&&end<=start)return toast('El km final debe ser mayor que el inicial.');if(seg&&start!=null&&(start<Number(seg.start_km)||end>Number(seg.end_km)))return toast('Las progresivas deben estar dentro del tramo seleccionado.');
- const payload={organization_id:geoOrg.id,project_id:maintenanceProjectId,road_id:road.id,segment_id:segmentId,code:$('#moCode').value.trim(),title:$('#moTitle').value.trim(),maintenance_type:$('#moType').value,priority:$('#moPriority').value,status:$('#moStatus').value,scheduled_start:$('#moScheduled').value||null,due_date:$('#moDue').value||null,assigned_to:$('#moAssigned').value.trim()||null,resources:$('#moResources').value.trim()||null,work_description:$('#moDescription').value.trim(),estimated_cost:$('#moEstimated').value===''?null:Number($('#moEstimated').value),actual_cost:$('#moActual').value===''?null:Number($('#moActual').value),start_km:start,end_km:end,notes:$('#moNotes').value.trim()||null,updated_at:new Date().toISOString()};if(payload.scheduled_start&&payload.due_date&&payload.due_date<payload.scheduled_start)return toast('La fecha límite no puede ser anterior a la fecha programada.');if(payload.status==='completed')payload.completed_at=new Date().toISOString();else payload.completed_at=null;if(payload.status==='in_progress'&&!maintenanceRows.find(x=>x.id===id)?.started_at)payload.started_at=new Date().toISOString();
- const button=$('[data-action="maintenance-save"]');if(button){button.disabled=true;button.textContent='Guardando…'}try{let q;if(id){q=await window.geoSupabase.from('maintenance_orders').update(payload).eq('id',id).eq('organization_id',geoOrg.id).eq('project_id',maintenanceProjectId).select('id').single()}else{payload.created_by=geoCurrentUser?.id||null;q=await window.geoSupabase.from('maintenance_orders').insert(payload).select('id').single()}if(q.error)throw q.error;if(!q.data?.id)throw new Error('Supabase no confirmó el guardado.');$('#dialog').close();toast(id?'Orden actualizada en Supabase':'Orden creada en Supabase');await loadMaintenanceData(maintenanceProjectId)}catch(e){console.error('[GEOTRACIA] maintenance save failed',e);toast('No se pudo guardar la orden: '+(e?.message||'Error de Supabase'));if(button){button.disabled=false;button.textContent='Guardar orden'}}
+ const f=$('#maintenanceForm');
+ if(!f){toast('No se encontró el formulario de mantenimiento. Cierra la ventana y vuelve a abrir Nueva orden.');console.error('[GEOTRACIA] maintenanceForm missing');return}
+ if(!f.reportValidity())return;
+ if(!window.geoSupabase){toast('Supabase no está conectado. Inicia sesión y vuelve a intentar.');return}
+ if(!geoOrg?.id){toast('No se detectó la organización activa. Recarga el módulo e inicia sesión nuevamente.');return}
+ if(!maintenanceProjectId){toast('Selecciona un proyecto antes de guardar la orden.');return}
+ const value=id=>document.getElementById(id);
+ const roadSelect=value('moRoad'), segmentSelect=value('moSegment');
+ const road=maintenanceRoads.find(r=>r.id===roadSelect?.value);
+ if(!road){toast('Selecciona un camino válido.');return}
+ const segmentId=segmentSelect?.value||null;
+ const seg=maintenanceSegments.find(s=>s.id===segmentId);
+ if(segmentId&&(!seg||seg.road_id!==road.id)){toast('El tramo no pertenece al camino seleccionado.');return}
+ const parseOptionalNumber=id=>value(id)?.value===''||value(id)?.value==null?null:Number(value(id).value);
+ const start=parseOptionalNumber('moStartKm'),end=parseOptionalNumber('moEndKm');
+ if((start==null)!==(end==null)){toast('Ingresa km inicial y km final, o deja ambos vacíos.');return}
+ if(start!=null&&(!Number.isFinite(start)||!Number.isFinite(end)||end<=start)){toast('El km final debe ser mayor que el km inicial.');return}
+ if(seg&&start!=null&&(start<Number(seg.start_km)||end>Number(seg.end_km))){toast('Las progresivas deben estar dentro del tramo seleccionado.');return}
+ const code=value('moCode').value.trim(),title=value('moTitle').value.trim(),description=value('moDescription').value.trim();
+ if(!code||!title||!description){toast('Completa código, nombre del trabajo y alcance.');return}
+ const payload={
+  organization_id:geoOrg.id,
+  project_id:maintenanceProjectId,
+  road_id:road.id,
+  segment_id:segmentId,
+  code,title,
+  maintenance_type:value('moType').value,
+  priority:value('moPriority').value,
+  status:value('moStatus').value,
+  scheduled_start:value('moScheduled').value||null,
+  due_date:value('moDue').value||null,
+  assigned_to:value('moAssigned').value.trim()||null,
+  resources:value('moResources').value.trim()||null,
+  work_description:description,
+  estimated_cost:parseOptionalNumber('moEstimated'),
+  actual_cost:parseOptionalNumber('moActual'),
+  start_km:start,
+  end_km:end,
+  notes:value('moNotes').value.trim()||null,
+  updated_at:new Date().toISOString()
+ };
+ if(payload.scheduled_start&&payload.due_date&&payload.due_date<payload.scheduled_start){toast('La fecha límite no puede ser anterior a la fecha programada.');return}
+ if(payload.status==='completed')payload.completed_at=new Date().toISOString();else payload.completed_at=null;
+ if(payload.status==='in_progress'&&!maintenanceRows.find(x=>x.id===id)?.started_at)payload.started_at=new Date().toISOString();
+ const button=$('[data-action="maintenance-save"]');
+ const originalText=button?.textContent||'Guardar orden';
+ if(button){button.disabled=true;button.textContent='Guardando…'}
+ try{
+  const client=window.geoSupabase;
+  let q;
+  if(id){
+   q=await client.from('maintenance_orders').update(payload).eq('id',id).eq('organization_id',geoOrg.id).eq('project_id',maintenanceProjectId).select('id').maybeSingle();
+  }else{
+   payload.created_by=geoCurrentUser?.id||null;
+   q=await client.from('maintenance_orders').insert(payload).select('id').single();
+  }
+  if(q.error)throw q.error;
+  if(!q.data?.id)throw new Error(id?'No se encontró la orden para actualizarla.':'Supabase no devolvió el ID de la nueva orden.');
+  $('#dialog').close();
+  toast(id?'Orden actualizada en Supabase':'Orden creada en Supabase');
+  await loadMaintenanceData(maintenanceProjectId);
+ }catch(e){
+  console.error('[GEOTRACIA] maintenance save failed',e);
+  const raw=String(e?.message||e?.details||e||'Error desconocido');
+  let friendly=raw;
+  if(/relation .*maintenance_orders.* does not exist|maintenance_orders.*schema cache/i.test(raw))friendly='No existe la tabla maintenance_orders en Supabase. Ejecuta la migración SQL y verifica que haya terminado correctamente.';
+  else if(/row-level security|violates row-level security|permission denied/i.test(raw))friendly='Supabase bloqueó el guardado por permisos RLS. Revisa la política de INSERT y el rol de tu usuario en la organización.';
+  else if(/duplicate key|maintenance_orders_project_code_unique|maintenance_orders_project_code_uidx/i.test(raw))friendly='Ya existe una orden con ese código en este proyecto. Usa un código distinto.';
+  else if(/foreign key|violates foreign key/i.test(raw))friendly='El camino o tramo seleccionado ya no corresponde al proyecto activo. Vuelve a seleccionar camino y tramo.';
+  else if(/column .* does not exist|schema cache/i.test(raw))friendly='La tabla de mantenimiento no coincide con la versión del módulo. Actualiza la migración y vuelve a intentar. Detalle: '+raw;
+  toast('No se pudo guardar: '+friendly);
+  const body=$('#dialogBody');
+  if(body){
+   let err=body.querySelector('#maintenanceSaveError');
+   if(!err){err=document.createElement('div');err.id='maintenanceSaveError';err.className='note full';err.setAttribute('role','alert');body.appendChild(err)}
+   err.textContent='Error al guardar: '+friendly;
+  }
+  if(button){button.disabled=false;button.textContent=originalText}
+ }
 }
 function viewMaintenanceOrder(id){const x=maintenanceRows.find(z=>z.id===id);if(!x)return;const r=maintenanceRoads.find(z=>z.id===x.road_id),s=maintenanceSegments.find(z=>z.id===x.segment_id),status={planned:'Programada',in_progress:'En ejecución',suspended:'Suspendida',completed:'Terminada',cancelled:'Cancelada'},type={preventive:'Preventivo',corrective:'Correctivo'},money=n=>n==null?'—':new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Number(n));dialog(esc(x.title),`<div class="form-grid"><div><label class="field-label">Código</label>${esc(x.code)}</div><div><label class="field-label">Tipo</label>${type[x.maintenance_type]||esc(x.maintenance_type)}</div><div class="full"><label class="field-label">Camino</label>${esc(r?.code||'—')} · ${esc(r?.name||'')}</div><div><label class="field-label">Tramo</label>${esc(s?.code||'Camino completo')}</div><div><label class="field-label">Progresivas</label>${x.start_km!=null&&x.end_km!=null?`Km ${x.start_km}–${x.end_km}`:'—'}</div><div><label class="field-label">Prioridad</label>${esc(({low:'Baja',normal:'Normal',high:'Alta',critical:'Crítica'})[x.priority]||x.priority)}</div><div><label class="field-label">Estado</label>${esc(status[x.status]||x.status)}</div><div><label class="field-label">Responsable</label>${esc(x.assigned_to||'Sin asignar')}</div><div><label class="field-label">Fecha programada</label>${esc(x.scheduled_start||'—')}</div><div><label class="field-label">Fecha límite</label>${esc(x.due_date||'—')}</div><div><label class="field-label">Costo estimado</label>${money(x.estimated_cost)}</div><div><label class="field-label">Costo real</label>${money(x.actual_cost)}</div><div class="full"><label class="field-label">Descripción</label><p>${esc(x.work_description||'—')}</p></div><div class="full"><label class="field-label">Recursos</label><p>${esc(x.resources||'—')}</p></div><div class="full"><label class="field-label">Observaciones</label><p>${esc(x.notes||'—')}</p></div></div>`,`<button class="btn" data-close>Cerrar</button><button class="btn primary" data-action="maintenance-edit" data-id="${esc(id)}">Editar orden</button>`)}
 function generic(){return `${head(mod(active)[1],mod(active)[3],btn("↓ Exportar","export-csv")+btn("＋ Crear nuevo","new-record","primary"))}<div class="kpis">${kpi("42,6 km","Red de referencia","Proyecto activo","⌁")}${kpi("156","Registros","Datos demostrativos","▤","teal")}${kpi("12","Pendientes","Seguimiento","◷","amber")}${kpi("94%","Completitud","Indicador ilustrativo","✓","purple")}</div><div class="module-layout"><div class="stack">${panel(active==="caminos"?"Red vial del proyecto":mod(active)[1],`<div class="tabs">${["Resumen","Registros","Configuración"].map(x=>`<button class="tab ${tab===x?"active":""}" data-tab="${x}">${x}</button>`).join("")}</div><div id="tabBody" class="panel-body">${tabContent(tab)}</div>`,"Componentes listos para conectar con servicios y reglas reales.")}${recordPanel()}</div><div class="stack">${mapPanel()}${panel("Acciones del módulo",body(`<div class="quick-grid">${quick("＋","Crear registro","Nuevo elemento","new-record")}${quick("▥","Crear informe","Resumen de actividad","go-reports")}${quick("↓","Exportar","Datos de demostración","export-csv")}${quick("⚙","Preferencias","Opciones del módulo","settings")}</div>`))}</div></div>`}
