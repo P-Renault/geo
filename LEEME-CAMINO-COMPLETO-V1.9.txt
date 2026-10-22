@@ -1,0 +1,18 @@
+GEOTRACIA — Corrección Inspecciones V1.9 (delta)
+
+Objetivo
+Cuando la modalidad de ubicación de una inspección es “Camino completo”, dibujar la geometría vial completa del camino asociado, igual que la cartografía de Caminos y tramos. No debe requerir una progresiva ni un segmento. Las modalidades “Punto” y “Tramo” conservan su comportamiento: punto en km_progressive y línea recortada entre km inicial/final.
+
+Archivos
+- app.js: conserva las funciones anteriores y añade el dibujo de geometría completa para la modalidad road, además de incluirla en el contador y selección.
+- index.html: cambia el parámetro de versión para evitar caché del JS anterior.
+- styles.css: archivo original del delta anterior, sin cambios de diseño.
+
+Instalación
+1. Respalda los archivos actuales.
+2. Sustituye app.js e index.html en la raíz del proyecto.
+3. Publica en GitHub Pages y recarga la web con caché actualizada.
+4. Comprueba una inspección “Camino completo”, otra puntual y otra de tramo.
+
+Limitación
+La geometría completa solo se dibuja si la RPC geotracia_inventory_road_geometries devuelve una geometría para el road_id de la inspección. No se modifican datos ni se inventa geometría. La sintaxis JS fue comprobada; no se ha probado contra la instancia productiva de Supabase.
