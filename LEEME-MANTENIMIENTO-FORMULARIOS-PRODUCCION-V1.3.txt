@@ -1,4 +1,4 @@
-GEOTRACIA — DELTA INTEGRADO MANTENIMIENTO + FORMULARIOS Y FICHAS V1.3
+GEOTRACIA — DELTA INTEGRADO MANTENIMIENTO + FORMULARIOS Y FICHAS V1.4
 
 ARCHIVOS INCLUIDOS
 - app.js: versión basada en la corrección de guardado de Mantenimiento V1.1, con integración funcional del módulo Formularios y fichas.
@@ -27,4 +27,9 @@ VALIDACIÓN REALIZADA
 Se comprobó la sintaxis JavaScript con node --check y la estructura de archivos del paquete. No se ha ejecutado una prueba de extremo a extremo contra tu instancia real de Supabase ni contra el despliegue; el guardado requiere que las tablas y políticas RLS estén instaladas correctamente.
 
 
-Corrección V1.3: se identifican ambos módulos explícitamente como módulos de producción en la navegación y encabezados; se fuerza la recarga de app.js mediante un nuevo parámetro de versión y se actualizan ambos módulos al renovar la sesión.
+Corrección V1.4: se identifican ambos módulos explícitamente como módulos de sin la palabra «producción» en la navegación y encabezados; se fuerza la recarga de app.js mediante un nuevo parámetro de versión y se actualizan ambos módulos al renovar la sesión.
+
+CAMBIOS V1.4
+- Eliminados los contadores estáticos «12» de Inspecciones y «3» de Incidencias en el menú lateral.
+- Renombrado «Mantenimiento de producción» a «Mantenimiento».
+- Renombrado «Formularios de producción» a «Formularios y fichas», tanto en el menú como en el encabezado de la pantalla.
