@@ -1,0 +1,19 @@
+GEOTRACIA — Corrección del botón Asignar responsable
+
+Archivo modificado: app.js
+
+Causa encontrada:
+El botón de la vista Operaciones y permisos llamaba a assignOperation(), pero esa función no estaba definida en app.js. Al pulsarlo, JavaScript producía un ReferenceError y no se abría ningún formulario.
+
+Corrección:
+- Se agrega el formulario de asignación vinculado a una operación del proyecto actual.
+- Si hay miembros cargados con acceso al proyecto, se pueden seleccionar y se rellena su UUID.
+- Se mantiene la opción de ingresar manualmente el UUID de Supabase Auth.
+- Se incluyen validaciones, estado de guardado y mensajes de error de Supabase.
+- No se modifica el SQL ni los módulos Mantenimiento y Formularios y Fichas.
+
+Instalación:
+Reemplaza el app.js desplegado por el incluido en este ZIP y vuelve a desplegar. Haz copia de seguridad del archivo anterior.
+
+Validación realizada: node --check app.js (sintaxis JavaScript).
+No se ha probado contra la instancia real de Supabase.
