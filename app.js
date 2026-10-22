@@ -247,7 +247,30 @@ function newMaintenanceOrder(item=null){
  const road=$('#moRoad'),seg=$('#moSegment');const filterSegs=()=>{const chosen=seg.value;seg.innerHTML='<option value="">Camino completo</option>'+maintenanceSegments.filter(s=>s.road_id===road.value).map(s=>`<option value="${esc(s.id)}">${esc(s.code+` · Km ${s.start_km}–${s.end_km}`)}</option>`).join('');if([...seg.options].some(o=>o.value===chosen))seg.value=chosen;syncRange()};const syncRange=()=>{const s=maintenanceSegments.find(x=>x.id===seg.value);if(s){$('#moStartKm').value=s.start_km??'';$('#moEndKm').value=s.end_km??''}else if(!item){$('#moStartKm').value='';$('#moEndKm').value=''}};road.addEventListener('change',filterSegs);seg.addEventListener('change',syncRange);
  let moMap=null,moRoadLayer=null,moMarker=null,moGeometries={};
  const updateMoMap=()=>{if(!moMap)return;const rid=road.value,kmRaw=$('#moStartKm')?.value,km=kmRaw===''||kmRaw==null?NaN:Number(kmRaw);const g=moGeometries[rid]||inventoryRoadGeometries?.[rid];if(moRoadLayer){moMap.removeLayer(moRoadLayer);moRoadLayer=null}if(g?.geojson){moRoadLayer=L.geoJSON(g.geojson,{style:{color:'#0f766e',weight:5,opacity:.85}}).addTo(moMap);try{moMap.fitBounds(moRoadLayer.getBounds(),{padding:[18,18],maxZoom:15})}catch{}}const pt=g?.geojson&&Number.isFinite(km)?inventoryLinePoint(g.geojson,km,g.length_m):null;if(pt){if(moMarker)moMarker.setLatLng([pt.lat,pt.lng]);else moMarker=L.circleMarker([pt.lat,pt.lng],{radius:9,color:'#b45309',fillColor:'#fbbf24',fillOpacity:.95,weight:3}).addTo(moMap);moMap.setView([pt.lat,pt.lng],Math.max(moMap.getZoom(),14));$('#moMapStatus').textContent=`Ubicación estimada para km ${km.toFixed(3)}: ${pt.lat.toFixed(6)}, ${pt.lng.toFixed(6)}.`}else{$('#moMapStatus').textContent='No hay geometría disponible o la progresiva no permite calcular el punto. La orden se podrá guardar, pero revisa la ubicación vial.';if(moMarker){moMap.removeLayer(moMarker);moMarker=null}}};
- if(window.L&&$('#moMap')){setTimeout(async()=>{if(!$('#moMap'))return;moMap=L.map($('#moMap')).setView([-38.7359,-72.5904],7);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(moMap);try{const q=await window.geoSupabase.rpc('geotracia_inventory_road_geometries',{p_project_id:maintenanceProjectId});if(!q.error)for(const z of q.data||[]){let geom=z.road_geojson||z.geojson||z.geom_geojson;if(typeof geom==='string'){try{geom=JSON.parse(geom)}catch{geom=null}}if(z.road_id&&geom)moGeometries[z.road_id]={geojson:geom,length_m:z.length_m==null?null:Number(z.length_m)}}}catch(e){console.warn('[GEOTRACIA] No se pudieron cargar geometrías para el mapa de mantenimiento',e)}updateMoMap();$('#moStartKm')?.addEventListener('input',updateMoMap);seg.addEventListener('change',updateMoMap);road.addEventListener('change',updateMoMap);requestAnimationFrame(()=>moMap?.invalidateSize())},180)}
+ // Inicializar primero el mapa base; la geometría vial se consulta en segundo plano.
+ // Así, un fallo del RPC de geometrías no deja el mapa vacío.
+ if($('#moMap')){setTimeout(async()=>{
+  const el=$('#moMap');if(!el||!document.querySelector('#dialog')?.open)return;
+  if(!window.L){const st=$('#moMapStatus');if(st)st.textContent='No se pudo cargar Leaflet. Comprueba la conexión y vuelve a abrir la orden.';return}
+  try{
+   moMap=L.map(el,{preferCanvas:true,scrollWheelZoom:true}).setView([-38.7359,-72.5904],7);
+   const tiles=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(moMap);
+   tiles.on('tileerror',()=>{const st=$('#moMapStatus');if(st)st.textContent='El mapa se abrió, pero no se pudieron descargar los mosaicos cartográficos. Comprueba la conexión o el bloqueo de OpenStreetMap.'});
+   const st=$('#moMapStatus');if(st)st.textContent='Mapa cargado. Consultando geometría del camino…';
+   // Reutilizar geometrías ya cargadas por Inventario si están disponibles.
+   if(typeof inventoryRoadGeometries!=='undefined')moGeometries={...inventoryRoadGeometries};
+   updateMoMap();
+   $('#moStartKm')?.addEventListener('input',updateMoMap);$('#moEndKm')?.addEventListener('input',updateMoMap);seg.addEventListener('change',updateMoMap);road.addEventListener('change',updateMoMap);
+   requestAnimationFrame(()=>requestAnimationFrame(()=>moMap?.invalidateSize(true)));
+   try{
+    const q=await window.geoSupabase.rpc('geotracia_inventory_road_geometries',{p_project_id:maintenanceProjectId});
+    if(q.error)throw q.error;
+    for(const z of q.data||[]){let geom=z.road_geojson||z.geojson||z.geom_geojson;if(typeof geom==='string'){try{geom=JSON.parse(geom)}catch{geom=null}}if(z.road_id&&geom)moGeometries[z.road_id]={geojson:geom,length_m:z.length_m==null?null:Number(z.length_m)}}
+    updateMoMap();
+    if(!(q.data||[]).length&&st)st.textContent='Mapa base disponible. Este proyecto aún no tiene geometrías viales publicadas; puedes registrar la orden, pero no se dibujará el camino hasta cargar su geometría.';
+   }catch(e){console.warn('[GEOTRACIA] No se pudieron cargar geometrías para el mapa de mantenimiento',e);if(st)st.textContent='Mapa base disponible; no se pudo consultar la geometría vial. Revisa permisos/RPC geotracia_inventory_road_geometries en Supabase.'}
+  }catch(e){console.error('[GEOTRACIA] Error al inicializar mapa de mantenimiento',e);const st=$('#moMapStatus');if(st)st.textContent='No se pudo inicializar el mapa: '+(e?.message||'error desconocido')}
+ },250)}
 }
 async function saveMaintenanceOrder(id=''){
  const f=$('#maintenanceForm');

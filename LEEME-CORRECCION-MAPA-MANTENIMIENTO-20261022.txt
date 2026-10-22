@@ -1,0 +1,15 @@
+GEOTRACIA — Corrección del mapa de mantenimiento
+
+Archivos del delta:
+- app.js: el mapa base se inicializa antes de consultar geometrías. Los fallos de RPC ya no bloquean el mapa; se muestran mensajes de estado y errores de mosaicos.
+- index.html: versión de caché actualizada para forzar la descarga del app.js corregido.
+
+Instalación:
+1. Reemplazar app.js e index.html por los de este ZIP, conservando los demás archivos del proyecto.
+2. Publicar los cambios.
+3. Recargar la aplicación sin caché.
+
+Notas:
+- La cartografía base requiere conexión a Internet y acceso a tile.openstreetmap.org.
+- Para dibujar el camino se necesita que public.roads.geom esté poblado y que la función RPC public.geotracia_inventory_road_geometries(uuid) exista y permita acceso al usuario autenticado.
+- La corrección no cambia la lógica de Formularios y Fichas ni altera el esquema de Supabase.
