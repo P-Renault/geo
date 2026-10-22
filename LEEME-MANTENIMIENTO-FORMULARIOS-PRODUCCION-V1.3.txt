@@ -1,0 +1,30 @@
+GEOTRACIA — DELTA INTEGRADO MANTENIMIENTO + FORMULARIOS Y FICHAS V1.3
+
+ARCHIVOS INCLUIDOS
+- app.js: versión basada en la corrección de guardado de Mantenimiento V1.1, con integración funcional del módulo Formularios y fichas.
+- styles.css: estilos de Mantenimiento más estilos añadidos para formularios.
+- index.html: referencia de caché actualizada para cargar el app.js integrado.
+
+INSTALACIÓN
+1. Haz una copia de seguridad de los tres archivos actuales.
+2. Descomprime el ZIP y copia los archivos de la carpeta geo-Desarrollo sobre los archivos homónimos del proyecto.
+3. Publica/despliega los cambios y recarga la aplicación. Si el navegador conserva recursos antiguos, fuerza la recarga.
+4. Entra a Formularios y fichas. Crea una plantilla, define sus campos JSON y guarda. Después crea una ficha y guárdala.
+
+BASE DE DATOS
+El módulo requiere las tablas public.geotracia_form_templates y public.geotracia_form_submissions y sus políticas RLS. Si aún no ejecutaste la migración entregada anteriormente, ejecuta en Supabase SQL Editor el archivo:
+202610220002_geotracia_forms_and_sheets.sql
+Ese SQL no se vuelve a incluir en este delta para evitar ejecuciones duplicadas innecesarias.
+
+COMPORTAMIENTO
+- Plantillas y fichas se leen/escriben en Supabase; no se presentan registros ficticios como si fueran persistidos.
+- Las plantillas pueden ser generales para la organización o asociarse a un proyecto.
+- Las fichas guardan código, título, plantilla, camino/ubicación, progresivas, estado, valores de campos y observaciones.
+- Se conserva la corrección de guardado de órdenes de Mantenimiento de V1.1.
+- Se conserva el archivo base de estilos de la entrega de Mantenimiento y se actualiza la versión de caché del script.
+
+VALIDACIÓN REALIZADA
+Se comprobó la sintaxis JavaScript con node --check y la estructura de archivos del paquete. No se ha ejecutado una prueba de extremo a extremo contra tu instancia real de Supabase ni contra el despliegue; el guardado requiere que las tablas y políticas RLS estén instaladas correctamente.
+
+
+Corrección V1.3: se identifican ambos módulos explícitamente como módulos de producción en la navegación y encabezados; se fuerza la recarga de app.js mediante un nuevo parámetro de versión y se actualizan ambos módulos al renovar la sesión.
