@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS public.geotracia_operations (
   kind text NOT NULL DEFAULT 'operation' CHECK (kind IN ('operation','service')),
   title text NOT NULL CHECK (length(trim(title)) BETWEEN 2 AND 200),
   location text,
+  road_id uuid REFERENCES public.roads(id) ON DELETE SET NULL,
+  km_progressive numeric(10,3) CHECK (km_progressive IS NULL OR km_progressive >= 0),
   assignee_name text,
   status text NOT NULL DEFAULT 'planned' CHECK (status IN ('planned','in_progress','paused','completed','cancelled')),
   priority text NOT NULL DEFAULT 'normal' CHECK (priority IN ('low','normal','high','critical')),
@@ -22,6 +24,14 @@ CREATE TABLE IF NOT EXISTS public.geotracia_operations (
   CHECK (start_date IS NULL OR due_date IS NULL OR due_date >= start_date),
   UNIQUE (organization_id, project_id, code)
 );
+ALTER TABLE public.geotracia_operations ADD COLUMN IF NOT EXISTS road_id uuid REFERENCES public.roads(id) ON DELETE SET NULL;
+ALTER TABLE public.geotracia_operations ADD COLUMN IF NOT EXISTS km_progressive numeric(10,3);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='geotracia_operations_km_progressive_check' AND conrelid='public.geotracia_operations'::regclass) THEN
+    ALTER TABLE public.geotracia_operations ADD CONSTRAINT geotracia_operations_km_progressive_check CHECK (km_progressive IS NULL OR km_progressive >= 0);
+  END IF;
+END $$;
+CREATE INDEX IF NOT EXISTS geotracia_operations_road_idx ON public.geotracia_operations(organization_id,project_id,road_id);
 CREATE INDEX IF NOT EXISTS geotracia_operations_project_created_idx ON public.geotracia_operations(organization_id,project_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS geotracia_operations_project_status_idx ON public.geotracia_operations(organization_id,project_id,status);
 
@@ -66,7 +76,7 @@ AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.members m
     WHERE m.organization_id = p_org AND m.user_id = auth.uid() AND m.active = true
-      AND lower(coalesce(m.role,'')) IN ('owner','admin','administrator')
+      AND lower(coalesce(m.role::text,'')) IN ('owner','admin','administrator')
   ) OR EXISTS (
     SELECT 1 FROM public.geotracia_project_access a
     WHERE a.organization_id = p_org AND a.project_id = p_project

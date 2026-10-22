@@ -1,0 +1,24 @@
+GEOTRACIA · Operaciones y servicios con camino, progresiva y mapa
+Versión: 2026-10-22
+
+CONTENIDO DEL DELTA
+- app.js: selector de caminos del proyecto, campo de progresiva decimal en km, validación, persistencia de road_id y km_progressive, punto calculado sobre la geometría vial en el mapa y detalle de la progresiva.
+- 202610220004_geotracia_operations_permissions.sql: migración idempotente de operaciones, asignaciones, accesos y columna km_progressive.
+- index.html: incluido desde el paquete integrado anterior para conservar el mismo baseline.
+
+INSTALACIÓN
+1. Haz una copia de seguridad del app.js actual.
+2. En Supabase SQL Editor ejecuta el contenido completo de 202610220004_geotracia_operations_permissions.sql.
+3. Sustituye app.js por el incluido en este ZIP. Mantén index.html si ya es el del paquete integrado v2; el archivo se incluye para preservar el conjunto de entrega.
+4. Publica los cambios y recarga sin caché.
+5. En Operaciones y permisos, selecciona el proyecto, crea una operación, elige un camino y escribe la progresiva en kilómetros decimales. Ejemplo: km 12+300 se introduce como 12.300.
+6. Guarda y verifica el registro tras recargar y el marcador sobre el camino en el mapa.
+
+COMPORTAMIENTO CARTOGRÁFICO
+- El punto se calcula reutilizando inventoryLinePoint y la geometría que entrega geotracia_inventory_road_geometries.
+- Si no hay geometría o no puede calcularse el punto, el formulario impide guardar para evitar registrar una ubicación falsa.
+- La progresiva se valida contra la longitud del camino cuando esa longitud está disponible.
+- La progresiva se almacena en km_progressive como kilómetros decimales (numeric(10,3)).
+
+VALIDACIÓN
+Se comprobó sintaxis con node --check y la integridad del ZIP. No se ha ejecutado contra la instancia real de Supabase; confirmar migración, RPC, longitud/progresiva y punto cartográfico en el proyecto desplegado antes de considerar E2E validado.
