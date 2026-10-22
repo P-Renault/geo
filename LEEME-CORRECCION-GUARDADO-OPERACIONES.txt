@@ -1,0 +1,14 @@
+GEOTRACIA — Corrección focalizada del guardado de Operaciones y permisos
+
+Contenido del delta:
+- app.js: validaciones ahora informan por toast y dentro del formulario; estado visible mientras guarda; manejo explícito de errores de Supabase; normalización de GeoJSON Feature antes de calcular la progresiva; verificación de respuesta al editar.
+
+Instalación:
+1. Haz una copia de seguridad del app.js actualmente desplegado.
+2. Reemplaza únicamente app.js por el de este ZIP.
+3. Publica/despliega y recarga la aplicación con actualización completa.
+4. Intenta registrar una operación. Si falla, ahora debe mostrarse el motivo dentro del formulario y en el aviso.
+
+No ejecutar migraciones SQL por esta corrección. No se modifican index.html ni los módulos de Mantenimiento y Formularios/Fichas.
+
+Validación realizada: node --check app.js (sintaxis JavaScript). No se ha probado contra el proyecto Supabase del usuario, por lo que la confirmación final requiere una prueba en su entorno.
