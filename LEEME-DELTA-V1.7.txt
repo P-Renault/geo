@@ -1,0 +1,31 @@
+GEOTRACIA — Inspecciones: ubicación puntual y tramo de trabajo
+Versión delta V1.7
+
+ARCHIVOS INCLUIDOS
+- app.js: agrega ubicación cartográfica en dos modalidades para Inspecciones.
+- index.html: actualiza el identificador de caché de app.js.
+
+COMPORTAMIENTO
+1. Progresiva puntual: guarda km_progressive y calcula un marcador sobre la geometría del camino, con la misma función de progresiva que usa Inventario e Incidencias.
+2. Tramo de trabajo: permite seleccionar un tramo existente del camino. Usa su start_km y end_km y dibuja únicamente esa porción de la geometría vial; no dibuja el camino completo ni conecta los extremos con una recta.
+3. La edición de ubicación permite cambiar entre ambas modalidades para inspecciones existentes.
+4. Si una inspección tiene un tramo y además una progresiva puntual, puede mostrar el tramo y el marcador. Al elegir modalidad de tramo, km_progressive se guarda como NULL y segment_id queda asociado al tramo.
+5. El contador incluye inspecciones que tengan un marcador válido o una línea de tramo dibujable.
+
+INTEGRACIÓN
+1. Haz copia de seguridad de app.js e index.html del paquete estable geo-Desarrollo.
+2. Copia estos dos archivos a la raíz del proyecto, reemplazando los existentes.
+3. Publica en GitHub Pages.
+4. Recarga la página completamente. index.html usa un nuevo parámetro de caché para evitar que el navegador reutilice app.js anterior.
+5. En Inspecciones, abre Editar ubicación en un registro y elige Progresiva puntual o Tramo de trabajo. Para tramo, selecciona un segmento existente del mismo camino. Los km inicial/final se toman de ese registro de segments.
+
+REQUISITOS
+- El proyecto debe tener geometría vial válida en roads.geom.
+- La función RPC geotracia_inventory_road_geometries(p_project_id) debe estar disponible y devolver road_id, road_geojson y length_m.
+- Para usar modalidad tramo, debe existir un segmento asociado al camino con start_km y end_km válidos.
+- No se agrega una migración SQL: se reutilizan km_progressive y segment_id ya existentes.
+
+VALIDACIÓN REALIZADA
+- Sintaxis JavaScript comprobada con node --check.
+- Función de recorte de geometría comprobada con una LineString sintética.
+- No se ha podido probar la escritura/lectura en la instancia productiva de Supabase ni confirmar el despliegue de GitHub Pages desde este entorno.
