@@ -1,0 +1,31 @@
+GEOTRACIA — Corrección de asociación geográfica de inspecciones V1.1
+
+Archivos del delta:
+- app.js
+- styles.css
+
+Qué corrige:
+1. Inspecciones carga las geometrías de caminos mediante la función existente
+   public.geotracia_inventory_road_geometries(p_project_id).
+2. Calcula el punto de cada inspección sobre la geometría del camino usando
+   km_progressive y length_m, igual que Inventario e Incidencias.
+3. Incorpora el mapa de inspecciones, marcadores vinculados al id de cada
+   registro, selección desde tabla o mapa y doble clic para abrir la ficha.
+4. Agrega altura explícita a los contenedores Leaflet. Sin altura CSS el mapa
+   puede existir en el DOM, pero no mostrarse o quedar colapsado.
+5. Agrega acción «Ubicar» por registro y mensaje cuando no sea posible calcular
+   su ubicación.
+
+Instalación:
+Reemplazar app.js y styles.css en la raíz del repositorio por los archivos del
+paquete y publicar en GitHub Pages. No requiere una nueva migración SQL si ya
+está instalada la función geotracia_inventory_road_geometries.
+
+Condiciones para que un marcador aparezca:
+- La inspección debe tener road_id válido y km_progressive informado.
+- El camino debe tener geom válido y length_m consistente en public.roads.
+- El usuario autenticado debe tener permisos de lectura sobre las tablas y la
+  función RPC.
+
+Validación realizada: node --check app.js. No se ejecutó contra la instancia
+real de Supabase ni se confirmó el despliegue de GitHub Pages.
