@@ -1,0 +1,25 @@
+GEOTRACIA — Corrección de Inspecciones V1.8
+
+Base: paquete restaurado geo-Desarrollo.zip.
+
+ARCHIVOS DELTA
+- app.js: formulario de ubicación de inspección con tres modos: progresiva puntual, tramo de trabajo (km inicial/final) y camino completo. Al seleccionar un segmento se rellenan sus progresivas; si no aparece un segmento en el selector, se permite ingresar el rango manualmente. El modo camino completo no exige segment_id. El mapa dibuja puntos o solo el subtramo de la geometría vial, según corresponda. La ficha y la tabla muestran la modalidad y las progresivas.
+- styles.css: mantiene Leaflet dentro de su propio contexto de apilamiento para evitar que los mapas se superpongan al menú lateral.
+- index.html: invalida la caché de app.js y styles.css para cargar esta corrección.
+
+INSTALACIÓN
+1. Haz una copia de seguridad de app.js, styles.css e index.html.
+2. Copia estos tres archivos en la raíz del proyecto restaurado, reemplazando los originales.
+3. Publica los cambios en GitHub Pages.
+4. En el navegador móvil, recarga la página. La referencia versionada fuerza la descarga de los archivos nuevos.
+5. En Nueva inspección, selecciona:
+   - Progresiva puntual: exige un único km y muestra un marcador.
+   - Tramo de trabajo: ingresa km inicial y final, o selecciona un tramo para completar los campos; muestra solo esa parte del camino.
+   - Camino completo: guarda sin segmento ni progresiva.
+
+NOTAS TÉCNICAS
+- No se modifica la lógica de Inventario ni Incidencias.
+- No requiere una migración SQL nueva: el rango se conserva en metadata y, cuando existe un segmento compatible, se enlaza por segment_id.
+- Si se ingresa un rango manual que no coincide completamente con un segmento existente, el rango queda en metadata y se dibuja desde la geometría vial del camino; no se inventa un segment_id.
+- Verificado: sintaxis de app.js, helper de recorte geométrico con una línea de prueba e integridad del ZIP.
+- No verificado: conexión a la instancia productiva de Supabase ni publicación real en GitHub Pages.

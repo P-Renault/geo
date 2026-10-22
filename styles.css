@@ -10,3 +10,6 @@
 .mobile-brand img{display:block;width:27px;height:27px;object-fit:contain;flex:0 0 27px}
 @media(max-width:1000px){.mobile-brand{display:flex}}
 @media(max-width:700px){.mobile-brand{display:flex}.mobile-brand b{font-size:12px}}
+
+/* GEOTRACIA fix: keep Leaflet maps below the mobile navigation drawer */
+.leaflet-container{z-index:0!important;isolation:isolate;position:relative}.sidebar{z-index:120!important}.overlay{z-index:110!important}.topbar{z-index:90!important}dialog{z-index:1000}
