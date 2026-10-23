@@ -144,3 +144,7 @@
 .notification-empty-icon{font-size:24px;color:#c79a32}
 .notification-empty b{color:var(--text,#344054)}
 .notification-empty span:last-child{font-size:12px}
+
+
+/* GEOTRACIA FLOW checkout return status modal */
+.flow-result{text-align:center;padding:12px 8px 18px}.flow-result-icon{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;margin:0 auto 14px;font-size:32px;font-weight:800}.flow-result h3{margin:0 0 8px;font:800 22px Manrope,sans-serif;color:#102d43}.flow-result p{max-width:440px;margin:0 auto 12px;color:#536779;line-height:1.6}.flow-result small{color:#708294;overflow-wrap:anywhere}.flow-result-success .flow-result-icon{background:#d9f7ee;color:#078b7f}.flow-result-warning .flow-result-icon{background:#fff2cf;color:#a96c00}.flow-result-danger .flow-result-icon{background:#ffe3e3;color:#c83d4b}
