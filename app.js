@@ -106,9 +106,16 @@ async function loadDashboardData(projectId=dashboardProjectId){
   if(errors.length)throw new Error(errors.join(' · '));
   let geometries=[],segmentGeometries=[],geometryWarning='';
   try{
-   const g=await c.rpc('geotracia_inventory_road_geometries',{p_project_id:dashboardProjectId});
+   // Misma fuente y contrato que el módulo Caminos y tramos (roads.js).
+   const g=await c.rpc('geotracia_project_road_geometries',{p_project_id:dashboardProjectId});
    if(g.error)throw g.error;
-   geometries=(g.data||[]).map(x=>{let geo=x.road_geojson||x.geojson||x.geom_geojson;if(typeof geo==='string'){try{geo=JSON.parse(geo)}catch{geo=null}}return {road_id:x.road_id,geojson:geo,length_m:x.length_m==null?null:Number(x.length_m)}}).filter(x=>x.road_id&&x.geojson);
+   geometries=(g.data||[]).map(x=>{
+    let geo=x.geojson||x.road_geojson||x.geom_geojson||x.geom;
+    if(typeof geo==='string'){try{geo=JSON.parse(geo)}catch{geo=null}}
+    // roads.js admite Feature y geometría GeoJSON; el dashboard normaliza igual.
+    if(geo?.type==='Feature')geo=geo.geometry;
+    return {road_id:x.road_id||x.id,geojson:geo,length_m:x.length_m==null?null:Number(x.length_m)};
+   }).filter(x=>x.road_id&&x.geojson?.type&&x.geojson?.coordinates);
   }catch(e){geometryWarning='No se pudieron cargar las geometrías de caminos: '+(e?.message||'error de consulta');console.warn('[GEOTRACIA] Geometrías de caminos',e)}
   // Prioriza la geometría propia persistida en segments.geom.
   try{
@@ -184,7 +191,8 @@ async function renderDashboardMap(){
  window.dashboardRoadLayers=new Map();window.dashboardSegmentLayers=new Map();
  const roadsWithGeometry=[];
  for(const r of dashboardData.roads||[]){const g=geoByRoad.get(r.id);if(!g?.geojson)continue;try{
-  const layer=L.geoJSON(g.geojson,{style:{color:'#168f91',weight:4,opacity:.86}}).addTo(map);
+  let roadGeo=g.geojson;if(roadGeo?.type==='Feature')roadGeo=roadGeo.geometry;
+  const layer=L.geoJSON(roadGeo,{style:{color:'#168f91',weight:4,opacity:.86,lineCap:'round',lineJoin:'round'}}).addTo(map);
   const roadName=[r.code,r.name].filter(Boolean).join(' · ')||'Camino sin nombre';layer.bindTooltip(esc(roadName));
   layer.on('click',()=>selectDashboardRoad(r.id));window.dashboardRoadLayers.set(r.id,layer);roadsWithGeometry.push({road:r,name:roadName,layer});
   if(layer.getBounds().isValid())bounds.push(layer.getBounds());roadCount++;
