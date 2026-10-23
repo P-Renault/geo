@@ -1,0 +1,24 @@
+GEOTRACIA — Corrección de directorio de usuarios demo v2
+
+ARCHIVO MODIFICADO
+- geo-Desarrollo/app.js
+
+CAUSA IDENTIFICADA
+En app.js coexistían dos funciones llamadas userTable(). La declaración antigua, que leía la lista local de demostración (Juan Pérez, María González, Carlos Ruiz, Ana Torres y Luis Soto), prevalecía sobre el renderizador nuevo que utiliza las membresías consultadas desde Supabase. Esto provocaba que el contador y la tabla mostraran fuentes diferentes.
+
+CORRECCIÓN
+- Renombra el renderizador heredado de demostración como legacyDemoUserTable().
+- Conserva userTable() como renderizador del directorio basado en geoUserRows, que se carga desde Supabase.
+- No cambia el esquema de Supabase ni ejecuta operaciones sobre cuentas.
+
+INSTALACIÓN
+1. Descomprime este ZIP.
+2. Reemplaza geo-Desarrollo/app.js conservando la ruta.
+3. Publica los cambios en GitHub Pages.
+4. En Android, cierra las pestañas de GEOTRACIA y vuelve a abrir el sitio. Si el navegador sigue mostrando la versión anterior, abre el menú de Chrome > Configuración > Configuración de sitios > p-renault.github.io > Almacenamiento y borra los datos de ese sitio; luego inicia sesión de nuevo. Esto puede cerrar la sesión local.
+5. En Usuarios, pulsa Actualizar. La tabla y los contadores deben coincidir con las membresías devueltas por Supabase. Si la consulta falla, debe mostrarse el error y no debe rellenarse con usuarios de demostración.
+
+VALIDACIÓN
+- node --check app.js: correcto.
+- Se verificó que la función heredada ya no declara userTable() y que no pisa el renderizador Supabase.
+- No se ha probado contra la instancia real de Supabase; confirmar en el despliegue que los nombres/correos visibles correspondan a perfiles autorizados y a las membresías de la organización activa.
