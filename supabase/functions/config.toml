@@ -1,0 +1,8 @@
+[functions.geotracia-flow-create-payment]
+verify_jwt = true
+
+[functions.geotracia-flow-webhook]
+verify_jwt = false
+
+[functions.geotracia-flow-return]
+verify_jwt = false
