@@ -1,12 +1,20 @@
-# Geotracia — reubicación de proyecto activo
-
-## Archivo modificado
-- `index.html`
+# Geotracia — Dashboard operativo (fase inicial)
 
 ## Cambios
-- Eliminada la tarjeta de proyecto activo del panel lateral.
-- El menú lateral comienza directamente con “ESPACIO DE TRABAJO” y conserva todos sus módulos.
-- Reubicada la tarjeta de proyecto activo en el header, inmediatamente a la izquierda de la campana de notificaciones.
-- Ajustado el tamaño de la tarjeta para escritorio y móvil, conservando el botón `#project` y su interacción existente.
+- Sustituye cifras y actividad demostrativa del dashboard por valores iniciales en cero.
+- Añade seis indicadores operativos de base: extensión de red, incidencias abiertas, inspecciones, mantenimiento pendiente, inventario y prioridades críticas.
+- Añade paneles de prioridades y actividad reciente con estados vacíos explícitos.
+- Añade las cuatro visualizaciones aprobadas: incidencias por severidad, evolución temporal, mapa operativo y estado del mantenimiento.
+- Mantiene los valores en cero hasta que se implementen y conecten las consultas y funciones de datos reales.
+- No modifica intencionalmente la lógica de los demás módulos.
 
-No se modificaron `app.js`, la navegación de módulos ni la lógica de datos.
+## Archivos modificados
+- `app.js`
+- `styles.css`
+
+## Validación
+- `node --check app.js` completado correctamente.
+- Las visualizaciones muestran placeholders y cero, no se presentan como datos reales.
+
+## Siguiente fase
+Definir y validar con el esquema real de Supabase las tablas, campos, estados, filtros por organización/proyecto/período y fórmulas. Luego conectar las consultas, validar permisos/RLS y sustituir los ceros por datos calculados.
