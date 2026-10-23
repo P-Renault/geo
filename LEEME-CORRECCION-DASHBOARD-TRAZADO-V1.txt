@@ -1,0 +1,22 @@
+CORRECCION GEOTRACIA — TRAZADO DE CAMINOS EN EL DASHBOARD
+
+Alcance de esta entrega: SOLO el mapa del dashboard. No modifica la persistencia del proyecto seleccionado.
+
+Causa corregida:
+- El dashboard invocaba geotracia_inventory_road_geometries, mientras que el módulo Caminos y tramos usa public.geotracia_project_road_geometries(p_project_id uuid).
+- Por esa discrepancia, el dashboard podía no recibir las geometrías reales de roads.geom aunque el módulo Caminos y tramos sí las mostrara.
+
+Cambios:
+- app.js usa el mismo RPC y el mismo parámetro p_project_id que roads.js.
+- La respuesta GeoJSON se lee desde el campo geojson, como devuelve la función compartida.
+- La longitud declarada del camino se obtiene de la fila de roads para proyectar las progresivas de los tramos.
+- index.html cambia el parámetro de versión de app.js para evitar caché del archivo anterior.
+
+Instalación diferencial:
+1. Reemplazar app.js e index.html en la raíz del proyecto publicado.
+2. No ejecutar SQL adicional para esta corrección: reutiliza la función SQL existente que usa Caminos y tramos.
+3. Publicar y hacer recarga forzada del navegador.
+4. Abrir Dashboard, seleccionar un camino en la lista y confirmar que se ve/resalta la línea geográfica y se ajusta el mapa al trazado.
+
+Validación local realizada: node --check app.js sin errores de sintaxis.
+No se ha podido ejecutar una prueba contra la instancia real de Supabase desde este entorno.
