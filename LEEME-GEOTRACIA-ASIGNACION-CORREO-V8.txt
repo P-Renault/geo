@@ -1,0 +1,22 @@
+GEOTRACIA — Asignación por correo v8
+Delta focalizado: app.js y este archivo de instrucciones.
+
+Causa corregida:
+La política RLS profiles_read_self solo permite leer el perfil del usuario autenticado. Por eso consultar profiles por el correo de otra persona devuelve cero filas aunque el perfil exista. La versión anterior interpretaba eso erróneamente como correo inexistente.
+
+Cambio:
+- Resuelve el usuario consultando geotracia_project_access por organization_id + project_id + email, tabla que contiene user_id y correo del acceso al proyecto.
+- Verifica membresía activa en members.
+- No intenta crear accesos desde el navegador ni elevar privilegios automáticamente.
+- Mantiene los errores visibles dentro del modal.
+- Inserta la asignación en geotracia_operation_assignments y cierra el formulario solo si Supabase confirma el registro.
+
+Requisito:
+El usuario que opera GEOTRACIA debe tener permiso RLS para consultar los registros relevantes de geotracia_project_access y members, y para insertar en geotracia_operation_assignments.
+No requiere migración SQL. No se probó contra la instancia remota de Supabase.
+
+Instalación:
+1. Respaldar app.js.
+2. Reemplazarlo por el app.js incluido.
+3. Desplegar GitHub Pages.
+4. Forzar recarga en el navegador móvil; si persiste el código antiguo, abrir el menú del navegador y recargar o limpiar caché del sitio.
