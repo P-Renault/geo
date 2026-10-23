@@ -1,0 +1,27 @@
+GEOTRACIA · TRABAJO SIN CONEXIÓN · DESPLIEGUE ÚNICO V1
+
+Incluye:
+- Detección de conectividad y estado visible.
+- PWA: manifest y service worker con caché de shell y recursos estáticos tras la primera visita online.
+- Cola persistente local con IndexedDB.
+- Captura local de notas/observaciones, con ID único estable, proyecto, tipo y progresiva opcional.
+- Sincronización manual/automática cuando vuelve la conexión, con sesión autenticada, reintentos y control de duplicados.
+- Errores por registro visibles; los registros no se marcan sincronizados hasta confirmar Supabase.
+- Exportación JSON de respaldo local.
+
+INSTALACIÓN
+1. En Supabase SQL Editor, ejecutar 202610230001_geotracia_offline_records.sql.
+2. Desplegar los archivos de este ZIP conservando la estructura raíz del sitio. Reemplazar app.js e index.html y agregar service-worker.js, manifest.webmanifest y la migración SQL.
+3. Publicar GitHub Pages y abrir el sitio con conexión al menos una vez. El service worker debe quedar instalado y los proyectos deben haberse cargado para que queden en caché local.
+4. Ir a Trabajo sin conexión, crear una nota y comprobar que queda en la cola.
+5. Con conexión y sesión válida, pulsar Sincronizar ahora y verificar el registro en public.geotracia_offline_records.
+
+SEGURIDAD Y ALCANCE
+- No se almacena la contraseña ni se usa service_role.
+- Supabase RLS valida usuario, membresía y rol de proyecto al sincronizar.
+- Un registro local no equivale a un registro final de inspección/incidencia/mantenimiento; esta primera integración sincroniza capturas en geotracia_offline_records para que no se pierdan y puedan revisarse.
+- Los formularios de dominio existentes aún no se han convertido todos a funcionamiento offline. No declarar inspecciones, inventario, incidencias, mantenimiento, formularios y operaciones completamente offline hasta crear y probar adaptadores específicos por tabla.
+- Los mapas vectoriales/teselas no se descargan automáticamente; el service worker cachea recursos estáticos de la aplicación, no un paquete cartográfico offline.
+- IndexedDB puede borrarse por el usuario o el sistema. Exportar respaldo si los registros son críticos.
+
+VALIDACIÓN REALIZADA: node --check app.js. La migración SQL y la sincronización deben probarse en el proyecto Supabase real antes de producción.

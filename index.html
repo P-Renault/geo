@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#071c32">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>GEOTRACIA | Inteligencia territorial</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -69,7 +72,7 @@
 <div class="main"><header class="topbar"><button class="icon mobile-menu" id="menu" aria-label="Abrir menú" title="Abrir menú">☰</button><a class="header-brand" data-go="dashboard" href="#" aria-label="GEOTRACIA inicio"><img src="geotracia-logo.png" alt="GEOTRACIA — Inteligencia territorial en acción"></a><label class="search">⌕ <input id="globalSearch" placeholder="Buscar módulos, registros, caminos o usuarios…"><kbd>Ctrl K</kbd></label><div class="top-actions"><button class="project" id="project">PROYECTO <b>Ruta R-720 - Conservación 2024⌄</b></button><button class="icon" id="notifications" title="Notificaciones">♧</button><button class="icon" id="help" title="Ayuda">?</button><span class="avatar" id="userAvatar">GT</span><button class="btn" id="logoutBtn" type="button">Salir</button></div></header><main id="content"></main><footer>GEOTRACIA · Plataforma de inteligencia territorial <span>Framework visual v0.1 · Datos demostrativos</span></footer></div><div id="overlay" class="overlay"></div><div id="toast" class="toast"></div><dialog id="dialog"><div class="dialog-head"><div><small id="dialogEyebrow">GEOTRACIA</small><h2 id="dialogTitle">Acción</h2></div><button class="icon" data-close>×</button></div><div id="dialogBody" class="dialog-body"></div><div id="dialogFoot" class="dialog-foot"></div></dialog>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="supabase-config.js"></script><script src="auth.js"></script><script src="app.js?v=forms-pdf-export-maintenance-map-v1"></script><script src="roads.js?v=3.5"></script><script src="sidebar-toggle.js?v=2.3"></script>
+<script src="supabase-config.js"></script><script src="auth.js"></script><script src="app.js?v=offline-core-v1"></script><script src="roads.js?v=3.5"></script><script src="sidebar-toggle.js?v=2.3"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link rel="stylesheet" href="roads.css?v=3.5">
 <script src="map-gps.js?v=3.2"></script><script src="map-gps-v06.js"></script>

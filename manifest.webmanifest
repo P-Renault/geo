@@ -1,0 +1,11 @@
+{
+  "name": "GEOTRACIA · Inteligencia territorial",
+  "short_name": "GEOTRACIA",
+  "lang": "es-CL",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f8fb",
+  "theme_color": "#071c32",
+  "icons": []
+}
