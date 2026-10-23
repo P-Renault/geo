@@ -1,0 +1,25 @@
+GEOTRACIA — Directorio real de usuarios v3
+
+ARCHIVOS DEL DELTA
+- geo-Desarrollo/app.js (modificado)
+- geo-Desarrollo/202610230002_geotracia_org_member_directory.sql (nuevo)
+- geo-Desarrollo/LEEME-DIRECTORIO-USUARIOS-EMAIL-V3.txt (nuevo)
+
+QUÉ CORRIGE
+El directorio ya no intenta leer nombre/correo de columnas que no necesariamente existen en members. En su lugar invoca la función SQL geotracia_org_member_directory, que relaciona memberships con auth.users y profiles en el servidor. Solo owner/admin puede consultar el directorio completo. El nombre se obtiene de profiles.full_name, metadatos de Auth o el prefijo del correo; el correo proviene de Auth y, como alternativa, del perfil.
+
+INSTALACIÓN (ORDEN OBLIGATORIO)
+1. En Supabase SQL Editor, revisar y ejecutar el archivo 202610230002_geotracia_org_member_directory.sql.
+2. Publicar geo-Desarrollo/app.js en GitHub Pages conservando la ruta.
+3. Cerrar y reabrir GEOTRACIA; pulsar Actualizar en Usuarios.
+4. Confirmar que la cuenta de prueba tenga rol owner o admin en la organización.
+
+SEGURIDAD Y LÍMITES
+- La función usa SECURITY DEFINER, fija search_path y valida auth.uid() y el rol de organización antes de devolver correos.
+- No se expone la tabla auth.users directamente al navegador; solo se devuelven campos del directorio autorizado.
+- No crea usuarios ni modifica membresías.
+- Si la función no está instalada, la interfaz debe mostrar un error explícito y no volver a datos de demostración.
+
+VALIDACIÓN LOCAL
+- Ejecutar node --check app.js.
+- La migración debe ejecutarse en el proyecto Supabase real antes de probar el directorio. No se ha ejecutado desde esta entrega ni se afirma haber probado contra Supabase real.
