@@ -1,0 +1,17 @@
+GEOTRACIA — Acceso a proyecto por correo (v9)
+
+Incluye:
+- app.js: elimina el campo visible de UUID en «Dar acceso al proyecto».
+- SQL: función RPC segura para resolver el correo a un usuario de Auth y guardar acceso.
+
+IMPORTANTE — orden de instalación:
+1. Respaldar el app.js desplegado.
+2. En Supabase SQL Editor, ejecutar una vez el archivo 20261023_geotracia_grant_project_access_by_email.sql.
+3. La función solo permite conceder acceso a quien tenga rol owner/admin de la organización Y project_admin del proyecto. No desactiva RLS.
+4. La persona que recibirá acceso debe tener cuenta en auth.users y membresía activa en public.members. Esta función NO crea membresías ni cuentas.
+5. Sustituir app.js por el incluido y desplegar GitHub Pages.
+6. Recargar la web con caché actualizada y probar «Dar acceso al proyecto» con correo y rol.
+
+Si el actor no tiene ambos roles administrativos, la operación será rechazada de forma intencional. No se recomienda relajar RLS para evitar ese control.
+
+La sintaxis de JavaScript fue comprobada localmente. El SQL no se ha ejecutado en la instancia real de Supabase; debe ejecutarse allí y verificarse antes de producción.
