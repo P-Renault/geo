@@ -1344,9 +1344,45 @@ $("#globalSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){let q=e.ta
 $("#menu").addEventListener("click",()=>{$("#sidebar").classList.toggle("open");$("#overlay").classList.toggle("show")});$("#overlay").addEventListener("click",()=>{$("#sidebar").classList.remove("open");$("#overlay").classList.remove("show")});
 
 // Motor de notificaciones persistentes (Supabase). No usa datos de demostración.
-let geoNotifications = [];
-let geoNotificationsUnread = 0;
-let geoNotificationsLoading = false;
+let geoNotifications = []; let geoNotificationsUnread = 0; let geoNotificationsLoading = false;
+let geoNotificationsRealtimeChannel = null;
+let geoNotificationsRealtimeUserId = null;
+function stopGeoNotificationsRealtime(){
+  const client=window.geoSupabase;
+  if(client && geoNotificationsRealtimeChannel){
+    try{client.removeChannel(geoNotificationsRealtimeChannel);}catch(err){console.warn('[GEOTRACIA] No se pudo cerrar el canal de notificaciones:',err);}
+  }
+  geoNotificationsRealtimeChannel=null;
+  geoNotificationsRealtimeUserId=null;
+}
+function subscribeGeoNotifications(userId){
+  const client=window.geoSupabase;
+  if(!client || !userId) return;
+  if(geoNotificationsRealtimeUserId===userId && geoNotificationsRealtimeChannel) return;
+  stopGeoNotificationsRealtime();
+  geoNotificationsRealtimeUserId=userId;
+  try{
+    geoNotificationsRealtimeChannel=client.channel('geotracia-notifications-'+userId)
+      .on('postgres_changes',{event:'*',schema:'public',table:'geotracia_notifications',filter:'user_id=eq.'+userId},async(payload)=>{
+        // La consulta vuelve a aplicar el filtro de usuario y las políticas RLS.
+        await loadGeoNotifications();
+        const list=document.querySelector('#notificationDialogList');
+        if(list) list.innerHTML=notificationListHtml();
+        const tools=document.querySelector('.notification-dialog-tools .sub');
+        if(tools) tools.textContent=geoNotificationsUnread+' sin leer';
+        if(payload?.eventType==='INSERT' && payload?.new?.id){
+          const n=payload.new;
+          if(!n.read_at && document.visibilityState!=='hidden'){
+            // Solo aviso visual dentro de la aplicación; no solicita permisos del navegador.
+            if(typeof toast==='function') toast('Nueva notificación: '+String(n.title||'Aviso'));
+          }
+        }
+      }).subscribe((status)=>{
+        if(status==='CHANNEL_ERROR' || status==='TIMED_OUT') console.warn('[GEOTRACIA] Tiempo real de notificaciones no disponible; puedes actualizar manualmente.');
+      });
+  }catch(err){console.warn('[GEOTRACIA] No se pudo activar tiempo real para notificaciones:',err);}
+}
+
 function notificationTime(value){
   if(!value) return 'Fecha no disponible';
   const d = new Date(value);
@@ -1437,8 +1473,15 @@ document.addEventListener('click',async e=>{
   if(e.target.closest('[data-notifications-read-all]')){e.preventDefault();await markAllGeoNotificationsRead();return;}
   if(e.target.closest('[data-notifications-refresh]')){e.preventDefault();await openNotifications();return;}
 });
-window.addEventListener('geotracia:session',async()=>{
-  await loadGeoNotifications();
+window.addEventListener('geotracia:session',async(e)=>{
+  const uid=e?.detail?.userId || geoCurrentUser?.id;
+  if(uid){geoCurrentUser=geoCurrentUser || e.detail?.user || null;await loadGeoNotifications();subscribeGeoNotifications(uid);}
+});
+window.addEventListener('geotracia:session-ended',()=>{
+  stopGeoNotificationsRealtime();geoNotifications=[];geoNotificationsUnread=0;notificationBellBadge();
+});
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible' && geoCurrentUser?.id) loadGeoNotifications();
 });
 
 $("#help").addEventListener("click",()=>dialog("Centro de ayuda",`<p>Este prototipo permite evaluar navegación, distribución, formularios, filtros, vistas responsive y operaciones locales.</p><div class="note">No incluye aún autenticación real, base de datos compartida, GPS, mapas georreferenciados ni sincronización con servidor.</div>`));
@@ -1455,6 +1498,8 @@ async function initializeGeoAppSession(){
   if(error)throw error;
   if(!data?.session?.user)return;
   geoCurrentUser=data.session.user;
+  await loadGeoNotifications();
+  subscribeGeoNotifications(geoCurrentUser.id);
   if(["dashboard","proyectos","kilometraje","inspecciones","inventario","incidencias","mantenimiento","formularios","operaciones"].includes(active)){
    await loadGeoProjects();
    if(active==="dashboard")await loadDashboardData();
