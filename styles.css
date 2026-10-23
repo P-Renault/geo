@@ -144,3 +144,96 @@
   .plans-grid .plan li{font-size:11px;margin-bottom:7px}
   .plans-grid .plan .btn{min-height:42px}
 }
+
+/* Geotracia | Ajustes de alineación de Administración y suscripciones */
+/* Mantener los mensajes vacíos alineados con el contenido de las tarjetas. */
+.panel .empty,
+.panel-body .empty,
+.panel-body > p:only-child,
+.panel-body > .empty-state,
+.panel-body > .empty-message {
+  text-align: left;
+  margin: 0;
+  padding: 12px 0 2px;
+  line-height: 1.55;
+}
+
+/* Encabezado de planes: título y subtítulo comparten el mismo eje izquierdo. */
+.billing-toolbar {
+  align-items: flex-start;
+}
+.billing-toolbar > div:first-child {
+  min-width: 0;
+  text-align: left;
+}
+.billing-toolbar > div:first-child > b,
+.billing-toolbar > div:first-child > strong,
+.billing-toolbar > div:first-child > h2,
+.billing-toolbar > div:first-child > h3,
+.billing-toolbar > div:first-child .sub,
+.billing-toolbar > div:first-child > p {
+  display: block;
+  text-align: left;
+  margin-left: 0;
+  margin-right: 0;
+}
+.billing-toolbar > div:first-child > p {
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+/* Consideraciones: iconos centrados dentro de su contenedor y texto alineado. */
+.settings-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
+}
+.settings-row .setting-icon {
+  width: 42px;
+  height: 42px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  line-height: 1;
+  text-align: center;
+}
+.settings-row .setting-icon > *,
+.settings-row .setting-icon svg,
+.settings-row .setting-icon i {
+  display: block;
+  margin: 0;
+  line-height: 1;
+}
+.settings-row .setting-copy {
+  min-width: 0;
+  align-self: center;
+  text-align: left;
+}
+.settings-row .setting-copy b,
+.settings-row .setting-copy small {
+  text-align: left;
+}
+
+@media (max-width: 700px) {
+  .panel-head {
+    align-items: flex-start;
+  }
+  .panel-head > div {
+    min-width: 0;
+    text-align: left;
+  }
+  .panel .empty,
+  .panel-body .empty,
+  .panel-body > p:only-child,
+  .panel-body > .empty-state,
+  .panel-body > .empty-message {
+    padding-top: 10px;
+  }
+  .settings-row {
+    grid-template-columns: 42px minmax(0, 1fr);
+    column-gap: 10px;
+  }
+}
