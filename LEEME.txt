@@ -1,17 +1,10 @@
-GEOTRACIA — Corrección Inspecciones: marcación por progresiva
+GEOTRACIA — Ajuste CSS de tarjetas de suscripción
 
-Paquete construido sobre geo-Desarrollo.zip (versión restaurada).
-Archivos: app.js, index.html.
+Archivo incluido: styles.css
 
-Qué hace:
-- Reutiliza inventoryLinePoint(), la misma función que ubica puntos en Inventario e Incidencias.
-- Cada inspección se marca como punto en la progresiva km_progressive del camino; no dibuja la geometría completa ni una línea de tramo.
-- Las inspecciones existentes sin progresiva tienen la acción “Asignar progresiva”.
-- Al guardar una progresiva, el sistema busca el segmento cuyo rango start_km–end_km la contiene y asocia su segment_id.
-- Las inspecciones nuevas requieren progresiva y se validan contra la geometría vial.
-- index.html actualiza la versión de caché de app.js.
+Integración:
+1. Reemplazar el archivo styles.css existente por este archivo completo.
+2. Publicar el cambio en GitHub Pages.
+3. En móvil, recargar la página forzando actualización de caché.
 
-Instalación: reemplaza app.js e index.html en la raíz de tu proyecto restaurado y publica en GitHub Pages.
-
-Importante: los registros existentes que no tienen km_progressive no pueden ubicarse hasta ingresar su progresiva real. No se inventa una ubicación.
-La sintaxis se valida localmente; no se ha probado contra la instancia productiva de Supabase.
+Este paquete solo modifica estilos. No cambia app.js, Supabase, tablas ni políticas RLS.
