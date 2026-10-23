@@ -1,14 +1,19 @@
-# Geotracia — Informes y exportaciones corregido
+# Geotracia — Motor de notificaciones v2
 
-Archivos diferenciales: `app.js`, `index.html`, `styles.css`.
+## Archivos
+- `app.js`: campana con consultas a Supabase, lista, contador no leído y acciones de marcar como leído.
+- `styles.css`: campana dorada sin fondo decorativo y estilos de lista/estados.
+- `index.html`: referencia versionada al CSS.
+- `202610230005_geotracia_notifications.sql`: tabla, índices y RLS.
 
-Cambios:
-- El selector de proyecto se rellena después de cargar los proyectos autorizados desde Supabase.
-- No se consulta ni muestra ningún KPI hasta seleccionar explícitamente un proyecto.
-- Se sustituyó la tarjeta técnica “Fuentes de datos” por opciones de exportación CSV, Excel compatible y PDF mediante impresión del navegador.
-- Los estados habituales en inglés se muestran en español en la tabla de resultados.
-- Se actualizó la versión CSS en `index.html` para invalidar caché.
+## Instalación
+1. Respaldar `app.js`, `styles.css` e `index.html`.
+2. Ejecutar el SQL en el SQL Editor del proyecto Supabase correcto.
+3. Sustituir los tres archivos de la raíz del repositorio.
+4. Publicar y probar con una sesión autenticada.
 
-Excel se entrega como `.xls` HTML compatible con Excel; no es un archivo `.xlsx` nativo. El PDF usa la ventana de impresión del navegador y permite elegir “Guardar como PDF”.
-
-No se modificó el esquema de Supabase. Las consultas siguen dependiendo de que las tablas y políticas RLS existentes permitan leer los registros.
+## Seguridad y alcance
+- La tabla solo permite leer y actualizar notificaciones cuyo `user_id` sea el usuario autenticado.
+- El cliente no puede crear notificaciones directamente; la creación debe añadirse a operaciones de servidor autorizadas o triggers revisados según los esquemas reales.
+- No se insertan datos de demostración. La campana mostrará cero notificaciones hasta que las funciones productivas generen filas.
+- El paquete implementa la bandeja persistente, el contador y el estado leído/no leído; la generación automática de eventos para incidencias, inspecciones y mantenimiento requiere conectar los productores de eventos a los esquemas exactos de esos módulos.

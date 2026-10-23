@@ -995,7 +995,105 @@ if(e.target.id==="globalSearch"&&e.target.value.trim().length>1){let q=e.target.
 document.addEventListener("change",e=>{if(e.target.id==="invPhotoCamera"||e.target.id==="invPhotoGallery"){handleInventoryPhoto(e.target);return}if(e.target.id==="icPhotoCamera"||e.target.id==="icPhotoGallery"){handleIncidentPhoto(e.target);return}if(["projectStatusFilter","projectTypeFilter"].includes(e.target.id)){show();return}if(e.target.id==="typeFilter"){typeFilter=e.target.value;let t=$("#recordsTable");if(t)t.innerHTML=table(records.filter(r=>match(r,query)&&(!typeFilter||r.type===typeFilter)))}if(e.target.id==="userState"){let t=$("#userTable");if(t)t.innerHTML=userTable()}if(e.target.id==="reportProjectSelect"){reportProjectId=e.target.value;loadReportData(reportProjectId)}if(e.target.id==="kmProjectSelect"){loadKilometrajeData(e.target.value)}if(e.target.id==="inspectionProjectSelect"){loadInspectionData(e.target.value)}if(e.target.id==="inventoryProjectSelect"){loadInventoryData(e.target.value)}if(e.target.id==="incidentProjectSelect"){loadIncidentData(e.target.value)}if(e.target.id==="maintenanceProjectSelect"){loadMaintenanceData(e.target.value)}if(e.target.id==="formsProjectSelect"){loadFormsData(e.target.value)}if(e.target.id==="opsProjectSelect"){loadOperationsData(e.target.value)}if(e.target.id==="maintenanceStatusFilter"){typeFilter=e.target.value;show()}});
 $("#globalSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){let q=e.target.value.trim().toLowerCase(),m=modules.find(x=>x[1].toLowerCase().includes(q)||x[3].toLowerCase().includes(q));if(m)go(m[0]);else{query=q;go("inspecciones");toast("Búsqueda aplicada a registros")}}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();e.target.focus()}});
 $("#menu").addEventListener("click",()=>{$("#sidebar").classList.toggle("open");$("#overlay").classList.toggle("show")});$("#overlay").addEventListener("click",()=>{$("#sidebar").classList.remove("open");$("#overlay").classList.remove("show")});
-$("#notifications").addEventListener("click",()=>dialog("Notificaciones",activity("△","Incidencia crítica pendiente","INC-2026-067 · Desprendimiento de talud","Hace 2 h","red")+activity("☑","Inspección completada","INS-2026-028 · Ruta R-720","Hoy · 14:32","teal")+activity("☁","Entorno de demostración","No hay sincronización externa","Ahora")));
+
+// Motor de notificaciones persistentes (Supabase). No usa datos de demostración.
+let geoNotifications = [];
+let geoNotificationsUnread = 0;
+let geoNotificationsLoading = false;
+function notificationTime(value){
+  if(!value) return 'Fecha no disponible';
+  const d = new Date(value);
+  if(Number.isNaN(d.getTime())) return 'Fecha no disponible';
+  return d.toLocaleString('es-CL',{dateStyle:'short',timeStyle:'short'});
+}
+function notificationTypeLabel(type){
+  return ({incident:'Incidencia',inspection:'Inspección',maintenance:'Mantenimiento',project:'Proyecto',subscription:'Suscripción',system:'Sistema',assignment:'Asignación'})[type] || 'Aviso';
+}
+function notificationIcon(type){
+  return ({incident:'△',inspection:'☑',maintenance:'⚒',project:'▦',subscription:'♧',system:'◈',assignment:'♙'})[type] || '♧';
+}
+function notificationBellBadge(){
+  const bell = $('#notifications');
+  if(!bell) return;
+  let badge = bell.querySelector('.notification-count');
+  if(geoNotificationsUnread > 0){
+    if(!badge){ badge=document.createElement('span'); badge.className='notification-count'; badge.setAttribute('aria-label','Notificaciones sin leer'); bell.appendChild(badge); }
+    badge.textContent = geoNotificationsUnread > 99 ? '99+' : String(geoNotificationsUnread);
+    bell.setAttribute('aria-label',`${geoNotificationsUnread} notificaciones sin leer`);
+  } else {
+    badge?.remove();
+    bell.setAttribute('aria-label','Notificaciones');
+  }
+}
+async function loadGeoNotifications(){
+  const client = window.geoSupabase;
+  const uid = geoCurrentUser?.id;
+  if(!client || !uid){
+    geoNotifications = [];
+    geoNotificationsUnread = 0;
+    notificationBellBadge();
+    return;
+  }
+  geoNotificationsLoading = true;
+  try {
+    const {data,error} = await client.from('geotracia_notifications')
+      .select('id,title,message,type,read_at,created_at,project_id,organization_id,link_url')
+      .eq('user_id',uid)
+      .order('created_at',{ascending:false})
+      .limit(50);
+    if(error) throw error;
+    geoNotifications = data || [];
+    geoNotificationsUnread = geoNotifications.filter(n=>!n.read_at).length;
+    notificationBellBadge();
+  } catch(err) {
+    console.error('[GEOTRACIA] No se pudieron cargar las notificaciones:',err);
+    geoNotifications = [];
+    geoNotificationsUnread = 0;
+    notificationBellBadge();
+  } finally { geoNotificationsLoading = false; }
+}
+function notificationListHtml(){
+  if(geoNotificationsLoading) return '<div class="notification-empty">Cargando notificaciones…</div>';
+  if(!window.geoSupabase || !geoCurrentUser) return '<div class="notification-empty">Inicia sesión para consultar tus notificaciones.</div>';
+  if(!geoNotifications.length) return '<div class="notification-empty"><span class="notification-empty-icon">♧</span><b>No tienes notificaciones</b><span>Los avisos asignados a tu cuenta aparecerán aquí.</span></div>';
+  return `<div class="notification-list">${geoNotifications.map(n=>`<article class="notification-item ${n.read_at?'is-read':'is-unread'}"><span class="notification-item-icon type-${esc(n.type||'system')}">${notificationIcon(n.type)}</span><div class="notification-item-copy"><div class="notification-item-top"><b>${esc(n.title||notificationTypeLabel(n.type))}</b>${n.read_at?'':'<span class="notification-unread-dot" title="No leída"></span>'}</div><p>${esc(n.message||'')}</p><small>${esc(notificationTime(n.created_at))}${n.project_id?' · Proyecto asociado':''}</small><div class="notification-item-actions">${!n.read_at?`<button class="btn small" data-notification-read="${esc(n.id)}">Marcar como leída</button>`:''}${n.link_url?`<a class="btn small" href="${esc(n.link_url)}" target="_blank" rel="noopener">Abrir</a>`:''}</div></div></article>`).join('')}</div>`;
+}
+async function openNotifications(){
+  await loadGeoNotifications();
+  dialog('Notificaciones',`<div class="notification-dialog-tools"><span class="sub">${geoNotificationsUnread} sin leer</span><button class="btn small" data-notifications-read-all ${geoNotificationsUnread?'':'disabled'}>Marcar todas como leídas</button></div><div id="notificationDialogList">${notificationListHtml()}</div>`,`<button class="btn" data-close>Cerrar</button><button class="btn primary" data-notifications-refresh>Actualizar</button>`);
+}
+async function markGeoNotificationRead(id){
+  if(!window.geoSupabase || !geoCurrentUser) return toast('Inicia sesión para actualizar notificaciones.');
+  const {error} = await window.geoSupabase.from('geotracia_notifications')
+    .update({read_at:new Date().toISOString()})
+    .eq('id',id).eq('user_id',geoCurrentUser.id).is('read_at',null);
+  if(error){console.error('[GEOTRACIA] No se pudo marcar la notificación:',error);return toast('No se pudo marcar como leída: '+error.message);}
+  await loadGeoNotifications();
+  const list=$('#notificationDialogList'); if(list) list.innerHTML=notificationListHtml();
+  const tools=$('.notification-dialog-tools .sub'); if(tools) tools.textContent=`${geoNotificationsUnread} sin leer`;
+}
+async function markAllGeoNotificationsRead(){
+  if(!window.geoSupabase || !geoCurrentUser) return;
+  const {error} = await window.geoSupabase.from('geotracia_notifications')
+    .update({read_at:new Date().toISOString()})
+    .eq('user_id',geoCurrentUser.id).is('read_at',null);
+  if(error){console.error('[GEOTRACIA] No se pudieron marcar todas:',error);return toast('No se pudieron actualizar las notificaciones: '+error.message);}
+  await loadGeoNotifications();
+  const list=$('#notificationDialogList'); if(list) list.innerHTML=notificationListHtml();
+  const tools=$('.notification-dialog-tools .sub'); if(tools) tools.textContent=`${geoNotificationsUnread} sin leer`;
+  toast('Notificaciones actualizadas.');
+}
+$("#notifications").addEventListener("click",openNotifications);
+document.addEventListener('click',async e=>{
+  const read=e.target.closest('[data-notification-read]');
+  if(read){e.preventDefault();await markGeoNotificationRead(read.dataset.notificationRead);return;}
+  if(e.target.closest('[data-notifications-read-all]')){e.preventDefault();await markAllGeoNotificationsRead();return;}
+  if(e.target.closest('[data-notifications-refresh]')){e.preventDefault();await openNotifications();return;}
+});
+window.addEventListener('geotracia:session',async()=>{
+  await loadGeoNotifications();
+});
+
 $("#help").addEventListener("click",()=>dialog("Centro de ayuda",`<p>Este prototipo permite evaluar navegación, distribución, formularios, filtros, vistas responsive y operaciones locales.</p><div class="note">No incluye aún autenticación real, base de datos compartida, GPS, mapas georreferenciados ni sincronización con servidor.</div>`));
 $("#project").addEventListener("click",()=>dialog("Proyecto activo",settingsRow("⌁","Ruta R-720 - Conservación 2024","La Araucanía","Activo")+settingsRow("⌁","Ruta S-51","Proyecto de referencia","Pendiente")));
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("#sidebar").classList.remove("open");$("#overlay").classList.remove("show")}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();$("#globalSearch").focus()}});

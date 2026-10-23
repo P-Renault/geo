@@ -111,3 +111,36 @@
 .report-export-options{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 .report-export-options .btn{min-height:44px;justify-content:center}
 @media(max-width:600px){.report-export-options{display:grid;grid-template-columns:1fr}.report-export-options .btn{width:100%}}
+
+/* Geotracia: campana dorada, sin fondo decorativo */
+#notifications.notification-bell{
+  display:grid;place-items:center;color:#c79a32;position:relative;
+  background:transparent;border:0;border-radius:8px;box-shadow:none;
+  transition:color .18s ease,transform .18s ease;
+}
+#notifications.notification-bell:hover{color:#a97d19;background:transparent;border-color:transparent;transform:translateY(-1px)}
+#notifications.notification-bell svg{display:block;width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#notifications.notification-bell:focus-visible{outline:2px solid #d8b45c;outline-offset:3px}
+.notification-count{position:absolute;right:-4px;top:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:#c63d36;color:#fff;border:2px solid var(--surface,#fff);font-size:10px;font-weight:800;line-height:12px;display:grid;place-items:center}
+.notification-dialog-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.notification-list{display:flex;flex-direction:column;gap:0;max-height:min(58vh,520px);overflow:auto}
+.notification-item{display:flex;align-items:flex-start;gap:12px;padding:14px 2px;border-bottom:1px solid var(--border,#e6eaf0)}
+.notification-item:last-child{border-bottom:0}
+.notification-item.is-unread{background:transparent}
+.notification-item-icon{width:36px;height:36px;flex:0 0 36px;display:grid;place-items:center;border-radius:9px;background:var(--surface-soft,#f5f7fa);color:var(--muted,#65758b);font-size:17px}
+.notification-item-icon.type-incident{color:#bd423a;background:#fff0ef}
+.notification-item-icon.type-inspection{color:#238365;background:#eaf8f1}
+.notification-item-icon.type-maintenance{color:#a87517;background:#fff7e5}
+.notification-item-icon.type-subscription{color:#b18a27;background:#fff9e9}
+.notification-item-copy{min-width:0;flex:1}
+.notification-item-top{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.notification-item-top b{font-size:13px;line-height:1.4}
+.notification-item-copy p{margin:5px 0;color:var(--text,#344054);font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.notification-item-copy small{color:var(--muted,#728092);font-size:11px}
+.notification-unread-dot{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#c79a32}
+.notification-item-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.notification-item-actions .btn.small,.notification-dialog-tools .btn.small{min-height:28px;padding:4px 9px;font-size:11px}
+.notification-empty{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px;text-align:center;padding:28px 16px;color:var(--muted,#728092)}
+.notification-empty-icon{font-size:24px;color:#c79a32}
+.notification-empty b{color:var(--text,#344054)}
+.notification-empty span:last-child{font-size:12px}
