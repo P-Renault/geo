@@ -149,3 +149,20 @@ body{background:var(--premium-bg);color:#172f49;-webkit-font-smoothing:antialias
 #offlineLiveContent .panel-body>.btn{margin:8px 6px 0 0}
 #offlineGeometryMap{border:1px solid #dce6ec}
 @media(max-width:760px){#offlineLiveContent .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}#offlineLiveContent .module-layout{grid-template-columns:minmax(0,1fr)}#offlineLiveContent .kpi{padding:12px 10px}}
+
+/* Mi espacio personal: estructura inicial sin datos simulados */
+#content .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;padding:28px 18px;color:#7a8da0}
+#content .empty-state-icon{display:grid;place-items:center;width:44px;height:44px;border:1px solid #dce8ef;border-radius:13px;background:#f6fafc;color:#668397;font-size:22px}
+#content .empty-state h3{margin:0;color:#29465f;font-size:13px}
+#content .empty-state p{margin:0;max-width:390px;font-size:11px;line-height:1.6;color:#7b8fa2}
+#content .empty-state.compact{padding:18px 12px}
+#content .check-row{display:flex;align-items:center;gap:9px;margin:10px 0;color:#425b71;font-size:11px;line-height:1.5}
+#content .check-row input{accent-color:var(--premium-teal);width:15px;height:15px;flex:0 0 auto}
+#content .actions-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:12px}
+#content .table-wrap{width:100%;overflow-x:auto;margin-top:14px;border:1px solid var(--premium-border);border-radius:12px}
+#content .data-table{width:100%;border-collapse:collapse;min-width:580px;background:#fff}
+#content .data-table th,#content .data-table td{padding:12px 14px;text-align:left;border-bottom:1px solid #edf1f5;font-size:11px;vertical-align:top}
+#content .data-table th{background:#f8fafc;color:#647b90;font-weight:700;white-space:nowrap}
+#content .data-table td[colspan]{padding:0}
+#content #userProfileForm input[readonly]{background:#f7f9fb;color:#8394a4}
+@media(max-width:700px){#content .actions-row .btn{flex:1 1 auto}#content .table-wrap{margin-left:0;max-width:100%}}
