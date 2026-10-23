@@ -2,81 +2,128 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#071c32">
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<title>GEOTRACIA | Inteligencia territorial</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#062a42">
+<meta name="description" content="GEOTRACIA conecta información geoespacial, proyectos y equipos para tomar mejores decisiones territoriales.">
+<title>GEOTRACIA — Inteligencia territorial en acción</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=leaflet-layer-fix-v1.8">
-<link rel="stylesheet" href="auth.css">
-<link rel="stylesheet" href="roads.css?v=3.2">
-<link rel="stylesheet" href="sidebar-toggle.css?v=2.3">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="map-gps.css">
-<link rel="stylesheet" href="map-gps-v06.css">
-<link rel="stylesheet" href="map-gps-v10-longitud-vial.css?v=2.6">
-<link rel="stylesheet" href="map-gps-v11-osm-longitud.css?v=3.4">
-
-<style id="geotracia-header-brand-v23">
-/* Encabezado de marca: logotipo principal junto al buscador */
-.topbar{display:flex;align-items:center;gap:14px;min-width:0}
-.header-brand{display:flex;align-items:center;justify-content:flex-start;flex:0 0 178px;width:178px;min-width:0;height:42px;overflow:hidden;text-decoration:none}
-.header-brand img{display:block;width:100%;height:100%;object-fit:contain;object-position:left center}
-.topbar .search{flex:1;min-width:120px}
-/* El proyecto activo queda como primer bloque de la barra lateral. */
-#sidebar>.workspace{margin-top:2px}
-@media(max-width:1000px){.topbar{gap:9px}.header-brand{flex-basis:145px;width:145px;height:38px}.topbar .search{min-width:90px}.top-actions{flex-shrink:0}}
-@media(max-width:700px){.topbar{height:auto;min-height:60px;padding:8px 9px;gap:7px;flex-wrap:wrap}.header-brand{flex:0 0 132px;width:132px;height:35px}.topbar .search{order:3;flex:1 1 100%;width:100%;max-width:none;height:34px;margin:0}.top-actions{margin-left:auto}.mobile-brand{display:none!important}.mobile-menu{flex:0 0 32px;min-width:32px}}
-@media(max-width:390px){.header-brand{flex-basis:116px;width:116px;height:31px}.topbar{gap:5px}.top-actions .icon{min-width:26px;padding:4px}.top-actions .avatar{width:27px;height:27px}.top-actions .btn{padding:7px 8px}}
-</style>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<section id="authGate" class="auth-gate" aria-live="polite">
-  <div class="auth-layout">
-    <aside class="auth-story" aria-label="GEOTRACIA inteligencia territorial">
-      <a class="auth-story-brand" href="#" aria-label="GEOTRACIA inicio"><img src="geotracia-logo.png" alt="GEOTRACIA — Inteligencia territorial en acción"></a>
-      <div class="auth-story-copy">
-        <span class="auth-story-kicker">INTELIGENCIA TERRITORIAL EN ACCIÓN</span>
-        <h2>El territorio,<br><span>mejor conectado.</span></h2>
-        <p>Centraliza caminos, inspecciones, activos e incidencias en un solo espacio de trabajo.</p>
-        <div class="auth-feature-grid"><div><span>⌖</span><b>Información geográfica</b></div><div><span>◈</span><b>Control operacional</b></div><div><span>✓</span><b>Trazabilidad de gestión</b></div></div>
-      </div>
-      <div class="auth-story-footer"><span class="auth-status-dot"></span> Plataforma de gestión territorial <span>·</span> GEOTRACIA</div>
-    </aside>
-    <div class="auth-main">
-      <div class="auth-mobile-brand"><img src="geotracia-symbol.png" alt=""><span><b>GEOTRACIA</b><small>INTELIGENCIA TERRITORIAL</small></span></div>
-      <div class="auth-card">
-        <div class="auth-mobile-wordmark"><img src="geotracia-logo.png" alt="GEOTRACIA — Inteligencia territorial en acción"></div>
-        <div id="authSetup" class="auth-message" hidden><span class="auth-kicker">CONFIGURACIÓN INICIAL</span><h1>Conecta tu espacio de trabajo</h1><p>Para activar el acceso real, configura las credenciales públicas de tu proyecto Supabase en <code>supabase-config.js</code>.</p><div class="auth-alert">El backend todavía no está configurado. No se aceptarán credenciales ficticias.</div><ol><li>Crea un proyecto en Supabase.</li><li>Ejecuta la migración SQL incluida en el paquete.</li><li>Completa la URL y la clave pública.</li></ol></div>
-        <div id="authTabs" class="auth-tabs" hidden role="tablist" aria-label="Tipo de acceso"><button type="button" class="auth-tab active" data-auth-mode="login" role="tab" aria-selected="true">Iniciar sesión</button><button type="button" class="auth-tab" data-auth-mode="signup" role="tab" aria-selected="false">Crear cuenta</button></div>
-        <form id="loginForm" class="auth-form" hidden>
-          <span class="auth-kicker" id="authKicker">ACCESO A LA PLATAFORMA</span><h1 id="authTitle">Bienvenido de nuevo</h1><p id="authDescription">Ingresa a tu espacio de trabajo de GEOTRACIA.</p>
-          <div id="signupFields" hidden><label for="authName">Nombre completo</label><input id="authName" type="text" autocomplete="name" placeholder="Tu nombre y apellido"><label for="authOrg">Organización <span class="optional">· opcional</span></label><input id="authOrg" type="text" autocomplete="organization" placeholder="Nombre de tu organización"></div>
-          <label for="authEmail">Correo electrónico</label><input id="authEmail" type="email" name="geotracia-email" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="email" required placeholder="nombre@organizacion.cl">
-          <label for="authPassword">Contraseña</label><div class="password-wrap"><input id="authPassword" type="password" name="geotracia-password" autocomplete="new-password" required minlength="8" placeholder="Mínimo 8 caracteres"><button type="button" id="togglePassword" class="password-toggle" aria-label="Mostrar contraseña" aria-pressed="false"><span class="toggle-icon">◉</span><span class="toggle-label">Mostrar</span></button></div>
-          <div id="confirmField" hidden><label for="authConfirm">Confirmar contraseña</label><input id="authConfirm" type="password" autocomplete="new-password" minlength="8" placeholder="Repite la contraseña"></div>
-          <div class="auth-utility-row"><span class="auth-secure-note"><span>◆</span> Conexión segura</span><button class="auth-link" id="forgotPassword" type="button">¿Olvidaste tu contraseña?</button></div>
-          <button class="auth-submit" type="submit"><span id="submitLabel">Iniciar sesión</span><span class="submit-arrow" aria-hidden="true">→</span></button>
-          <div id="authError" class="auth-error" role="alert" aria-live="polite"></div><p class="auth-terms">Al continuar, accedes a tu espacio de trabajo de GEOTRACIA.</p>
-        </form>
-        <div class="auth-foot"><span class="auth-foot-shield">✓</span> Acceso protegido <span>·</span> GEOTRACIA</div>
-      </div>
-      <div class="auth-main-footer">© 2026 GEOTRACIA <span>·</span> Inteligencia territorial en acción</div>
+<header class="header">
+  <a class="logo" href="#inicio" aria-label="GEOTRACIA, inicio"><img src="assets/logo-geotracia.png" alt="GEOTRACIA · Inteligencia territorial en acción"></a>
+  <button class="hamburger" aria-label="Abrir navegación" aria-expanded="false"><i></i><i></i><i></i></button>
+  <nav class="nav" aria-label="Principal">
+    <a href="#soluciones">Soluciones</a><a href="#plataforma">Plataforma</a><a href="#sectores">Sectores</a><a href="#contacto">Contacto</a>
+    <a class="nav-button" href="#contacto">Solicitar demostración <span>↗</span></a>
+  </nav>
+</header>
+
+<main id="inicio">
+<section class="hero">
+  <div class="hero-bg-lines" aria-hidden="true"></div>
+  <div class="hero-copy">
+    <div class="kicker"><span></span> TRANSFORMA DATOS EN DECISIONES</div>
+    <h1 class="headline-mobile">El territorio<br>también tiene<br><em>respuestas.</em><br><em>Conéctalas.</em></h1>
+    <h1 class="headline-desktop">Del territorio<br>al conocimiento,<br><em>para mejores</em><br><em>decisiones.</em></h1>
+    <p class="intro">Una plataforma geoespacial para organizaciones que necesitan planificar, monitorear y gestionar su territorio con información confiable y actualizada.</p>
+    <div class="benefits">
+      <div><span class="benefit-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 6.5 8.8 4l6.4 2.4L20.5 4v13.5l-5.3 2.4-6.4-2.4-5.3 2.4z"/><path d="M8.8 4v13.5M15.2 6.4v13.5M12 8.5l4-3.2"/></svg></span><b>Información<br>centralizada</b></div>
+      <div><span class="benefit-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19.5V4.5M4 19.5h16"/><path d="m6.5 15 4-4 3 2 5-6"/><path d="M14.8 7H18.5v3.7"/></svg></span><b>Seguimiento trazable</b></div>
+      <div><span class="benefit-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 20 6v5.6c0 4.7-3.2 7.7-8 9.4-4.8-1.7-8-4.7-8-9.4V6z"/><path d="m8.2 12.2 2.4 2.4 5.3-5.4"/></svg></span><b>Decisiones basadas<br>en evidencia</b></div>
+    </div>
+    <a class="primary-button" href="#plataforma">Conoce la plataforma <span>↗</span></a>
+  </div>
+  <div class="hero-art">
+    <picture class="hero-picture">
+      <source media="(max-width: 700px)" srcset="assets/hero-mobile-scene.png">
+      <img src="assets/desktop-laptop.png" alt="GEOTRACIA: cartografía del proyecto y gestión de caminos en la versión escritorio">
+    </picture>
+  </div>
+  <div class="desktop-highlights" aria-label="Capacidades de GEOTRACIA">
+    <article><span class="highlight-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></svg></span><div><b>Visualización geoespacial</b><p>Mapas, capas y datos integrados.</p></div></article>
+    <article><span class="highlight-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><div><b>Gestión de proyectos</b><p>Planificación y seguimiento en tiempo real.</p></div></article>
+    <article><span class="highlight-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5h6M8.5 11h7M8.5 15h3M13 15l1.5 1.5L17.5 13"/></svg></span><div><b>Inspecciones en terreno</b><p>Registra evidencia y trazabilidad.</p></div></article>
+    <article><span class="highlight-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V11h4v9M10 20V5h4v15M16 20v-7h4v7"/></svg></span><div><b>Reportes y análisis</b><p>Información clara para mejores decisiones.</p></div></article>
+  </div>
+  <div class="feature-strip">
+    <article class="feature-card">
+      <picture class="feature-device"><source media="(min-width: 701px)" srcset="assets/desktop-device-map-clean.png"><img src="assets/desktop-phone-1.png" alt="Dispositivo móvil con cartografía de proyectos y caminos"></picture>
+      <div class="feature-caption"><span class="feature-icon">◫</span><div><b>Cartografía de proyectos</b><p>Visualiza caminos y tramos en un mapa interactivo.</p></div></div>
+    </article>
+    <article class="feature-card">
+      <picture class="feature-device"><source media="(min-width: 701px)" srcset="assets/desktop-device-detail-clean.png"><img src="assets/desktop-phone-2.png" alt="Dispositivo móvil con ficha y fotografía de un elemento"></picture>
+      <div class="feature-caption"><span class="feature-icon">▣</span><div><b>Registro de elementos</b><p>Detalles, fotografías y trazabilidad en terreno.</p></div></div>
+    </article>
+    <article class="feature-card">
+      <picture class="feature-device"><source media="(min-width: 701px)" srcset="assets/desktop-device-menu-clean.png"><img src="assets/desktop-phone-3.png" alt="Dispositivo móvil con menú de módulos de GEOTRACIA"></picture>
+      <div class="feature-caption"><span class="feature-icon">☰</span><div><b>Menú intuitivo</b><p>Accede a todos los módulos desde cualquier dispositivo.</p></div></div>
+    </article>
+    <article class="feature-card feature-card-wide">
+      <picture class="feature-device"><source media="(min-width: 701px)" srcset="assets/desktop-device-territory-clean.png"><img src="assets/desktop-phone-4.png" alt="Dispositivo móvil con vista territorial y lista de caminos"></picture>
+      <div class="feature-caption"><span class="feature-icon">▱</span><div><b>Vista territorial completa</b><p>Explora el proyecto en una vista amplia y detallada.</p></div></div>
+    </article>
+  </div>
+  <div class="mobile-hero-cta">
+    <a class="primary-button" href="#contacto">Solicitar una demostración <span>↗</span></a>
+    <div class="mobile-hero-assurances"><span>✓</span> Implementación segura <span>✓</span> Uso simple y eficiente <span>✓</span> Soporte especializado</div>
+  </div>
+</section>
+
+<section class="workflow" id="soluciones">
+  <div class="workflow-inner">
+    <div class="workflow-copy">
+      <div class="kicker kicker-light"><span></span> TU TERRITORIO, EN UNA NUEVA DIMENSIÓN</div>
+      <h2>De los datos aislados<br>a una <em>visión integrada.</em></h2>
+      <p>Explora el territorio desde una plataforma pensada para equipos que necesitan entender qué ocurre, dónde ocurre y qué hacer después.</p>
+      <ul><li>Visualización geoespacial por capas</li><li>Seguimiento de proyectos e hitos</li><li>Información organizada y consultable</li><li>Reportes para respaldar decisiones</li></ul>
+    </div>
+    <div class="steps" id="plataforma">
+      <article class="step"><div class="step-num">01</div><div class="step-content"><h3>Captura en terreno</h3><p>Registra información desde cualquier dispositivo. Fotografías, formularios y ubicación GPS.</p><img class="step-illustration" src="assets/workflow-capture.png" alt="Captura en terreno con dispositivo y ubicación GPS"></div><span class="step-arrow">›</span></article>
+      <article class="step"><div class="step-num">02</div><div class="step-content"><h3>Integra datos geoespaciales</h3><p>Combina capas, proyectos y registros en un solo mapa. Visualiza toda la información de forma centralizada.</p><img class="step-illustration" src="assets/workflow-layers.png" alt="Capas de datos geoespaciales"></div><span class="step-arrow">›</span></article>
+      <article class="step"><div class="step-num">03</div><div class="step-content"><h3>Analiza y prioriza</h3><p>Identifica riesgos, oportunidades y toma mejores decisiones con datos actualizados.</p><img class="step-illustration" src="assets/workflow-analysis.png" alt="Panel de análisis e indicadores"></div><span class="step-arrow">›</span></article>
+      <article class="step"><div class="step-num">04</div><div class="step-content"><h3>Ejecuta y monitorea</h3><p>Gestiona actividades, seguimiento en tiempo real y avance en terreno.</p><img class="step-illustration" src="assets/workflow-monitor.png" alt="Seguimiento de trabajos y ubicación en terreno"></div><span class="step-arrow">›</span></article>
+      <article class="step"><div class="step-num">05</div><div class="step-content"><h3>Reporta y respalda</h3><p>Genera reportes con evidencia para equipos, instituciones y auditorías.</p><img class="step-illustration" src="assets/workflow-report.png" alt="Informe con mapa y evidencia fotográfica"></div></article>
     </div>
   </div>
 </section>
-<aside class="sidebar" id="sidebar"><div class="workspace"><span class="workspace-icon">R7</span><span><small>PROYECTO ACTIVO</small><b>Ruta R-720 · Conservación</b></span></div><small class="nav-label">ESPACIO DE TRABAJO</small><nav id="nav"></nav><div class="sidebar-bottom"><span class="online"></span><span><b>Sistema operativo</b><small>Entorno de demostración</small></span><div class="user"><span class="avatar">JP</span><span><b>Juan Pérez</b><small>Administrador</small></span></div></div></aside>
-<div class="main"><header class="topbar"><button class="icon mobile-menu" id="menu" aria-label="Abrir menú" title="Abrir menú">☰</button><a class="header-brand" data-go="dashboard" href="#" aria-label="GEOTRACIA inicio"><img src="geotracia-logo.png" alt="GEOTRACIA — Inteligencia territorial en acción"></a><label class="search">⌕ <input id="globalSearch" placeholder="Buscar módulos, registros, caminos o usuarios…"><kbd>Ctrl K</kbd></label><div class="top-actions"><button class="project" id="project">PROYECTO <b>Ruta R-720 - Conservación 2024⌄</b></button><button class="icon" id="notifications" title="Notificaciones">♧</button><button class="icon" id="help" title="Ayuda">?</button><span class="avatar" id="userAvatar">GT</span><button class="btn" id="logoutBtn" type="button">Salir</button></div></header><main id="content"></main><footer>GEOTRACIA · Plataforma de inteligencia territorial <span>Framework visual v0.1 · Datos demostrativos</span></footer></div><div id="overlay" class="overlay"></div><div id="toast" class="toast"></div><dialog id="dialog"><div class="dialog-head"><div><small id="dialogEyebrow">GEOTRACIA</small><h2 id="dialogTitle">Acción</h2></div><button class="icon" data-close>×</button></div><div id="dialogBody" class="dialog-body"></div><div id="dialogFoot" class="dialog-foot"></div></dialog>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="supabase-config.js"></script><script src="auth.js"></script><script src="app.js?v=offline-core-v1"></script><script src="roads.js?v=3.5"></script><script src="sidebar-toggle.js?v=2.3"></script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<link rel="stylesheet" href="roads.css?v=3.5">
-<script src="map-gps.js?v=3.2"></script><script src="map-gps-v06.js"></script>
-<script src="map-gps-v10-longitud-vial.js?v=2.6"></script>
-<script src="map-gps-v11-osm-longitud.js?v=3.4"></script>
+
+<section class="trust">
+  <div class="trust-inner">
+    <div><div class="kicker"><span></span> TECNOLOGÍA CON CRITERIO</div><h2>Confianza en cada capa.<br><em>Control en cada decisión.</em></h2></div>
+    <div class="trust-list">
+      <article><span>▣</span><div><b>Control de la información</b><p>Acceso organizado a la información que tus equipos necesitan consultar.</p></div></article>
+      <article><span>◴</span><div><b>Trazabilidad operativa</b><p>Contexto y seguimiento para comprender el estado de los proyectos.</p></div></article>
+      <article><span>◇</span><div><b>Diseñada para crecer</b><p>Una base de trabajo adaptable a distintas escalas y necesidades.</p></div></article>
+    </div>
+  </div>
+</section>
+
+<section class="contact-wrap" id="contacto">
+  <div class="contact-panel">
+    <div class="contact-copy"><div class="kicker kicker-light"><span></span> EL SIGUIENTE PASO COMIENZA AQUÍ</div><h2>Tu territorio es demasiado importante<br>para decidir a ciegas.</h2><p>Conversemos sobre tus desafíos y descubre cómo GEOTRACIA puede ayudar a tu equipo a trabajar con más claridad, control y agilidad.</p><div class="contact-actions"><a class="light-button" href="mailto:contacto@geotracia.cl?subject=Solicitud%20de%20demostraci%C3%B3n%20GEOTRACIA">Solicitar una demostración <span>↗</span></a><small>Sin compromiso · Una conversación enfocada en tus necesidades</small></div></div>
+    <div class="brand-orbit" aria-hidden="true"><span>G<sup>+</sup></span></div>
+  </div>
+</section>
+
+<section class="sectors" id="sectores">
+  <div class="kicker"><span></span> DISEÑADA PARA EL TRABAJO REAL</div>
+  <h2>La complejidad del territorio.<br><em>La claridad para actuar.</em></h2>
+  <p class="sectors-intro">GEOTRACIA conecta datos, personas y proyectos para que cada decisión tenga contexto y cada avance pueda seguirse.</p>
+  <div class="sector-list">
+    <article><span class="sector-icon">⌁</span><small>01 / INGENIERÍA</small><div><b>Ingeniería y consultoría</b><p>Evalúa alternativas, integra antecedentes y fortalece estudios de factibilidad con una lectura territorial más completa.</p></div><strong>›</strong></article>
+    <article><span class="sector-icon">▣</span><small>02 / CONSTRUCCIÓN</small><div><b>Empresas constructoras</b><p>Visualiza obras y restricciones, coordina equipos y supervisa el avance con información georreferenciada.</p></div><strong>›</strong></article>
+    <article><span class="sector-icon">⌂</span><small>03 / GESTIÓN PÚBLICA</small><div><b>Instituciones públicas</b><p>Apoya la planificación, la gestión de infraestructura y la priorización de iniciativas con evidencia territorial.</p></div><strong>›</strong></article>
+  </div>
+</section>
+</main>
+<footer class="footer">
+  <a class="footer-logo" href="#inicio"><img src="assets/logo-geotracia.png" alt="GEOTRACIA"></a>
+  <p>Más contexto para mejores decisiones.</p><nav><a href="#soluciones">Soluciones</a><a href="#plataforma">Plataforma</a><a href="#contacto">Contacto</a></nav>
+  <small>© 2026 GEOTRACIA. Todos los derechos reservados.</small><small>Inteligencia territorial en acción.</small>
+</footer>
+<script src="script.js"></script>
 </body>
 </html>
