@@ -228,3 +228,78 @@
 .dash-priority-grid>.panel{min-width:0;overflow:hidden}.dash-priority-grid .panel-body{min-width:0}
 .dash-chart-grid>.panel{min-width:0}.dash-chart-grid .panel-body{min-width:0}.dash-chart-grid .panel-body>p{overflow-wrap:anywhere}
 @media(max-width:700px){.dash-context-controls{width:100%;display:grid;grid-template-columns:minmax(0,1fr)}.dash-context-controls label,.dash-context-controls .field{width:100%;min-width:0}.dash-real-map{height:230px}.dash-real-bar-row{grid-template-columns:74px minmax(0,1fr) 24px;gap:7px;font-size:11px}.dash-trend-legend{font-size:10px;gap:8px}.dash-activity-item,.dash-priority-item{grid-template-columns:9px minmax(0,1fr) auto;gap:7px}.dash-activity-item time,.dash-priority-item time{font-size:9px}}
+
+/* Dashboard: normalización visual y legibilidad móvil v2 */
+.dash-context,.dash-kpis .kpi,.dash-priority-grid>.panel,.dash-chart-grid>.panel{border:1px solid #dfe7ed!important;border-radius:16px!important;box-shadow:0 4px 16px rgba(18,48,72,.035)!important;overflow:hidden}
+.dash-context{padding:20px!important;background:linear-gradient(135deg,#fff 0%,#f2fbfa 100%)!important;display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,.8fr);gap:20px;align-items:center}
+.dash-context h2{font-size:20px!important;line-height:1.25;margin:8px 0!important;color:#19384f}
+.dash-context p{font-size:12px!important;line-height:1.5;color:#788a98;margin:7px 0 0!important}
+.dash-context-controls{display:grid!important;grid-template-columns:1fr;gap:10px!important;width:100%;max-width:none!important}
+.dash-context-controls label{display:grid;gap:5px;color:#64798b;font-size:11px;font-weight:600;min-width:0!important}
+.dash-context-controls .field{width:100%;min-width:0!important;max-width:none!important;min-height:42px;padding:10px 12px!important;font-size:12px!important;border-radius:10px!important;background:#fff}
+.dash-kpis{gap:12px!important;margin:14px 0 18px!important}
+.dash-kpis .kpi{min-width:0;min-height:112px;padding:17px 14px!important;align-items:center}
+.dash-kpis .kpi strong{font-size:25px!important;line-height:1.15;letter-spacing:-.5px}
+.dash-kpis .kpi label{font-size:11px!important;line-height:1.4;font-weight:700;white-space:normal}
+.dash-kpis .kpi small{font-size:10px!important;line-height:1.45;white-space:normal}
+.dash-priority-grid{gap:14px!important;margin-bottom:16px!important}
+.dash-priority-grid .panel-head,.dash-chart-grid .panel-head{padding:17px 18px 11px!important;align-items:flex-start;gap:12px}
+.dash-priority-grid .panel-head h2,.dash-chart-grid .panel-head h2{font-size:14px!important;line-height:1.4;margin:0!important}
+.dash-priority-grid .panel-head .sub,.dash-chart-grid .panel-head .sub{font-size:11px!important;line-height:1.5;margin-top:4px}
+.dash-priority-grid .panel-body,.dash-chart-grid .panel-body{padding:0 18px 18px!important;min-width:0}
+.dash-chart-grid{gap:14px!important;margin:0 0 16px!important;align-items:stretch}
+.dash-chart-grid>.panel{min-width:0!important;display:flex;flex-direction:column}
+.dash-chart-grid .panel-body{flex:1;min-width:0;overflow:hidden}
+.dash-chart-grid .panel-body>p,.dash-chart-caption{font-size:11px!important;line-height:1.55!important;overflow-wrap:anywhere;white-space:normal}
+.dash-chart-legend,.dash-trend-legend{display:flex!important;flex-direction:row!important;align-items:center;flex-wrap:wrap;gap:8px 14px!important;margin:5px 0 16px!important;color:#687d90;font-size:11px!important;line-height:1.4}
+.dash-chart-legend span,.dash-trend-legend span{display:inline-flex!important;align-items:center;gap:6px;white-space:nowrap}
+.dash-chart-legend i,.dash-trend-legend i{width:8px;height:8px;flex:0 0 8px;border-radius:50%;display:inline-block}
+.dash-real-bars{display:grid!important;gap:15px!important;padding:4px 0 10px!important}
+.dash-real-bar-row{display:grid!important;grid-template-columns:72px minmax(0,1fr) 28px!important;align-items:center!important;gap:10px!important;font-size:11px!important;line-height:1.3;color:#60758a}
+.dash-real-bar-row>span{display:block!important;white-space:nowrap}
+.dash-real-bar-track{height:9px!important;min-width:0;border-radius:20px;background:#edf2f5;overflow:hidden}
+.dash-real-bar-row b{display:block!important;text-align:right;font-size:12px!important;font-variant-numeric:tabular-nums}
+.dash-trend-wrap{display:block!important;width:100%;min-width:0;overflow:hidden}
+.dash-trend-real{display:block!important;width:100%!important;height:auto!important;min-height:0!important;aspect-ratio:600/190;overflow:visible}
+.dash-trend-real text{font-size:10px;fill:#8192a1}
+.dash-real-map{height:320px!important;width:100%;min-width:0;border:1px solid #dce7e9;border-radius:12px;overflow:hidden;background:#edf3f2}
+.dash-map-status{font-size:11px!important;line-height:1.55!important;padding:10px 1px!important;color:#718596;overflow-wrap:anywhere}
+.dash-road-list{display:grid;gap:0;margin-top:12px;border:1px solid #e4ebef;border-radius:12px;overflow:hidden;background:#fff}
+.dash-road-list-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#f7fafb;border-bottom:1px solid #e7edf1;color:#28475e;font-size:12px}
+.dash-road-list-head span{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 6px;border-radius:8px;background:#e4f6f2;color:#0d8d84;font-size:11px;font-weight:800}
+.dash-road-option{display:flex;align-items:center;gap:11px;width:100%;min-width:0;padding:12px 13px;border:0;border-bottom:1px solid #edf1f4;background:#fff;text-align:left;color:#29475e;transition:background .16s,border-color .16s}
+.dash-road-option:last-child{border-bottom:0}
+.dash-road-option:hover{background:#f7fbfc}
+.dash-road-option.is-selected{background:#eef5ff;box-shadow:inset 3px 0 #1769ee}
+.dash-road-number{display:grid;place-items:center;width:29px;height:29px;flex:0 0 29px;border-radius:9px;background:#e5f5f3;color:#0d8e87;font-size:11px;font-weight:800}
+.dash-road-option.is-selected .dash-road-number{background:#1769ee;color:#fff}
+.dash-road-copy{display:grid;gap:4px;min-width:0;flex:1}
+.dash-road-copy b{font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+.dash-road-copy small{font-size:10px;color:#8192a1;line-height:1.4}
+.dash-road-chevron{font-size:22px;color:#8da0ad;line-height:1}
+.dash-road-option.is-selected .dash-road-chevron{color:#1769ee}
+.dash-empty-state{padding:16px!important;font-size:12px!important;line-height:1.55!important;white-space:normal!important;overflow-wrap:anywhere}
+.dash-activity-item,.dash-priority-item{grid-template-columns:10px minmax(0,1fr) auto!important;gap:10px!important;padding:12px 0!important}
+.dash-activity-item b,.dash-priority-item b{font-size:12px!important;line-height:1.45!important;overflow-wrap:anywhere}
+.dash-activity-item small,.dash-priority-item small{font-size:10px!important;line-height:1.5!important;white-space:normal}
+.dash-footnote{font-size:11px!important;line-height:1.55!important;border-radius:12px!important;padding:12px 14px!important}
+@media(max-width:700px){
+ .dash-context{grid-template-columns:minmax(0,1fr)!important;padding:15px!important;gap:14px!important}
+ .dash-context h2{font-size:17px!important}
+ .dash-kpis{gap:8px!important;margin:10px 0 13px!important}
+ .dash-kpis .kpi{min-height:104px;padding:12px 9px!important;gap:8px!important;border-radius:13px!important;align-items:flex-start}
+ .dash-kpis .kpi-icon{width:34px;height:34px;flex:0 0 34px}
+ .dash-kpis .kpi strong{font-size:21px!important}
+ .dash-kpis .kpi label{font-size:10px!important}
+ .dash-kpis .kpi small{font-size:9px!important}
+ .dash-priority-grid,.dash-chart-grid{grid-template-columns:minmax(0,1fr)!important;gap:11px!important}
+ .dash-priority-grid .panel-head,.dash-chart-grid .panel-head{padding:14px 13px 9px!important}
+ .dash-priority-grid .panel-body,.dash-chart-grid .panel-body{padding:0 13px 14px!important}
+ .dash-chart-grid .panel-head h2{font-size:13px!important}
+ .dash-chart-legend,.dash-trend-legend{gap:7px 10px!important;font-size:10px!important;margin-bottom:12px!important}
+ .dash-real-bar-row{grid-template-columns:65px minmax(0,1fr) 24px!important;gap:7px!important;font-size:10px!important}
+ .dash-real-map{height:255px!important}
+ .dash-road-option{padding:11px 10px}
+ .dash-activity-item,.dash-priority-item{grid-template-columns:9px minmax(0,1fr)!important;gap:8px!important}
+ .dash-activity-item time,.dash-priority-item time{grid-column:2;font-size:10px!important;white-space:normal}
+}
