@@ -1,0 +1,22 @@
+GEOTRACIA — Usuarios v1 (delta)
+
+Cambios incluidos:
+- Sustituye el directorio local de demostración por consulta de membresías de la organización actual en Supabase (tabla members).
+- Muestra indicadores basados en las filas devueltas por el servidor.
+- Permite editar el rol y activar/desactivar una membresía, sujetos a RLS.
+- Evita mostrar identificadores de usuario en la interfaz.
+- Exporta las membresías cargadas desde Supabase, no el conjunto de datos local de demostración.
+- La invitación se identifica explícitamente como pendiente de una Edge Function/endpoint seguro; no se simulan altas ni correos.
+
+Instalación:
+1. Reemplazar geo-Desarrollo/app.js conservando la ruta.
+2. Publicar mediante el flujo habitual de GitHub Pages.
+3. Iniciar sesión con una cuenta que pertenezca a una organización y abrir Usuarios.
+4. Probar actualizar, filtros, exportación y cambios de rol/estado con una cuenta autorizada.
+
+Importante:
+- No se incluye migración SQL porque el proyecto ya usa la tabla members y su RLS. La app no puede elevar permisos; si las políticas deniegan un cambio, se muestra el error.
+- El directorio muestra correo/nombre solo si esos campos están disponibles en la fila de members. No intenta leer perfiles ajenos ni omitir RLS.
+- No se implementa invitación real ni creación de usuarios de Auth. Para ello debe desplegarse una Edge Function que use la service_role únicamente en servidor, valide el rol del solicitante y llame a Supabase Auth Admin.
+- El campo role debe coincidir con los valores permitidos por el enum real de la base de datos. Si el esquema usa valores distintos de owner/admin/member/viewer, adaptar las opciones a los valores reales antes de habilitar cambios.
+- Validación realizada: node --check app.js. No se ha probado contra la instancia real de Supabase del usuario.
