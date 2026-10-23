@@ -1,0 +1,31 @@
+GEOTRACIA — Corrección de mapa y persistencia del proyecto (V7)
+
+Archivos modificados:
+- app.js
+- index.html (invalidación de caché del navegador)
+
+Corrección 1 — trazas de caminos y tramos:
+- El dashboard ahora llama a la función existente public.geotracia_dashboard_segment_geometries(p_project_id), con su firma real de un parámetro UUID.
+- Consume el campo de retorno segment_id y segment_geojson de la función existente.
+- Dibuja primero la geometría real guardada en segments.geom. Solo si un tramo no tiene geometría persistida, intenta derivarla desde la geometría del camino y las progresivas.
+- Los caminos asociados a tramos geográficos se pueden seleccionar aunque el camino no tenga una geometría propia.
+- El mapa ajusta el encuadre también cuando existen geometrías de tramos pero no de caminos.
+- Si la función de segmentos falla, el error queda en el diagnóstico de geometría y se intenta el fallback por progresivas.
+
+Corrección 2 — persistencia de proyecto:
+- Guarda la selección por usuario y organización, manteniendo compatibilidad con la clave anterior por organización.
+- Al entrar o recargar el dashboard, valida la selección guardada contra los proyectos accesibles y la prioriza sobre el valor en memoria potencialmente obsoleto.
+- Evita reutilizar la última selección global si corresponde a otra organización.
+
+Validaciones realizadas localmente:
+- node --check app.js: correcto.
+- Revisión estática de la llamada RPC frente a la firma y columnas de retorno de 20261023_geotracia_dashboard_segment_geometries.sql: coinciden.
+
+Límite de verificación:
+No se dispone de conexión a tu instancia de Supabase ni al navegador desplegado para comprobar datos reales/RLS en producción. Si la base no tiene geometrías almacenadas en roads.geom o segments.geom y las progresivas no corresponden al trazado, el código no puede inventar una traza correcta.
+
+Instalación:
+1. Reemplaza app.js e index.html en la raíz del proyecto por los incluidos.
+2. Publica/despliega ambos archivos juntos.
+3. Recarga sin caché (en móvil, cerrar y abrir la página; si hace falta, limpiar caché del sitio).
+4. No ejecutes una query SQL nueva: el paquete usa la función existente de un parámetro.
