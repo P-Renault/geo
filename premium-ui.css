@@ -99,3 +99,40 @@ body{background:var(--premium-bg);color:#172f49;-webkit-font-smoothing:antialias
  #content .dialog-foot{padding:12px 16px}
 }
 @media(prefers-reduced-motion:reduce){#content .btn,#content tbody tr{transition:none}}
+
+/* Ajustes puntuales V1.1 solicitados: separación de KPIs y tarjetas de planes centradas. */
+#content > .panel + .kpis,
+#content > section.panel + #reportsLiveContent > .kpis,
+#content #reportsLiveContent > .kpis:first-child{
+  margin-top:14px;
+}
+/* Los módulos operativos renderizan el selector dentro de un panel y los KPI a continuación. */
+#content > .panel + .kpis{margin-top:14px}
+/* Solo las tarjetas comerciales del módulo Administración y suscripciones. */
+#content .plans-grid .plan{
+  text-align:center;
+  align-items:stretch;
+}
+#content .plans-grid .plan-topline{
+  justify-content:center;
+  flex-wrap:wrap;
+  min-height:20px;
+}
+#content .plans-grid .plan h3,
+#content .plans-grid .plan .price,
+#content .plans-grid .plan p,
+#content .plans-grid .plan .annual-equivalent{
+  text-align:center;
+}
+#content .plans-grid .plan ul{
+  list-style:none;
+  padding:0;
+  margin:14px 0 18px;
+  text-align:center;
+}
+#content .plans-grid .plan li{ text-align:center; }
+#content .plans-grid .plan .btn{align-self:stretch}
+@media(max-width:700px){
+  #content > .panel + .kpis{margin-top:12px}
+  #content .plans-grid .plan{padding:18px 16px}
+}
