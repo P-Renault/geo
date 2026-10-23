@@ -166,3 +166,14 @@ body{background:var(--premium-bg);color:#172f49;-webkit-font-smoothing:antialias
 #content .data-table td[colspan]{padding:0}
 #content #userProfileForm input[readonly]{background:#f7f9fb;color:#8394a4}
 @media(max-width:700px){#content .actions-row .btn{flex:1 1 auto}#content .table-wrap{margin-left:0;max-width:100%}}
+
+/* Geotracia · foto de perfil del espacio personal */
+#content .usp-avatar-editor{display:flex;align-items:center;gap:18px;padding:16px;border:1px solid var(--line,#dbe4ec);border-radius:16px;background:var(--panel-soft,#f7fafc)}
+#content .usp-avatar-frame{width:112px;height:112px;flex:0 0 112px;border-radius:50%;overflow:hidden;border:2px solid #dce7ee;background:#eaf2f6;display:flex;align-items:center;justify-content:center}
+#content .usp-avatar-frame img{width:100%;height:100%;object-fit:cover}
+#content .usp-avatar-frame img[hidden],#content #uspAvatarEmpty[hidden]{display:none}
+#content .usp-avatar-empty{font-size:42px;color:#668092;line-height:1}
+#content .usp-avatar-controls{flex:1;min-width:0}
+#content .usp-avatar-controls input[type=file]{max-width:100%;padding:9px;font-size:13px}
+#content .usp-avatar-controls .sub{margin-top:6px;overflow-wrap:anywhere}
+@media(max-width:520px){#content .usp-avatar-editor{align-items:flex-start;gap:12px;padding:12px}#content .usp-avatar-frame{width:84px;height:84px;flex-basis:84px}#content .usp-avatar-empty{font-size:32px}}
