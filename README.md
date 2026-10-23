@@ -1,9 +1,12 @@
-GEOTRACIA — Rediseño de iconos del panel lateral
+# Geotracia — reubicación de proyecto activo
 
-Archivos modificados:
-- app.js: los iconos del panel lateral se renderizan como SVG de línea por módulo.
-- styles.css: estilo visual de los iconos del panel lateral (cuadros azul petróleo, bordes sutiles y trazos turquesa).
+## Archivo modificado
+- `index.html`
 
-Se conservan los IDs, nombres, orden, rutas de navegación y lógica de todos los módulos. No se han modificado las funciones de negocio ni las tablas.
+## Cambios
+- Eliminada la tarjeta de proyecto activo del panel lateral.
+- El menú lateral comienza directamente con “ESPACIO DE TRABAJO” y conserva todos sus módulos.
+- Reubicada la tarjeta de proyecto activo en el header, inmediatamente a la izquierda de la campana de notificaciones.
+- Ajustado el tamaño de la tarjeta para escritorio y móvil, conservando el botón `#project` y su interacción existente.
 
-Integración: reemplazar ambos archivos en la raíz del repositorio publicado. Mantener el resto de archivos sin cambios.
+No se modificaron `app.js`, la navegación de módulos ni la lógica de datos.
