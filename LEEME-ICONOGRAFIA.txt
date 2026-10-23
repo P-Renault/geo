@@ -1,0 +1,13 @@
+GEOTRACIA — Adaptación visual de iconos
+
+Archivos incluidos (rutas en la raíz del repositorio):
+- app.js: reemplaza los caracteres de iconos del menú lateral e inferior por iconos SVG de trazo uniforme. No cambia los identificadores de navegación ni la lógica de los módulos.
+- styles.css: armoniza color, tamaño, fondo y estados activo/inactivo de los iconos; ajusta la navegación inferior móvil a las referencias visuales.
+- index.html: actualiza las versiones de caché de app.js y styles.css para que el navegador cargue los cambios.
+
+Aplicación:
+1. Haz una copia de seguridad de los tres archivos actuales.
+2. Reemplaza cada archivo en la misma ubicación dentro del repositorio.
+3. Publica/despliega y recarga el sitio sin caché.
+
+Alcance: solo iconografía y estilos visuales de navegación. No se modifican los módulos, sus permisos, consultas, rutas de navegación ni integraciones.
