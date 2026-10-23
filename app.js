@@ -62,6 +62,9 @@ function table(data=records,limit=100){let d=data.slice(0,limit);return `<div cl
 function tableTools(){return `<div class="table-tools"><label class="field-search">⌕ <input id="tableSearch" placeholder="Buscar código, descripción, responsable…" value="${esc(query)}"></label><select class="field" id="typeFilter" style="max-width:160px"><option value="">Todos los tipos</option>${["Inspección","Incidencia","Infraestructura","Intervención","Operación"].map(x=>`<option ${typeFilter===x?"selected":""}>${x}</option>`).join("")}</select><button class="btn" data-action="clear-filters">Limpiar filtros</button></div>`}
 function recordPanel(){let d=records.filter(r=>match(r,query)&&(!typeFilter||r.type===typeFilter));return panel("Registros del módulo",`${tableTools()}<div id="recordsTable">${table(d)}</div><div class="pagination"><span>${d.length} registros visibles · almacenamiento local</span><div class="pages"><button>‹</button><button class="selected">1</button><button>›</button></div></div>`,"Consulta, filtra y abre los registros para revisar sus datos.",btn("＋ Nuevo registro","new-record","primary"))}
 let dashboardProjectId='', dashboardPeriodDays=30, dashboardData={loading:false,error:'',roads:[],segments:[],incidents:[],inspections:[],inventory:[],maintenance:[],geometries:[],loadedAt:null};
+function dashboardProjectStorageKey(){return `geo.dashboardProject.${geoOrg?.id||'default'}`}
+function readDashboardProjectId(){try{return localStorage.getItem(dashboardProjectStorageKey())||''}catch{return ''}}
+function persistDashboardProjectId(id=dashboardProjectId){try{if(id)localStorage.setItem(dashboardProjectStorageKey(),id);else localStorage.removeItem(dashboardProjectStorageKey())}catch{}}
 function dashPeriodStart(){const d=new Date();d.setDate(d.getDate()-dashboardPeriodDays);d.setHours(0,0,0,0);return d}
 function dashDateLabel(value){if(!value)return 'Fecha no disponible';const d=new Date(value);return Number.isNaN(d.getTime())?'Fecha no disponible':d.toLocaleDateString('es-CL',{day:'2-digit',month:'short'})}
 function dashIsActiveIncident(x){return !['resolved','closed','draft','archived'].includes(String(x.status||'').toLowerCase())}
@@ -73,7 +76,12 @@ async function loadDashboardData(projectId=dashboardProjectId){
  if(!c){dashboardData={...dashboardData,loading:false,error:'El cliente de Supabase no está disponible. Inicia sesión y vuelve a intentar.'};if(active==='dashboard')show();return}
  if(!geoCurrentUser||!geoOrg){await loadGeoProjects()}
  if(!geoOrg?.id){dashboardData={...dashboardData,loading:false,error:geoProjectsError||'No se encontró una organización accesible para esta cuenta.'};if(active==='dashboard')show();return}
- const available=geoProjects.filter(p=>p.status!=='archived');dashboardProjectId=projectId||dashboardProjectId||available[0]?.id||'';
+ const available=geoProjects.filter(p=>p.status!=='archived');
+ const requested=projectId||dashboardProjectId;
+ const saved=readDashboardProjectId();
+ const validId=id=>available.some(p=>p.id===id);
+ dashboardProjectId=validId(requested)?requested:(validId(saved)?saved:(available[0]?.id||''));
+ persistDashboardProjectId(dashboardProjectId);
  if(!dashboardProjectId){dashboardData={loading:false,error:'No hay proyectos activos en esta organización.',roads:[],segments:[],incidents:[],inspections:[],inventory:[],maintenance:[],geometries:[],loadedAt:new Date()};if(active==='dashboard')show();return}
  dashboardData={...dashboardData,loading:true,error:''};if(active==='dashboard')show();
  try{
@@ -133,12 +141,30 @@ async function renderDashboardMap(){
  setTimeout(()=>map.invalidateSize(),100)
 }
 function selectDashboardRoad(roadId,segmentId=null){
- const layers=window.dashboardRoadLayers;if(!layers)return;let selectedBounds=null;
- for(const [id,layer] of layers){const selected=id===roadId;layer.setStyle({color:selected?'#1769ee':'#168f91',weight:selected?7:4,opacity:selected?1:.86});if(selected&&layer.getBounds().isValid())selectedBounds=layer.getBounds()}
- for(const [id,items] of (window.dashboardSegmentLayers||new Map()))for(const item of items){const selected=id===roadId&&(!segmentId||item.segment.segment_id===segmentId);item.layer.setStyle({color:selected?'#f59e0b':id===roadId?'#1769ee':'#0d7779',weight:selected?8:id===roadId?5:3,opacity:selected?1:id===roadId?.95:.65,dashArray:selected?null:'5 4'});if(selected&&item.layer.getBounds().isValid())selectedBounds=selectedBounds?selectedBounds.extend(item.layer.getBounds()):item.layer.getBounds()}
+ const layers=window.dashboardRoadLayers||new Map();let selectedBounds=null;
+ const map=window.dashboardMapInstance;
+ for(const [id,layer] of layers){const selected=id===roadId;layer.setStyle({color:selected?'#1769ee':'#168f91',weight:selected?8:4,opacity:selected?1:.82,lineCap:'round',lineJoin:'round'});if(selected){if(layer.bringToFront)layer.bringToFront();if(layer.getBounds().isValid())selectedBounds=layer.getBounds()}}
+ for(const [id,items] of (window.dashboardSegmentLayers||new Map()))for(const item of items){const selected=id===roadId&&(!segmentId||item.segment.segment_id===segmentId);item.layer.setStyle({color:selected?'#f59e0b':id===roadId?'#1769ee':'#0d7779',weight:selected?9:id===roadId?5:3,opacity:selected?1:id===roadId?.98:.62,dashArray:selected?null:'5 4',lineCap:'round',lineJoin:'round'});if(selected&&item.layer.bringToFront)item.layer.bringToFront();if(selected&&item.layer.getBounds().isValid())selectedBounds=selectedBounds?selectedBounds.extend(item.layer.getBounds()):item.layer.getBounds()}
+ // Refuerzo visual independiente: dibuja una copia superior del camino seleccionado.
+ // Usa exclusivamente GeoJSON real devuelto por Supabase.
+ if(window.dashboardSelectedRoadHighlight&&map){try{map.removeLayer(window.dashboardSelectedRoadHighlight)}catch{}window.dashboardSelectedRoadHighlight=null}
+ if(map){
+  const segItems=(window.dashboardSegmentLayers?.get(roadId)||[]).filter(x=>!segmentId||x.segment.segment_id===segmentId);
+  const roadGeo=(dashboardData.geometries||[]).find(g=>g.road_id===roadId)?.geojson;
+  const selectedGeo=segItems.length?segItems.map(x=>x.segment.geojson).filter(Boolean):[];
+  try{
+   const layersToHighlight=selectedGeo.length?selectedGeo:(roadGeo?[roadGeo]:[]);
+   if(layersToHighlight.length){
+    window.dashboardSelectedRoadHighlight=L.featureGroup(layersToHighlight.map(geo=>L.geoJSON(geo,{style:{color:segmentId?'#f59e0b':'#1769ee',weight:10,opacity:1,lineCap:'round',lineJoin:'round'}}))).addTo(map);
+    if(window.dashboardSelectedRoadHighlight.bringToFront)window.dashboardSelectedRoadHighlight.bringToFront();
+    const hb=window.dashboardSelectedRoadHighlight.getBounds();if(hb?.isValid())selectedBounds=selectedBounds?selectedBounds.extend(hb):hb;
+   }
+  }catch(e){console.warn('[GEOTRACIA] No se pudo reforzar el resaltado del camino',e)}
+ }
  document.querySelectorAll('#dashboardRoadList [data-road-id]').forEach(btn=>{const selected=btn.dataset.roadId===roadId;btn.classList.toggle('is-selected',selected);btn.setAttribute('aria-pressed',String(selected))});
- if(selectedBounds&&window.dashboardMapInstance)window.dashboardMapInstance.fitBounds(selectedBounds.pad(.16),{maxZoom:15});
- const status=$('#dashboardMapStatus'),count=(window.dashboardSegmentLayers?.get(roadId)||[]).length;if(status){const road=(dashboardData.roads||[]).find(r=>r.id===roadId);status.textContent=count?`${road?.code||road?.name||'Camino seleccionado'}: ${count} ${count===1?'tramo geográfico localizado':'tramos geográficos localizados'}. El tramo seleccionado se resalta en ámbar.`:`${road?.code||road?.name||'Camino seleccionado'}: no hay geometría de tramo asociada disponible. Se mantiene el trazado del camino sin inventar ubicaciones.`}
+ if(selectedBounds&&map){map.fitBounds(selectedBounds.pad(.18),{maxZoom:16});setTimeout(()=>map.invalidateSize(),80)}
+ const status=$('#dashboardMapStatus'),count=(window.dashboardSegmentLayers?.get(roadId)||[]).length;
+ if(status){const road=(dashboardData.roads||[]).find(r=>r.id===roadId);status.textContent=count?`${road?.code||road?.name||'Camino seleccionado'}: ${count} ${count===1?'tramo geográfico localizado':'tramos geográficos localizados'}. El tramo seleccionado se resalta en ámbar.`:`${road?.code||road?.name||'Camino seleccionado'}: no hay geometría de tramo asociada; se resalta el trazado vial real disponible.`}
 }
 function dashStatusLabel(value){const key=String(value||'').toLowerCase();return ({open:'Abierta',in_progress:'En curso',in_progress:'En curso',resolved:'Resuelta',archived:'Archivada',closed:'Cerrada',planned:'Programada',scheduled:'Programada',completed:'Terminada',cancelled:'Cancelada',pending:'Pendiente',active:'Activa',critical:'Crítica',high:'Alta',medium:'Media',low:'Baja'})[key]||value||'Sin estado'}
 
@@ -1101,7 +1127,7 @@ if(e.target.id==="maintenanceSearch"){query=e.target.value;const pos=e.target.se
 if(e.target.id==="roadSearch")$$('#roadRows tr').forEach(tr=>tr.hidden=!tr.textContent.toLowerCase().includes(e.target.value.toLowerCase()));
 if(e.target.id==="globalSearch"&&e.target.value.trim().length>1){let q=e.target.value.toLowerCase(),m=modules.find(x=>x[1].toLowerCase().includes(q));if(m){/* search remains unobtrusive until Enter */}}
 });
-document.addEventListener("change",e=>{if(e.target.id==="invPhotoCamera"||e.target.id==="invPhotoGallery"){handleInventoryPhoto(e.target);return}if(e.target.id==="icPhotoCamera"||e.target.id==="icPhotoGallery"){handleIncidentPhoto(e.target);return}if(["projectStatusFilter","projectTypeFilter"].includes(e.target.id)){show();return}if(e.target.id==="typeFilter"){typeFilter=e.target.value;let t=$("#recordsTable");if(t)t.innerHTML=table(records.filter(r=>match(r,query)&&(!typeFilter||r.type===typeFilter)))}if(e.target.id==="userState"){let t=$("#userTable");if(t)t.innerHTML=userTable()}if(e.target.id==="reportProjectSelect"){reportProjectId=e.target.value;loadReportData(reportProjectId)}if(e.target.id==="kmProjectSelect"){loadKilometrajeData(e.target.value)}if(e.target.id==="inspectionProjectSelect"){loadInspectionData(e.target.value)}if(e.target.id==="inventoryProjectSelect"){loadInventoryData(e.target.value)}if(e.target.id==="incidentProjectSelect"){loadIncidentData(e.target.value)}if(e.target.id==="maintenanceProjectSelect"){loadMaintenanceData(e.target.value)}if(e.target.id==="formsProjectSelect"){loadFormsData(e.target.value)}if(e.target.id==="opsProjectSelect"){loadOperationsData(e.target.value)}if(e.target.id==="maintenanceStatusFilter"){typeFilter=e.target.value;show()}if(e.target.id==="dashboardProjectSelect"){dashboardProjectId=e.target.value;loadDashboardData(dashboardProjectId)}if(e.target.id==="dashboardPeriodSelect"){dashboardPeriodDays=Number(e.target.value)||30;loadDashboardData(dashboardProjectId)}});
+document.addEventListener("change",e=>{if(e.target.id==="invPhotoCamera"||e.target.id==="invPhotoGallery"){handleInventoryPhoto(e.target);return}if(e.target.id==="icPhotoCamera"||e.target.id==="icPhotoGallery"){handleIncidentPhoto(e.target);return}if(["projectStatusFilter","projectTypeFilter"].includes(e.target.id)){show();return}if(e.target.id==="typeFilter"){typeFilter=e.target.value;let t=$("#recordsTable");if(t)t.innerHTML=table(records.filter(r=>match(r,query)&&(!typeFilter||r.type===typeFilter)))}if(e.target.id==="userState"){let t=$("#userTable");if(t)t.innerHTML=userTable()}if(e.target.id==="reportProjectSelect"){reportProjectId=e.target.value;loadReportData(reportProjectId)}if(e.target.id==="kmProjectSelect"){loadKilometrajeData(e.target.value)}if(e.target.id==="inspectionProjectSelect"){loadInspectionData(e.target.value)}if(e.target.id==="inventoryProjectSelect"){loadInventoryData(e.target.value)}if(e.target.id==="incidentProjectSelect"){loadIncidentData(e.target.value)}if(e.target.id==="maintenanceProjectSelect"){loadMaintenanceData(e.target.value)}if(e.target.id==="formsProjectSelect"){loadFormsData(e.target.value)}if(e.target.id==="opsProjectSelect"){loadOperationsData(e.target.value)}if(e.target.id==="maintenanceStatusFilter"){typeFilter=e.target.value;show()}if(e.target.id==="dashboardProjectSelect"){dashboardProjectId=e.target.value;persistDashboardProjectId(dashboardProjectId);loadDashboardData(dashboardProjectId)}if(e.target.id==="dashboardPeriodSelect"){dashboardPeriodDays=Number(e.target.value)||30;loadDashboardData(dashboardProjectId)}});
 $("#globalSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){let q=e.target.value.trim().toLowerCase(),m=modules.find(x=>x[1].toLowerCase().includes(q)||x[3].toLowerCase().includes(q));if(m)go(m[0]);else{query=q;go("inspecciones");toast("Búsqueda aplicada a registros")}}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();e.target.focus()}});
 $("#menu").addEventListener("click",()=>{$("#sidebar").classList.toggle("open");$("#overlay").classList.toggle("show")});$("#overlay").addEventListener("click",()=>{$("#sidebar").classList.remove("open");$("#overlay").classList.remove("show")});
 
