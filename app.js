@@ -1352,5 +1352,45 @@ $("#help").addEventListener("click",()=>dialog("Centro de ayuda",`<p>Este protot
 $("#project").addEventListener("click",()=>dialog("Proyecto activo",settingsRow("⌁","Ruta R-720 - Conservación 2024","La Araucanía","Activo")+settingsRow("⌁","Ruta S-51","Proyecto de referencia","Pendiente")));
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("#sidebar").classList.remove("open");$("#overlay").classList.remove("show")}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();$("#globalSearch").focus()}});
 show();
-window.addEventListener("geotracia:session",()=>{if(["dashboard","proyectos","kilometraje","inspecciones","inventario","incidencias","mantenimiento","formularios","operaciones"].includes(active))loadGeoProjects().then(()=>{if(active==="dashboard")loadDashboardData();if(active==="kilometraje")loadKilometrajeData(kmProjectId);if(active==="inspecciones")loadInspectionData(inspectionProjectId);if(active==="inventario")loadInventoryData(inventoryProjectId);if(active==="incidencias")loadIncidentData(incidentProjectId);if(active==="mantenimiento")loadMaintenanceData(maintenanceProjectId);if(active==="formularios")loadFormsData(formsProjectId);if(active==="operaciones")loadOperationsData(opsProjectId)})});
+async function initializeGeoAppSession(){
+ const client=window.geoSupabase;
+ if(!client)return;
+ try{
+  // No depender exclusivamente de geotracia:session: auth.js puede resolver
+  // getSession() antes de que app.js termine de registrar sus listeners.
+  const {data,error}=await client.auth.getSession();
+  if(error)throw error;
+  if(!data?.session?.user)return;
+  geoCurrentUser=data.session.user;
+  if(["dashboard","proyectos","kilometraje","inspecciones","inventario","incidencias","mantenimiento","formularios","operaciones"].includes(active)){
+   await loadGeoProjects();
+   if(active==="dashboard")await loadDashboardData();
+   if(active==="kilometraje")loadKilometrajeData(kmProjectId);
+   if(active==="inspecciones")loadInspectionData(inspectionProjectId);
+   if(active==="inventario")loadInventoryData(inventoryProjectId);
+   if(active==="incidencias")loadIncidentData(incidentProjectId);
+   if(active==="mantenimiento")loadMaintenanceData(maintenanceProjectId);
+   if(active==="formularios")loadFormsData(formsProjectId);
+   if(active==="operaciones")loadOperationsData(opsProjectId);
+  }
+ }catch(e){
+  geoLoadDiagnostics={...geoLoadDiagnostics,stage:'error al restaurar sesión al iniciar app.js',errorCode:e?.code||'',errorDetails:e?.message||String(e),updatedAt:new Date().toISOString()};
+  if(active==='dashboard')show();
+  console.error('[GEOTRACIA] No se pudo inicializar la sesión del dashboard',e);
+ }
+}
+window.addEventListener("geotracia:session",async()=>{
+ if(!["dashboard","proyectos","kilometraje","inspecciones","inventario","incidencias","mantenimiento","formularios","operaciones"].includes(active))return;
+ await loadGeoProjects();
+ if(active==="dashboard")await loadDashboardData();
+ if(active==="kilometraje")loadKilometrajeData(kmProjectId);
+ if(active==="inspecciones")loadInspectionData(inspectionProjectId);
+ if(active==="inventario")loadInventoryData(inventoryProjectId);
+ if(active==="incidencias")loadIncidentData(incidentProjectId);
+ if(active==="mantenimiento")loadMaintenanceData(maintenanceProjectId);
+ if(active==="formularios")loadFormsData(formsProjectId);
+ if(active==="operaciones")loadOperationsData(opsProjectId);
+});
+// Inicialización explícita para cubrir el caso en que el evento de auth ocurrió antes de este archivo.
+initializeGeoAppSession();
 })();
