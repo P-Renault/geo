@@ -1,10 +1,13 @@
-GEOTRACIA — Ajuste CSS de tarjetas de suscripción
+GEOTRACIA - Corrección de alineación CSS v1.9
 
-Archivo incluido: styles.css
+Archivos incluidos:
+- styles.css: hoja completa con correcciones de alineación para contenido directo de tarjetas, selector de periodicidad y filas de Consideraciones.
+- index.html: misma página, actualizada para cargar styles.css?v=admin-card-alignment-v1.9 y evitar caché antigua.
 
 Integración:
-1. Reemplazar el archivo styles.css existente por este archivo completo.
-2. Publicar el cambio en GitHub Pages.
-3. En móvil, recargar la página forzando actualización de caché.
+1. Reemplaza el styles.css del repositorio con el incluido.
+2. Reemplaza index.html con el incluido.
+3. Publica ambos archivos en GitHub Pages.
+4. Abre la web y recarga. El nuevo parámetro de versión fuerza la descarga del CSS actualizado.
 
-Este paquete solo modifica estilos. No cambia app.js, Supabase, tablas ni políticas RLS.
+No modifica app.js ni Supabase.

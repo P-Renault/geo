@@ -30,210 +30,75 @@
 @media(max-width:1200px){.plans-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.billing-toolbar{align-items:stretch}.billing-switch{width:100%}.billing-option{flex:1}.plans-grid{grid-template-columns:1fr}.plans-grid .price{font-size:24px}.plans-grid .plan{padding:16px}.billing-toolbar>div:first-child{width:100%}}
 
-/* GEOTRACIA | Ajuste visual estándar de tarjetas de suscripción */
-.billing-toolbar{
-  align-items:center;
-  padding:4px 0 18px;
-}
-.billing-toolbar>div:first-child{min-width:0;flex:1 1 240px}
-.billing-toolbar .sub{max-width:560px;line-height:1.55}
-.billing-switch{align-self:center;flex:0 0 auto}
-.plans-grid{align-items:stretch;gap:14px}
-.plans-grid .plan{
-  height:100%;
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  align-items:stretch;
-  text-align:left;
-  padding:18px;
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:10px;
-  box-shadow:none;
-}
-.plans-grid .plan.featured{
-  border:1px solid #9bcfc9;
-  box-shadow:0 2px 8px #173c5c08;
-}
-.plan-topline{width:100%;min-height:18px;margin-bottom:12px}
-.plan-kicker{text-align:left;line-height:1.4}
-.plans-grid .plan h3{
-  margin:0;
-  text-align:left;
-  font-size:16px;
-  line-height:1.35;
-  overflow-wrap:anywhere;
-}
-.plans-grid .price{
-  margin:14px 0 3px;
-  text-align:left;
-  font-size:clamp(22px,2vw,28px);
-  line-height:1.2;
-  letter-spacing:-.45px;
-  font-variant-numeric:tabular-nums;
-  overflow-wrap:anywhere;
-}
-.plans-grid .price small{
-  display:block!important;
-  margin-top:6px;
-  font-size:11px!important;
-  font-weight:600;
-  line-height:1.4;
-  letter-spacing:0;
-  text-align:left;
-}
-.plans-grid .plan>p{
-  margin:12px 0 0;
-  min-height:32px;
-  text-align:left;
-  font-size:11px;
-  line-height:1.5;
-}
-.plans-grid .plan .annual-equivalent{
-  min-height:0;
-  margin:5px 0 0;
-  font-size:10px;
-  line-height:1.45;
-}
-.plans-grid .plan ul{
-  width:100%;
-  padding-left:17px;
-  margin:17px 0 20px;
-  flex:1 1 auto;
-  text-align:left;
-}
-.plans-grid .plan li{
-  padding-left:1px;
-  margin:0 0 8px;
-  font-size:11px;
-  line-height:1.55;
-  overflow-wrap:anywhere;
-}
-.plans-grid .plan li:last-child{margin-bottom:0}
-.plans-grid .plan .btn{
-  width:100%;
-  min-height:42px;
-  margin-top:auto;
-  padding:10px 12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  white-space:normal;
-  line-height:1.35;
-  border-radius:7px;
-}
-.plans-grid .plan .badge{flex:0 0 auto}
-.billing-footnote{line-height:1.65;max-width:900px}
-@media(max-width:1200px){
-  .plans-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-  .plans-grid .price{font-size:25px}
-}
-@media(max-width:700px){
-  .billing-toolbar{display:flex;flex-direction:column;align-items:stretch;gap:12px}
-  .billing-toolbar>div:first-child{flex:0 0 auto;width:100%}
-  .billing-switch{width:100%;align-self:stretch;justify-content:stretch}
-  .billing-option{flex:1 1 50%;min-width:0;text-align:center}
-  .plans-grid{grid-template-columns:minmax(0,1fr);gap:12px}
-  .plans-grid .plan{padding:17px;border-radius:10px}
-  .plans-grid .plan h3{font-size:17px}
-  .plans-grid .price{font-size:27px;margin-top:12px}
-  .plans-grid .plan>p{min-height:0;margin-top:10px;font-size:11px}
-  .plans-grid .plan ul{margin:15px 0 18px}
-  .plans-grid .plan li{font-size:11px;margin-bottom:7px}
-  .plans-grid .plan .btn{min-height:42px}
-}
-
-/* Geotracia | Ajustes de alineación de Administración y suscripciones */
-/* Mantener los mensajes vacíos alineados con el contenido de las tarjetas. */
-.panel .empty,
-.panel-body .empty,
-.panel-body > p:only-child,
-.panel-body > .empty-state,
-.panel-body > .empty-message {
-  text-align: left;
-  margin: 0;
-  padding: 12px 0 2px;
-  line-height: 1.55;
-}
-
-/* Encabezado de planes: título y subtítulo comparten el mismo eje izquierdo. */
-.billing-toolbar {
-  align-items: flex-start;
-}
-.billing-toolbar > div:first-child {
-  min-width: 0;
-  text-align: left;
-}
-.billing-toolbar > div:first-child > b,
-.billing-toolbar > div:first-child > strong,
-.billing-toolbar > div:first-child > h2,
-.billing-toolbar > div:first-child > h3,
-.billing-toolbar > div:first-child .sub,
-.billing-toolbar > div:first-child > p {
+/* Geotracia admin/subscriptions alignment fix v1.9 */
+/* Keep direct panel content aligned with the panel heading gutters. */
+.panel > p.sub,
+.panel > .sub {
   display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 0 17px 17px;
   text-align: left;
-  margin-left: 0;
-  margin-right: 0;
-}
-.billing-toolbar > div:first-child > p {
-  margin-top: 6px;
   line-height: 1.5;
 }
-
-/* Consideraciones: iconos centrados dentro de su contenedor y texto alineado. */
-.settings-row {
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
-  align-items: center;
-  column-gap: 12px;
+.panel > .billing-toolbar,
+.panel > .plans-grid,
+.panel > .billing-footnote {
+  margin-left: 17px;
+  margin-right: 17px;
 }
-.settings-row .setting-icon {
-  width: 42px;
-  height: 42px;
-  margin: 0;
-  display: flex;
+.panel > .billing-toolbar {
+  padding-top: 2px;
+  padding-bottom: 18px;
+}
+.panel > .plans-grid {
+  width: auto;
+}
+.panel > .billing-footnote {
+  margin-top: 14px;
+  margin-bottom: 0;
+  padding-bottom: 17px;
+}
+/* Standardize considerations rows and their icon/text alignment. */
+.panel > .settings-row {
+  margin-left: 17px;
+  margin-right: 17px;
   align-items: center;
-  justify-content: center;
+  gap: 12px;
+}
+.panel > .settings-row .setting-icon {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  flex: 0 0 36px;
   align-self: center;
-  line-height: 1;
-  text-align: center;
 }
-.settings-row .setting-icon > *,
-.settings-row .setting-icon svg,
-.settings-row .setting-icon i {
-  display: block;
-  margin: 0;
-  line-height: 1;
-}
-.settings-row .setting-copy {
-  min-width: 0;
+.panel > .settings-row .setting-copy {
   align-self: center;
   text-align: left;
+  padding: 2px 0;
 }
-.settings-row .setting-copy b,
-.settings-row .setting-copy small {
+.panel > .settings-row .setting-copy b,
+.panel > .settings-row .setting-copy small {
   text-align: left;
 }
-
 @media (max-width: 700px) {
-  .panel-head {
-    align-items: flex-start;
+  .panel > p.sub,
+  .panel > .sub {
+    padding: 0 12px 13px;
   }
-  .panel-head > div {
-    min-width: 0;
-    text-align: left;
+  .panel > .billing-toolbar,
+  .panel > .plans-grid,
+  .panel > .billing-footnote,
+  .panel > .settings-row {
+    margin-left: 12px;
+    margin-right: 12px;
   }
-  .panel .empty,
-  .panel-body .empty,
-  .panel-body > p:only-child,
-  .panel-body > .empty-state,
-  .panel-body > .empty-message {
-    padding-top: 10px;
-  }
-  .settings-row {
-    grid-template-columns: 42px minmax(0, 1fr);
-    column-gap: 10px;
+  .panel > .settings-row .setting-icon {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    flex-basis: 34px;
   }
 }
