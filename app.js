@@ -62,9 +62,9 @@ function table(data=records,limit=100){let d=data.slice(0,limit);return `<div cl
 function tableTools(){return `<div class="table-tools"><label class="field-search">⌕ <input id="tableSearch" placeholder="Buscar código, descripción, responsable…" value="${esc(query)}"></label><select class="field" id="typeFilter" style="max-width:160px"><option value="">Todos los tipos</option>${["Inspección","Incidencia","Infraestructura","Intervención","Operación"].map(x=>`<option ${typeFilter===x?"selected":""}>${x}</option>`).join("")}</select><button class="btn" data-action="clear-filters">Limpiar filtros</button></div>`}
 function recordPanel(){let d=records.filter(r=>match(r,query)&&(!typeFilter||r.type===typeFilter));return panel("Registros del módulo",`${tableTools()}<div id="recordsTable">${table(d)}</div><div class="pagination"><span>${d.length} registros visibles · almacenamiento local</span><div class="pages"><button>‹</button><button class="selected">1</button><button>›</button></div></div>`,"Consulta, filtra y abre los registros para revisar sus datos.",btn("＋ Nuevo registro","new-record","primary"))}
 let dashboardProjectId='', dashboardPeriodDays=30, dashboardData={loading:false,error:'',roads:[],segments:[],incidents:[],inspections:[],inventory:[],maintenance:[],geometries:[],loadedAt:null};
-function dashboardProjectStorageKey(){return `geo.dashboardProject.${geoOrg?.id||'default'}`}
-function readDashboardProjectId(){try{return localStorage.getItem(dashboardProjectStorageKey())||localStorage.getItem('geo.dashboardProject.last')||''}catch{return ''}}
-function persistDashboardProjectId(id=dashboardProjectId){try{if(id){localStorage.setItem(dashboardProjectStorageKey(),id);localStorage.setItem('geo.dashboardProject.last',id)}}catch(e){console.warn('[GEOTRACIA] No se pudo persistir el proyecto seleccionado',e)}}
+function dashboardProjectStorageKey(){return `geo.dashboardProject.${geoCurrentUser?.id||'guest'}.${geoOrg?.id||'default'}`}
+function readDashboardProjectId(){try{return localStorage.getItem(dashboardProjectStorageKey())||localStorage.getItem(`geo.dashboardProject.${geoOrg?.id||'default'}`)||localStorage.getItem('geo.dashboardProject.last')||''}catch{return ''}}
+function persistDashboardProjectId(id=dashboardProjectId){try{if(id){localStorage.setItem(dashboardProjectStorageKey(),id);if(geoOrg?.id)localStorage.setItem(`geo.dashboardProject.${geoOrg.id}`,id);localStorage.setItem('geo.dashboardProject.last',id)}}catch(e){console.warn('[GEOTRACIA] No se pudo persistir el proyecto seleccionado',e)}}
 function dashPeriodStart(){const d=new Date();d.setDate(d.getDate()-dashboardPeriodDays);d.setHours(0,0,0,0);return d}
 function dashDateLabel(value){if(!value)return 'Fecha no disponible';const d=new Date(value);return Number.isNaN(d.getTime())?'Fecha no disponible':d.toLocaleDateString('es-CL',{day:'2-digit',month:'short'})}
 function dashIsActiveIncident(x){return !['resolved','closed','draft','archived'].includes(String(x.status||'').toLowerCase())}
@@ -80,8 +80,13 @@ async function loadDashboardData(projectId=dashboardProjectId){
  const requested=projectId||dashboardProjectId;
  const saved=readDashboardProjectId();
  const validId=id=>available.some(p=>p.id===id);
+ // Si la consulta falló, no reemplazar la selección persistida con una lista vacía.
+ if(geoProjectsError && !available.length){
+  dashboardData={...dashboardData,loading:false,error:geoProjectsError};
+  if(active==='dashboard')show();
+  return;
+ }
  dashboardProjectId=validId(requested)?requested:(validId(saved)?saved:(available[0]?.id||''));
- // No borrar la última selección si la lista no pudo cargarse temporalmente.
  if(dashboardProjectId)persistDashboardProjectId(dashboardProjectId);
  if(!dashboardProjectId){dashboardData={loading:false,error:'No hay proyectos activos en esta organización.',roads:[],segments:[],incidents:[],inspections:[],inventory:[],maintenance:[],geometries:[],loadedAt:new Date()};if(active==='dashboard')show();return}
  dashboardData={...dashboardData,loading:true,error:''};if(active==='dashboard')show();
@@ -100,12 +105,31 @@ async function loadDashboardData(projectId=dashboardProjectId){
   // El dashboard informa fuentes fallidas explícitamente; no disfraza errores de permisos/esquema como cero real.
   if(errors.length)throw new Error(errors.join(' · '));
   let geometries=[],segmentGeometries=[],geometryWarning='';
-  try{const g=await c.rpc('geotracia_inventory_road_geometries',{p_project_id:dashboardProjectId});if(g.error)throw g.error;geometries=(g.data||[]).map(x=>{let geo=x.road_geojson||x.geojson||x.geom_geojson;if(typeof geo==='string'){try{geo=JSON.parse(geo)}catch{geo=null}}return {road_id:x.road_id,geojson:geo,length_m:x.length_m==null?null:Number(x.length_m)}}).filter(x=>x.road_id&&x.geojson)}catch(e){geometryWarning=e?.message||'No se pudieron cargar geometrías viales';console.warn('[GEOTRACIA] Dashboard: geometrías de caminos no disponibles',e)}
-  // Los registros de segments guardan road_id y progresivas, pero no necesariamente una columna geom.
-  // Construimos el tramo recortando la geometría REAL del camino entre start_km y end_km.
+  try{
+   const g=await c.rpc('geotracia_inventory_road_geometries',{p_project_id:dashboardProjectId});
+   if(g.error)throw g.error;
+   geometries=(g.data||[]).map(x=>{let geo=x.road_geojson||x.geojson||x.geom_geojson;if(typeof geo==='string'){try{geo=JSON.parse(geo)}catch{geo=null}}return {road_id:x.road_id,geojson:geo,length_m:x.length_m==null?null:Number(x.length_m)}}).filter(x=>x.road_id&&x.geojson);
+  }catch(e){geometryWarning='No se pudieron cargar las geometrías de caminos: '+(e?.message||'error de consulta');console.warn('[GEOTRACIA] Geometrías de caminos',e)}
+  // Prioriza la geometría propia persistida en segments.geom.
+  try{
+   const sg=await c.rpc('geotracia_dashboard_segment_geometries',{p_project_id:dashboardProjectId});
+   if(sg.error)throw sg.error;
+   segmentGeometries=(sg.data||[]).map(x=>{
+    let geo=x.segment_geojson||x.geojson||x.geom_geojson;
+    if(typeof geo==='string'){try{geo=JSON.parse(geo)}catch{geo=null}}
+    return {segment_id:x.segment_id||x.id,road_id:x.road_id,code:x.code,start_km:x.start_km==null?null:Number(x.start_km),end_km:x.end_km==null?null:Number(x.end_km),geojson:geo};
+   }).filter(x=>x.segment_id&&x.road_id&&x.geojson);
+  }catch(e){geometryWarning=[geometryWarning,'No se pudieron consultar las geometrías propias de los tramos: '+(e?.message||'error de consulta')].filter(Boolean).join(' · ');console.warn('[GEOTRACIA] Geometrías propias de tramos',e)}
+  // Compatibilidad para tramos sin geom: recorta el camino por progresivas solo como alternativa.
+  const existingSegmentIds=new Set(segmentGeometries.map(x=>x.segment_id));
   const roadGeometryById=new Map(geometries.map(g=>[g.road_id,g]));
-  segmentGeometries=(queries[1].data||[]).map(seg=>{const road=roadGeometryById.get(seg.road_id);const clipped=road?dashboardClipRoadByProgressive(road.geojson,seg.start_km,seg.end_km,road.length_m):null;return {segment_id:seg.id,road_id:seg.road_id,code:seg.code,start_km:seg.start_km==null?null:Number(seg.start_km),end_km:seg.end_km==null?null:Number(seg.end_km),geojson:clipped}}).filter(x=>x.segment_id&&x.road_id&&x.geojson);
-  if((queries[1].data||[]).length&&!segmentGeometries.length){geometryWarning=[geometryWarning,'Hay tramos registrados, pero sus progresivas no se pudieron proyectar sobre la geometría del camino. Revisa que start_km/end_km estén en kilómetros y que la geometría del camino cubra esas progresivas.'].filter(Boolean).join(' · ')}
+  const fallbackSegments=(queries[1].data||[]).filter(seg=>!existingSegmentIds.has(seg.id)).map(seg=>{
+   const road=roadGeometryById.get(seg.road_id);
+   const clipped=road?dashboardClipRoadByProgressive(road.geojson,seg.start_km,seg.end_km,road.length_m):null;
+   return {segment_id:seg.id,road_id:seg.road_id,code:seg.code,start_km:seg.start_km==null?null:Number(seg.start_km),end_km:seg.end_km==null?null:Number(seg.end_km),geojson:clipped};
+  }).filter(x=>x.segment_id&&x.road_id&&x.geojson);
+  segmentGeometries.push(...fallbackSegments);
+  if((queries[1].data||[]).length&&!segmentGeometries.length){geometryWarning=[geometryWarning,'Hay tramos registrados, pero no hay geometría guardada ni se pudo calcular un tramo a partir de las progresivas.'].filter(Boolean).join(' · ')}
   dashboardData={loading:false,error:'',geometryWarning,roads:queries[0].data||[],segments:queries[1].data||[],incidents:queries[2].data||[],inspections:queries[3].data||[],inventory:queries[4].data||[],maintenance:queries[5].data||[],geometries,segmentGeometries,loadedAt:new Date()};
  }catch(e){dashboardData={loading:false,error:e?.message||'No fue posible cargar los datos del dashboard.',geometryWarning:'',roads:[],segments:[],incidents:[],inspections:[],inventory:[],maintenance:[],geometries:[],loadedAt:new Date()};console.error('[GEOTRACIA] Dashboard: fallo la carga de datos',e)}
  if(active==='dashboard'){show();setTimeout(renderDashboardMap,80)}
