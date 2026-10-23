@@ -102,3 +102,12 @@
     flex-basis: 34px;
   }
 }
+
+
+/* Informes: selector y exportaciones */
+.report-empty-state .panel-body{padding:22px 20px;text-align:left}
+.report-empty-state h2{margin:0 0 8px;font-size:18px}
+.report-empty-state p{margin:0;color:var(--muted,#728092);line-height:1.55}
+.report-export-options{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.report-export-options .btn{min-height:44px;justify-content:center}
+@media(max-width:600px){.report-export-options{display:grid;grid-template-columns:1fr}.report-export-options .btn{width:100%}}
