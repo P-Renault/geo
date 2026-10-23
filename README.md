@@ -1,20 +1,13 @@
-# Geotracia — Dashboard operativo (fase inicial)
+GEOTRACIA — Corrección dashboard trazado V2
 
-## Cambios
-- Sustituye cifras y actividad demostrativa del dashboard por valores iniciales en cero.
-- Añade seis indicadores operativos de base: extensión de red, incidencias abiertas, inspecciones, mantenimiento pendiente, inventario y prioridades críticas.
-- Añade paneles de prioridades y actividad reciente con estados vacíos explícitos.
-- Añade las cuatro visualizaciones aprobadas: incidencias por severidad, evolución temporal, mapa operativo y estado del mantenimiento.
-- Mantiene los valores en cero hasta que se implementen y conecten las consultas y funciones de datos reales.
-- No modifica intencionalmente la lógica de los demás módulos.
+Archivos incluidos: app.js, index.html.
 
-## Archivos modificados
-- `app.js`
-- `styles.css`
+Cambios:
+- El dashboard usa la misma RPC que el módulo Caminos y tramos: geotracia_project_road_geometries({ p_project_id }).
+- La longitud de referencia se obtiene de los registros roads ya consultados.
+- Si la RPC falla o no devuelve geometrías válidas, se intenta usar roads.geom como fallback, igual que el módulo Caminos y tramos.
+- Se actualiza la versión del script en index.html para invalidar caché.
+- No se modificó la persistencia del proyecto ni se requiere ejecutar SQL.
 
-## Validación
-- `node --check app.js` completado correctamente.
-- Las visualizaciones muestran placeholders y cero, no se presentan como datos reales.
-
-## Siguiente fase
-Definir y validar con el esquema real de Supabase las tablas, campos, estados, filtros por organización/proyecto/período y fórmulas. Luego conectar las consultas, validar permisos/RLS y sustituir los ceros por datos calculados.
+Validación local: node --check app.js.
+Pendiente: validar contra la instancia real de Supabase y datos del proyecto.

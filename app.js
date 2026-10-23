@@ -88,7 +88,7 @@ async function loadDashboardData(projectId=dashboardProjectId){
  try{
   const since=dashPeriodStart().toISOString();
   const queries=await Promise.all([
-   c.from('roads').select('id,organization_id,project_id,code,name,length_m,official_length_m,geometry_length_m,is_test').eq('organization_id',geoOrg.id).eq('project_id',dashboardProjectId).eq('is_test',false).order('code').limit(5000),
+   c.from('roads').select('id,organization_id,project_id,code,name,length_m,official_length_m,geometry_length_m,geom,is_test').eq('organization_id',geoOrg.id).eq('project_id',dashboardProjectId).eq('is_test',false).order('code').limit(5000),
    c.from('segments').select('id,organization_id,project_id,road_id,code,start_km,end_km,condition,is_test').eq('organization_id',geoOrg.id).eq('project_id',dashboardProjectId).eq('is_test',false).order('start_km').limit(10000),
    c.from('road_incidents').select('id,organization_id,project_id,road_id,segment_id,code,title,incident_type,severity,status,km_progressive,occurred_at,created_at,updated_at').eq('organization_id',geoOrg.id).eq('project_id',dashboardProjectId).order('created_at',{ascending:false}).limit(5000),
    c.from('inspections').select('id,organization_id,project_id,road_id,segment_id,code,title,inspection_type,inspection_date,status,condition,created_at,updated_at').eq('organization_id',geoOrg.id).eq('project_id',dashboardProjectId).gte('inspection_date',since.slice(0,10)).order('inspection_date',{ascending:false}).limit(5000),
@@ -100,28 +100,26 @@ async function loadDashboardData(projectId=dashboardProjectId){
   // El dashboard informa fuentes fallidas explícitamente; no disfraza errores de permisos/esquema como cero real.
   if(errors.length)throw new Error(errors.join(' · '));
   let geometries=[],segmentGeometries=[],geometryWarning='';
-  // MISMA fuente y RPC que utiliza el módulo Caminos y tramos.
-  // No se llama a geotracia_inventory_road_geometries: esa función no es la que usa roads.js.
+  // MISMA fuente y contrato RPC que usa Caminos y tramos: no usar la RPC del inventario.
+  // geotracia_project_road_geometries devuelve {road_id, geojson}; la longitud se toma
+  // del registro roads ya consultado para mantener la misma referencia de progresivas.
+  const roadLengthById=new Map((queries[0].data||[]).map(r=>[r.id,Number(r.length_m??r.official_length_m??r.geometry_length_m)||null]));
   try{
    const g=await c.rpc('geotracia_project_road_geometries',{p_project_id:dashboardProjectId});
    if(g.error)throw g.error;
-   const roadRowsById=new Map((queries[0].data||[]).map(r=>[r.id,r]));
-   geometries=(g.data||[]).map(x=>{
-    let geo=x.geojson;
-    if(typeof geo==='string'){try{geo=JSON.parse(geo)}catch{geo=null}}
-    const road=roadRowsById.get(x.road_id);
-    const length=road?.length_m??road?.official_length_m??road?.geometry_length_m??null;
-    return {road_id:x.road_id,geojson:geo,length_m:length==null?null:Number(length)};
-   }).filter(x=>x.road_id&&x.geojson&&roadRowsById.has(x.road_id));
-  }catch(e){geometryWarning=e?.message||'No se pudieron cargar geometrías viales';console.warn('[GEOTRACIA] Dashboard: geometrías de caminos no disponibles',e)}
-  // Replica la lógica de Caminos y tramos: la línea del camino procede de roads.geom.
-  // Los tramos se proyectan sobre esa misma geometría real usando sus progresivas registradas.
+   geometries=(g.data||[]).map(x=>{let geo=x.geojson||x.road_geojson||x.geom_geojson;if(typeof geo==='string'){try{geo=JSON.parse(geo)}catch{geo=null}}if(geo?.type==='Feature')geo=geo.geometry;return {road_id:x.road_id,geojson:geo,length_m:roadLengthById.get(x.road_id)||null}}).filter(x=>x.road_id&&x.geojson?.type&&x.geojson?.coordinates);
+   // Si la RPC no devuelve filas, reutilizar el fallback directo que usa Caminos y tramos.
+   if(!geometries.length)geometries=(queries[0].data||[]).map(r=>{let geo=r.geom;if(typeof geo==='string'){try{geo=JSON.parse(geo)}catch{geo=null}}if(geo?.type==='Feature')geo=geo.geometry;return {road_id:r.id,geojson:geo,length_m:roadLengthById.get(r.id)||null}}).filter(x=>x.road_id&&x.geojson?.type&&x.geojson?.coordinates);
+  }catch(e){
+   geometryWarning=e?.message||'No se pudieron cargar geometrías viales';
+   console.warn('[GEOTRACIA] Dashboard: RPC de Caminos y tramos falló; probando geom directo',e);
+   geometries=(queries[0].data||[]).map(r=>{let geo=r.geom;if(typeof geo==='string'){try{geo=JSON.parse(geo)}catch{geo=null}}if(geo?.type==='Feature')geo=geo.geometry;return {road_id:r.id,geojson:geo,length_m:roadLengthById.get(r.id)||null}}).filter(x=>x.road_id&&x.geojson?.type&&x.geojson?.coordinates);
+   if(geometries.length)geometryWarning='Se dibujan geometrías desde roads.geom porque la RPC compartida no respondió.';
+  }
+  // Los registros de segments guardan road_id y progresivas, pero no necesariamente una columna geom.
+  // Construimos el tramo recortando la geometría REAL del camino entre start_km y end_km.
   const roadGeometryById=new Map(geometries.map(g=>[g.road_id,g]));
-  segmentGeometries=(queries[1].data||[]).map(seg=>{
-   const road=roadGeometryById.get(seg.road_id);
-   const clipped=road?dashboardClipRoadByProgressive(road.geojson,seg.start_km,seg.end_km,road.length_m):null;
-   return {segment_id:seg.id,road_id:seg.road_id,code:seg.code,start_km:seg.start_km==null?null:Number(seg.start_km),end_km:seg.end_km==null?null:Number(seg.end_km),geojson:clipped};
-  }).filter(x=>x.segment_id&&x.road_id&&x.geojson);
+  segmentGeometries=(queries[1].data||[]).map(seg=>{const road=roadGeometryById.get(seg.road_id);const clipped=road?dashboardClipRoadByProgressive(road.geojson,seg.start_km,seg.end_km,road.length_m):null;return {segment_id:seg.id,road_id:seg.road_id,code:seg.code,start_km:seg.start_km==null?null:Number(seg.start_km),end_km:seg.end_km==null?null:Number(seg.end_km),geojson:clipped}}).filter(x=>x.segment_id&&x.road_id&&x.geojson);
   if((queries[1].data||[]).length&&!segmentGeometries.length){geometryWarning=[geometryWarning,'Hay tramos registrados, pero sus progresivas no se pudieron proyectar sobre la geometría del camino. Revisa que start_km/end_km estén en kilómetros y que la geometría del camino cubra esas progresivas.'].filter(Boolean).join(' · ')}
   dashboardData={loading:false,error:'',geometryWarning,roads:queries[0].data||[],segments:queries[1].data||[],incidents:queries[2].data||[],inspections:queries[3].data||[],inventory:queries[4].data||[],maintenance:queries[5].data||[],geometries,segmentGeometries,loadedAt:new Date()};
  }catch(e){dashboardData={loading:false,error:e?.message||'No fue posible cargar los datos del dashboard.',geometryWarning:'',roads:[],segments:[],incidents:[],inspections:[],inventory:[],maintenance:[],geometries:[],loadedAt:new Date()};console.error('[GEOTRACIA] Dashboard: fallo la carga de datos',e)}
