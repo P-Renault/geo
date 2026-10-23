@@ -1,0 +1,25 @@
+GEOTRACIA — Informes y exportaciones v1
+
+ARCHIVO MODIFICADO
+- geo-Desarrollo/app.js
+
+CAMBIOS
+- Sustituye cifras fijas de demostración del módulo Informes y exportaciones por conteos de los registros disponibles en los módulos cargados.
+- Incorpora filtros por tipo, camino, fecha y estado.
+- Añade vista previa tabular y exportaciones CSV, XLSX cuando la biblioteca XLSX está disponible (si no, descarga CSV), PDF mediante vista imprimible del navegador y KML para registros con coordenadas válidas.
+- Los botones de exportación ya no muestran los avisos de función pendiente.
+- Indica el alcance real de los datos cargados y evita inventar coordenadas para KML.
+
+INSTALACIÓN
+1. Descomprime este ZIP conservando la carpeta geo-Desarrollo.
+2. Copia/reemplaza geo-Desarrollo/app.js en el repositorio, sin eliminar otros archivos.
+3. Publica el cambio mediante el flujo habitual de GitHub Pages.
+4. Abre Informes y exportaciones, actualiza los módulos de origen y prueba los filtros y formatos de exportación.
+
+ALCANCE Y VALIDACIÓN
+- `node --check app.js` pasó correctamente.
+- La exportación XLSX requiere que la biblioteca XLSX esté cargada por la aplicación; si no, el módulo ofrece CSV como alternativa.
+- PDF se genera mediante la función de impresión del navegador: elegir «Guardar como PDF» en el diálogo de impresión.
+- KML solo contiene filas con latitud/longitud válidas. Los registros sin coordenadas no se georreferencian artificialmente.
+- El informe incluye registros que los módulos ya hayan cargado en memoria. Esta entrega no modifica políticas RLS, consultas de backend ni convierte datos locales de demostración de otros módulos en datos persistidos de Supabase.
+- No se ha probado contra el proyecto Supabase de producción; debe validarse tras desplegar.
