@@ -136,3 +136,16 @@ body{background:var(--premium-bg);color:#172f49;-webkit-font-smoothing:antialias
   #content > .panel + .kpis{margin-top:12px}
   #content .plans-grid .plan{padding:18px 16px}
 }
+
+/* Geotracia offline v2: estado real de conectividad y panel local */
+.sidebar-bottom{grid-template-columns:9px minmax(0,1fr);padding:16px 7px 10px;min-height:72px}
+.sidebar-bottom b{font-size:11px;line-height:1.35;color:#edf8fc}
+.sidebar-bottom small{font-size:10px;line-height:1.45;letter-spacing:0;overflow-wrap:anywhere}
+.sidebar-bottom .online{background:#42d3ad}
+.sidebar-bottom .online.offline-dot{background:#f4b84a;box-shadow:0 0 0 4px #f4b84a20}
+#offlineLiveContent .kpis{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px}
+#offlineLiveContent .module-layout{margin-top:14px}
+#offlineLiveContent .stack{gap:16px}
+#offlineLiveContent .panel-body>.btn{margin:8px 6px 0 0}
+#offlineGeometryMap{border:1px solid #dce6ec}
+@media(max-width:760px){#offlineLiveContent .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}#offlineLiveContent .module-layout{grid-template-columns:minmax(0,1fr)}#offlineLiveContent .kpi{padding:12px 10px}}
