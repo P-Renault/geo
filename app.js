@@ -88,7 +88,7 @@ async function loadDashboardData(projectId=dashboardProjectId){
  try{
   const since=dashPeriodStart().toISOString();
   const queries=await Promise.all([
-   c.from('roads').select('id,organization_id,project_id,code,name,length_m,official_length_m,geometry_length_m,geom,is_test').eq('organization_id',geoOrg.id).eq('project_id',dashboardProjectId).eq('is_test',false).order('code').limit(5000),
+   c.from('roads').select('id,organization_id,project_id,code,name,length_m,official_length_m,geometry_length_m,is_test').eq('organization_id',geoOrg.id).eq('project_id',dashboardProjectId).eq('is_test',false).order('code').limit(5000),
    c.from('segments').select('id,organization_id,project_id,road_id,code,start_km,end_km,condition,is_test').eq('organization_id',geoOrg.id).eq('project_id',dashboardProjectId).eq('is_test',false).order('start_km').limit(10000),
    c.from('road_incidents').select('id,organization_id,project_id,road_id,segment_id,code,title,incident_type,severity,status,km_progressive,occurred_at,created_at,updated_at').eq('organization_id',geoOrg.id).eq('project_id',dashboardProjectId).order('created_at',{ascending:false}).limit(5000),
    c.from('inspections').select('id,organization_id,project_id,road_id,segment_id,code,title,inspection_type,inspection_date,status,condition,created_at,updated_at').eq('organization_id',geoOrg.id).eq('project_id',dashboardProjectId).gte('inspection_date',since.slice(0,10)).order('inspection_date',{ascending:false}).limit(5000),
@@ -100,22 +100,16 @@ async function loadDashboardData(projectId=dashboardProjectId){
   // El dashboard informa fuentes fallidas explícitamente; no disfraza errores de permisos/esquema como cero real.
   if(errors.length)throw new Error(errors.join(' · '));
   let geometries=[],segmentGeometries=[],geometryWarning='';
-  // MISMA fuente y contrato RPC que usa Caminos y tramos: no usar la RPC del inventario.
-  // geotracia_project_road_geometries devuelve {road_id, geojson}; la longitud se toma
-  // del registro roads ya consultado para mantener la misma referencia de progresivas.
-  const roadLengthById=new Map((queries[0].data||[]).map(r=>[r.id,Number(r.length_m??r.official_length_m??r.geometry_length_m)||null]));
   try{
+   // MISMA fuente y contrato que el módulo funcional Caminos y tramos.
    const g=await c.rpc('geotracia_project_road_geometries',{p_project_id:dashboardProjectId});
    if(g.error)throw g.error;
-   geometries=(g.data||[]).map(x=>{let geo=x.geojson||x.road_geojson||x.geom_geojson;if(typeof geo==='string'){try{geo=JSON.parse(geo)}catch{geo=null}}if(geo?.type==='Feature')geo=geo.geometry;return {road_id:x.road_id,geojson:geo,length_m:roadLengthById.get(x.road_id)||null}}).filter(x=>x.road_id&&x.geojson?.type&&x.geojson?.coordinates);
-   // Si la RPC no devuelve filas, reutilizar el fallback directo que usa Caminos y tramos.
-   if(!geometries.length)geometries=(queries[0].data||[]).map(r=>{let geo=r.geom;if(typeof geo==='string'){try{geo=JSON.parse(geo)}catch{geo=null}}if(geo?.type==='Feature')geo=geo.geometry;return {road_id:r.id,geojson:geo,length_m:roadLengthById.get(r.id)||null}}).filter(x=>x.road_id&&x.geojson?.type&&x.geojson?.coordinates);
-  }catch(e){
-   geometryWarning=e?.message||'No se pudieron cargar geometrías viales';
-   console.warn('[GEOTRACIA] Dashboard: RPC de Caminos y tramos falló; probando geom directo',e);
-   geometries=(queries[0].data||[]).map(r=>{let geo=r.geom;if(typeof geo==='string'){try{geo=JSON.parse(geo)}catch{geo=null}}if(geo?.type==='Feature')geo=geo.geometry;return {road_id:r.id,geojson:geo,length_m:roadLengthById.get(r.id)||null}}).filter(x=>x.road_id&&x.geojson?.type&&x.geojson?.coordinates);
-   if(geometries.length)geometryWarning='Se dibujan geometrías desde roads.geom porque la RPC compartida no respondió.';
-  }
+   geometries=(g.data||[]).map(x=>{let geo=x.geojson||x.road_geojson||x.geom_geojson;if(typeof geo==='string'){try{geo=JSON.parse(geo)}catch{geo=null}}if(geo?.type==='Feature')geo=geo.geometry;return {road_id:x.road_id,geojson:geo,length_m:x.length_m==null?null:Number(x.length_m)}}).filter(x=>x.road_id&&x.geojson&&x.geojson.type&&x.geojson.coordinates);
+   // Igual que Caminos y tramos: si la RPC no devuelve una geometría para un camino,
+   // usar geom del registro ya consultado, sin fabricar coordenadas.
+   const known=new Set(geometries.map(x=>x.road_id));
+   for(const r of (queries[0].data||[])){if(known.has(r.id)||!r.geom)continue;let geo=r.geom;try{if(typeof geo==='string')geo=JSON.parse(geo);if(geo?.type==='Feature')geo=geo.geometry;if(geo?.type&&geo.coordinates)geometries.push({road_id:r.id,geojson:geo,length_m:Number(r.length_m||r.geometry_length_m||r.official_length_m)||null})}catch(e){console.warn('[GEOTRACIA] Geometría geom no interpretable',r.id,e)}}
+  }catch(e){geometryWarning=e?.message||'No se pudieron cargar geometrías viales';console.warn('[GEOTRACIA] Dashboard: geometrías de caminos no disponibles',e)}
   // Los registros de segments guardan road_id y progresivas, pero no necesariamente una columna geom.
   // Construimos el tramo recortando la geometría REAL del camino entre start_km y end_km.
   const roadGeometryById=new Map(geometries.map(g=>[g.road_id,g]));
@@ -191,19 +185,19 @@ async function renderDashboardMap(){
 function selectDashboardRoad(roadId,segmentId=null){
  const layers=window.dashboardRoadLayers||new Map();let selectedBounds=null;
  const map=window.dashboardMapInstance;
- for(const [id,layer] of layers){const selected=id===roadId;layer.setStyle({color:selected?'#1769ee':'#168f91',weight:selected?8:4,opacity:selected?1:.82,lineCap:'round',lineJoin:'round'});if(selected){if(layer.bringToFront)layer.bringToFront();if(layer.getBounds().isValid())selectedBounds=layer.getBounds()}}
+ for(const [id,layer] of layers){const selected=id===roadId;layer.setStyle({color:selected?'#ef4444':'#168f91',weight:selected?8:4,opacity:selected?1:.82,lineCap:'round',lineJoin:'round'});if(selected){if(layer.bringToFront)layer.bringToFront();if(layer.getBounds().isValid())selectedBounds=layer.getBounds()}}
  for(const [id,items] of (window.dashboardSegmentLayers||new Map()))for(const item of items){const selected=id===roadId&&(!segmentId||item.segment.segment_id===segmentId);item.layer.setStyle({color:selected?'#f59e0b':id===roadId?'#1769ee':'#0d7779',weight:selected?9:id===roadId?5:3,opacity:selected?1:id===roadId?.98:.62,dashArray:selected?null:'5 4',lineCap:'round',lineJoin:'round'});if(selected&&item.layer.bringToFront)item.layer.bringToFront();if(selected&&item.layer.getBounds().isValid())selectedBounds=selectedBounds?selectedBounds.extend(item.layer.getBounds()):item.layer.getBounds()}
  // Refuerzo visual independiente: dibuja una copia superior del camino seleccionado.
  // Usa exclusivamente GeoJSON real devuelto por Supabase.
  if(window.dashboardSelectedRoadHighlight&&map){try{map.removeLayer(window.dashboardSelectedRoadHighlight)}catch{}window.dashboardSelectedRoadHighlight=null}
  if(map){
-  const segItems=(window.dashboardSegmentLayers?.get(roadId)||[]).filter(x=>!segmentId||x.segment.segment_id===segmentId);
+  const segItems=(window.dashboardSegmentLayers?.get(roadId)||[]).filter(x=>segmentId&&x.segment.segment_id===segmentId);
   const roadGeo=(dashboardData.geometries||[]).find(g=>g.road_id===roadId)?.geojson;
-  const selectedGeo=segItems.length?segItems.map(x=>x.segment.geojson).filter(Boolean):[];
+  const selectedGeo=segmentId?segItems.map(x=>x.segment.geojson).filter(Boolean):[];
   try{
    const layersToHighlight=selectedGeo.length?selectedGeo:(roadGeo?[roadGeo]:[]);
    if(layersToHighlight.length){
-    window.dashboardSelectedRoadHighlight=L.featureGroup(layersToHighlight.map(geo=>L.geoJSON(geo,{style:{color:segmentId?'#f59e0b':'#1769ee',weight:10,opacity:1,lineCap:'round',lineJoin:'round'}}))).addTo(map);
+    window.dashboardSelectedRoadHighlight=L.featureGroup(layersToHighlight.map(geo=>L.geoJSON(geo,{style:{color:segmentId?'#f59e0b':'#ef4444',weight:10,opacity:1,lineCap:'round',lineJoin:'round'}}))).addTo(map);
     if(window.dashboardSelectedRoadHighlight.bringToFront)window.dashboardSelectedRoadHighlight.bringToFront();
     const hb=window.dashboardSelectedRoadHighlight.getBounds();if(hb?.isValid())selectedBounds=selectedBounds?selectedBounds.extend(hb):hb;
    }
