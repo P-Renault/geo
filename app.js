@@ -134,27 +134,39 @@ async function loadDashboardData(projectId=null){
   const errors=queries.map((q,i)=>q.error?`${labels[i]}: ${q.error.message}`:null).filter(Boolean);
   // El dashboard informa fuentes fallidas explícitamente; no disfraza errores de permisos/esquema como cero real.
   if(errors.length)throw new Error(errors.join(' · '));
+  // Publica primero los datos tabulares para que los KPI aparezcan sin esperar al mapa.
+  // Las geometrías son independientes y se cargan en paralelo en segundo plano.
+  if(loadSequence!==dashboardLoadSequence)return;
+  dashboardData={loading:false,error:'',geometryWarning:'',roads:queries[0].data||[],segments:queries[1].data||[],incidents:queries[2].data||[],inspections:queries[3].data||[],inventory:queries[4].data||[],maintenance:queries[5].data||[],geometries:[],segmentGeometries:[],loadedAt:new Date(),geometryLoading:true};
+  if(active==='dashboard')show();
+
   let geometries=[],segmentGeometries=[],geometryWarning='';
-  // Integración V4: reutiliza exactamente la RPC del módulo Caminos y tramos.
+  const [roadGeometryResult,segmentGeometryResult]=await Promise.allSettled([
+   c.rpc('geotracia_project_road_geometries',{p_project_id:dashboardProjectId}),
+   c.rpc('geotracia_dashboard_segment_geometries',{p_project_id:dashboardProjectId})
+  ]);
+  if(loadSequence!==dashboardLoadSequence)return;
+
+  // Geometrías de caminos.
   try{
-   const g=await c.rpc('geotracia_project_road_geometries',{p_project_id:dashboardProjectId});
-   if(g.error)throw g.error;
+   if(roadGeometryResult.status!=='fulfilled')throw roadGeometryResult.reason;
+   const g=roadGeometryResult.value;if(g.error)throw g.error;
    geometries=(g.data||[]).map(x=>{let geo=x.geojson||x.road_geojson||x.geom_geojson||x.geom;if(typeof geo==='string'){try{geo=JSON.parse(geo)}catch{geo=null}}if(geo?.type==='Feature')geo=geo.geometry;return {road_id:x.road_id||x.id,geojson:geo,length_m:x.length_m==null?null:Number(x.length_m)}}).filter(x=>x.road_id&&x.geojson&&x.geojson.type&&x.geojson.coordinates);
   }catch(e){
    geometryWarning='No se pudieron cargar geometrías mediante la RPC: '+(e?.message||'error de consulta');console.warn('[GEOTRACIA] geotracia_project_road_geometries',e);
    geometries=(queries[0].data||[]).map(r=>{let geo=r.geom;if(typeof geo==='string'){try{geo=JSON.parse(geo)}catch{geo=null}}if(geo?.type==='Feature')geo=geo.geometry;return {road_id:r.id,geojson:geo,length_m:r.length_m||r.geometry_length_m||r.official_length_m||null}}).filter(x=>x.road_id&&x.geojson&&x.geojson.type&&x.geojson.coordinates);
   }
-  // Prioriza la geometría propia persistida en segments.geom.
+  // Geometrías de tramos.
   try{
-   const sg=await c.rpc('geotracia_dashboard_segment_geometries',{p_project_id:dashboardProjectId});
-   if(sg.error)throw sg.error;
+   if(segmentGeometryResult.status!=='fulfilled')throw segmentGeometryResult.reason;
+   const sg=segmentGeometryResult.value;if(sg.error)throw sg.error;
    segmentGeometries=(sg.data||[]).map(x=>{
     let geo=x.segment_geojson||x.geojson||x.geom_geojson;
     if(typeof geo==='string'){try{geo=JSON.parse(geo)}catch{geo=null}}
     return {segment_id:x.segment_id||x.id,road_id:x.road_id,code:x.code,start_km:x.start_km==null?null:Number(x.start_km),end_km:x.end_km==null?null:Number(x.end_km),geojson:geo};
    }).filter(x=>x.segment_id&&x.road_id&&x.geojson);
   }catch(e){geometryWarning=[geometryWarning,'No se pudieron consultar las geometrías propias de los tramos: '+(e?.message||'error de consulta')].filter(Boolean).join(' · ');console.warn('[GEOTRACIA] Geometrías propias de tramos',e)}
-  // Compatibilidad para tramos sin geom: recorta el camino por progresivas solo como alternativa.
+  // Compatibilidad para tramos sin geometría propia.
   const existingSegmentIds=new Set(segmentGeometries.map(x=>x.segment_id));
   const roadGeometryById=new Map(geometries.map(g=>[g.road_id,g]));
   const fallbackSegments=(queries[1].data||[]).filter(seg=>!existingSegmentIds.has(seg.id)).map(seg=>{
@@ -165,7 +177,8 @@ async function loadDashboardData(projectId=null){
   segmentGeometries.push(...fallbackSegments);
   if((queries[1].data||[]).length&&!segmentGeometries.length){geometryWarning=[geometryWarning,'Hay tramos registrados, pero no hay geometría guardada ni se pudo calcular un tramo a partir de las progresivas.'].filter(Boolean).join(' · ')}
   if(loadSequence!==dashboardLoadSequence)return;
-  dashboardData={loading:false,error:'',geometryWarning,roads:queries[0].data||[],segments:queries[1].data||[],incidents:queries[2].data||[],inspections:queries[3].data||[],inventory:queries[4].data||[],maintenance:queries[5].data||[],geometries,segmentGeometries,loadedAt:new Date()};
+  dashboardData={...dashboardData,geometryWarning,geometries,segmentGeometries,geometryLoading:false,loadedAt:new Date()};
+
  }catch(e){if(loadSequence!==dashboardLoadSequence)return;dashboardData={loading:false,error:e?.message||'No fue posible cargar los datos del dashboard.',geometryWarning:'',roads:[],segments:[],incidents:[],inspections:[],inventory:[],maintenance:[],geometries:[],loadedAt:new Date()};console.error('[GEOTRACIA] Dashboard: fallo la carga de datos',e)}
  if(active==='dashboard'){show();setTimeout(renderDashboardMap,80)}
 }
