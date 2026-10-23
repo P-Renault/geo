@@ -78,5 +78,38 @@
 <script src="map-gps.js?v=3.2"></script><script src="map-gps-v06.js"></script>
 <script src="map-gps-v10-longitud-vial.js?v=2.6"></script>
 <script src="map-gps-v11-osm-longitud.js?v=3.4"></script>
+<script id="geotracia-flow-return-result-v1">
+/* Manejo visual del retorno de Flow. La confirmación definitiva debe venir del webhook. */
+(function () {
+  "use strict";
+  function handleFlowReturn() {
+    const url = new URL(window.location.href);
+    const result = (url.searchParams.get("flow_result") || "").trim().toLowerCase();
+    const reference = (url.searchParams.get("flow_reference") || "").trim();
+    if (!result) return;
+    url.searchParams.delete("flow_result");
+    url.searchParams.delete("flow_reference");
+    window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+    let title = "Estado del pago";
+    let message;
+    if (["approved", "paid", "success", "succeeded"].includes(result)) {
+      title = "Pago recibido";
+      message = "Flow devolvió un resultado aprobado. La activación definitiva de la suscripción depende de la confirmación del servidor.";
+    } else if (["pending", "in_process", "processing"].includes(result)) {
+      title = "Pago pendiente";
+      message = "Tu pago está pendiente de confirmación. No vuelvas a pagar mientras se verifica el resultado.";
+    } else if (["rejected", "declined", "failed", "failure", "error", "cancelled", "canceled"].includes(result)) {
+      title = "Pago rechazado";
+      message = "Flow informó que la transacción fue rechazada o no se completó. No se activó la suscripción. Puedes revisar el medio de pago o intentarlo nuevamente.";
+    } else {
+      message = "Flow devolvió el estado: " + result + ". La suscripción no debe considerarse activa hasta que el servidor confirme el pago.";
+    }
+    if (reference) message += "\n\nReferencia: " + reference;
+    window.setTimeout(function () { window.alert(title + "\n\n" + message); }, 250);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", handleFlowReturn, { once: true });
+  else handleFlowReturn();
+})();
+</script>
 </body>
 </html>
