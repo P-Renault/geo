@@ -1,0 +1,30 @@
+GEOTRACIA · MÓDULO DE ADMINISTRACIÓN Y SUSCRIPCIONES · V1
+
+CONTENIDO
+- 202610230003_geotracia_subscriptions_admin.sql: catálogo de planes, suscripción por organización y solicitudes de cambio con RLS.
+- app.js: reemplaza la vista administrativa de muestra por una consulta real a Supabase, tarjetas de planes, vigencia/estado, historial y flujo de solicitud.
+
+INSTALACIÓN
+1. Haz respaldo de la base de datos y del repositorio.
+2. Abre Supabase Dashboard > SQL Editor.
+3. Ejecuta completo 202610230003_geotracia_subscriptions_admin.sql.
+4. Publica los archivos del paquete manteniendo el resto de archivos y rutas actuales.
+5. Inicia sesión con un usuario que pertenezca a una organización activa y abre Administración.
+6. Comprueba que los planes Individual, Equipo, Empresa e Institucional aparezcan y que una solicitud quede en geotracia_subscription_change_requests.
+
+PRECIOS INICIALES (CLP, + IVA)
+Individual: $19.990 mensual / $199.900 anual, 1 operador.
+Equipo: $69.990 mensual / $699.900 anual, 5 operadores.
+Empresa: $179.990 mensual / $1.799.900 anual, 20 operadores.
+Institucional: cotización personalizada, desde los valores definidos comercialmente.
+
+LÍMITES DE ESTA ENTREGA
+- El flujo registra solicitudes, no cobra ni activa/suspende automáticamente suscripciones.
+- No se incluye aún pasarela de pago, emisión de documentos tributarios, webhooks ni proceso de renovación.
+- El catálogo está sembrado con los precios entregados. No se expone edición de precios desde el navegador.
+- La vista muestra la suscripción de la organización del usuario; no es todavía un panel global para el equipo interno de Geotracia.
+- Los límites de operadores/proyectos/almacenamiento deben verificarse en las operaciones servidoras antes de considerarlos enforcement completo.
+- El RBAC operativo existente y sus políticas RLS no se sustituyen con este módulo. Se integran por etapas.
+
+SEGURIDAD
+La migración permite leer el catálogo activo a usuarios autenticados; la suscripción y las solicitudes se consultan solo para organizaciones donde el usuario sea miembro. Crear solicitudes exige rol owner/admin mediante has_org_role. No se expone service_role. Las operaciones de aprobación y modificación de suscripción deben implementarse en servidor, nunca como actualización libre desde el cliente.
