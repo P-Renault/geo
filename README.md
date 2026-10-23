@@ -1,20 +1,13 @@
-# Geotracia — Dashboard operativo (fase inicial)
+# Integración del trazado V4 sobre Geotracia 1.4
+
+Esta entrega parte del ZIP geo-Desarrollo-1.4 y conserva sus módulos, consultas de indicadores, datos reales, simuladores y persistencia. Los cambios se limitan al trazado del mapa operativo del dashboard y al versionado de caché de app.js.
 
 ## Cambios
-- Sustituye cifras y actividad demostrativa del dashboard por valores iniciales en cero.
-- Añade seis indicadores operativos de base: extensión de red, incidencias abiertas, inspecciones, mantenimiento pendiente, inventario y prioridades críticas.
-- Añade paneles de prioridades y actividad reciente con estados vacíos explícitos.
-- Añade las cuatro visualizaciones aprobadas: incidencias por severidad, evolución temporal, mapa operativo y estado del mantenimiento.
-- Mantiene los valores en cero hasta que se implementen y conecten las consultas y funciones de datos reales.
-- No modifica intencionalmente la lógica de los demás módulos.
-
-## Archivos modificados
-- `app.js`
-- `styles.css`
+- Usa `geotracia_project_road_geometries({p_project_id})`, igual que `roads.js`.
+- Normaliza GeoJSON devuelto como objeto, string o Feature.
+- Usa `roads.geom` como fallback si falla la RPC.
+- Dibuja caminos con Leaflet y los resalta en rojo al seleccionar; conserva tramos, incidencias y los demás datos del dashboard.
+- Lista todos los caminos del proyecto, incluidos los que no tienen geometría disponible.
 
 ## Validación
-- `node --check app.js` completado correctamente.
-- Las visualizaciones muestran placeholders y cero, no se presentan como datos reales.
-
-## Siguiente fase
-Definir y validar con el esquema real de Supabase las tablas, campos, estados, filtros por organización/proyecto/período y fórmulas. Luego conectar las consultas, validar permisos/RLS y sustituir los ceros por datos calculados.
+Se valida sintaxis con `node --check app.js`. La conexión real con Supabase no se puede validar desde este entorno; el resultado depende de que el proyecto tenga geometría en la RPC o en `roads.geom`. No se requiere ejecutar SQL nuevo.
