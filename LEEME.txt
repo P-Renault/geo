@@ -1,13 +1,16 @@
-GEOTRACIA - Corrección de alineación CSS v1.9
+GEOTRACIA — RESTAURACIÓN DE INFORMES Y EXPORTACIONES
+Paquete diferencial: solo archivos de integración.
 
-Archivos incluidos:
-- styles.css: hoja completa con correcciones de alineación para contenido directo de tarjetas, selector de periodicidad y filas de Consideraciones.
-- index.html: misma página, actualizada para cargar styles.css?v=admin-card-alignment-v1.9 y evitar caché antigua.
+Archivos:
+- index.html: conserva las referencias a scripts y módulos existentes; actualiza la versión del CSS para invalidar caché.
+- app.js: conserva el enrutamiento del módulo "informes", la función reports() y sus acciones existentes.
+- styles.css: mantiene los estilos actuales y el ajuste de alineación.
 
 Integración:
-1. Reemplaza el styles.css del repositorio con el incluido.
-2. Reemplaza index.html con el incluido.
-3. Publica ambos archivos en GitHub Pages.
-4. Abre la web y recarga. El nuevo parámetro de versión fuerza la descarga del CSS actualizado.
+1. Haz una copia de seguridad de los tres archivos actuales.
+2. Reemplaza los tres archivos en la raíz del repositorio por los de este paquete.
+3. Verifica que no se haya omitido ningún archivo CSS/JS externo ya referenciado en index.html.
+4. Publica en GitHub Pages y realiza una recarga forzada.
 
-No modifica app.js ni Supabase.
+Nota: este paquete restaura el código del módulo de Informes y exportaciones que existe en la versión fuente geo-Desarrollo-1.0. No modifica Supabase.
+La interfaz actual contiene acciones de demostración para generar informes y algunos formatos aparecen marcados como pendientes; no se debe interpretar eso como exportación PDF/KML productiva.
